@@ -1,0 +1,13 @@
+{
+  "name": "Usar Serena para código",
+  "version": "1.0.0",
+  "description": "Usar Serena ao invés de edições diretas",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": ["fs_write", "str_replace"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Use as ferramentas do Serena (mcp_serena_replace_content, mcp_serena_replace_symbol_body, mcp_serena_create_text_file) para alterações em código. Não use fs_write ou str_replace.\n"
+  }
+}

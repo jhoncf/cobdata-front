@@ -1,0 +1,70 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/lib/api';
+import { toaster } from '@/components/ui/toaster';
+import { handleApiError } from '@/lib/error-handler';
+import type { CreateContractDto, UpdateContractDto, ManageTagsDto } from '@/types/api';
+
+export function useCreateContractMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateContractDto) => api.post('/contracts', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      toaster.create({ type: 'success', title: 'Contrato criado com sucesso' });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
+export function useUpdateContractMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateContractDto }) =>
+      api.patch(`/contracts/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      toaster.create({ type: 'success', title: 'Contrato atualizado com sucesso' });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
+export function useDeleteContractMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/contracts/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      toaster.create({ type: 'success', title: 'Contrato excluído com sucesso' });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
+export function useAddTagsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ManageTagsDto }) =>
+      api.post(`/contracts/${id}/tags`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['tags'] });
+      toaster.create({ type: 'success', title: 'Tags adicionadas' });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
+export function useRemoveTagsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ManageTagsDto }) =>
+      api.delete(`/contracts/${id}/tags`, { data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['tags'] });
+      toaster.create({ type: 'success', title: 'Tags removidas' });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}

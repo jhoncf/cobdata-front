@@ -1,0 +1,13 @@
+{
+  "name": "Usar Chakra UI no front",
+  "version": "1.0.0",
+  "description": "Consultar Chakra UI MCP ao editar frontend",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["**/*.tsx", "**/*.jsx"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Use o MCP do Chakra UI (mcp_chakra_ui_get_component_example, mcp_chakra_ui_get_component_props) para verificar componentes. Use Chakra UI v3."
+  }
+}
