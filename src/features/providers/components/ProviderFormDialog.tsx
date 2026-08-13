@@ -19,8 +19,7 @@ const createSchema = z.object({
   type: z.nativeEnum(ProviderType, { errorMap: () => ({ message: 'Selecione um tipo' }) }),
   environment: z.nativeEnum(ProviderEnv, { errorMap: () => ({ message: 'Selecione um ambiente' }) }),
   credentials: z.object({
-    username: z.string().min(1, 'Obrigatório'),
-    password: z.string().min(1, 'Obrigatório'),
+    apiKey: z.string().min(1, 'Informe a API Key fornecida pela Serasa'),
   }),
 });
 
@@ -57,9 +56,9 @@ export function ProviderFormDialog({ open, onOpenChange, provider }: ProviderFor
       ? {
           type: provider.type,
           environment: provider.environment,
-          credentials: { username: '', password: '' },
+          credentials: { apiKey: '' },
         }
-      : { type: undefined, environment: undefined, credentials: { username: '', password: '' } },
+      : { type: undefined, environment: undefined, credentials: { apiKey: '' } },
   });
 
   const onSubmit = (data: ProviderFormData) => {
@@ -145,23 +144,17 @@ export function ProviderFormDialog({ open, onOpenChange, provider }: ProviderFor
                     <Field.ErrorText>{errors.environment?.message}</Field.ErrorText>
                   </Field.Root>
 
-                  <Field.Root invalid={!!errors.credentials?.username}>
-                    <Field.Label>Usuário (credencial)</Field.Label>
+                  <Field.Root invalid={!!errors.credentials?.apiKey}>
+                    <Field.Label>API Key</Field.Label>
                     <Input
-                      {...register('credentials.username')}
-                      placeholder="Usuário do canal"
-                    />
-                    <Field.ErrorText>{errors.credentials?.username?.message}</Field.ErrorText>
-                  </Field.Root>
-
-                  <Field.Root invalid={!!errors.credentials?.password}>
-                    <Field.Label>Senha (credencial)</Field.Label>
-                    <Input
-                      {...register('credentials.password')}
+                      {...register('credentials.apiKey')}
                       type="password"
-                      placeholder={isEditing ? '(nova senha)' : 'Senha do canal'}
+                      placeholder={isEditing ? '(nova API Key)' : 'API Key fornecida pela Serasa'}
                     />
-                    <Field.ErrorText>{errors.credentials?.password?.message}</Field.ErrorText>
+                    <Field.HelperText>
+                      A URL da API é definida automaticamente conforme o ambiente selecionado.
+                    </Field.HelperText>
+                    <Field.ErrorText>{errors.credentials?.apiKey?.message}</Field.ErrorText>
                   </Field.Root>
                 </Stack>
               </form>
