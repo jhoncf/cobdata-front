@@ -105,20 +105,28 @@ export function WalletFormDialog({
 
                   <Field.Root invalid={!!errors.creditorId} required>
                     <Field.Label>Credor</Field.Label>
-                    <NativeSelect.Root>
-                      <NativeSelect.Field
-                        {...register('creditorId')}
-                        {...(isEdit ? { _disabled: { opacity: 0.5 }, readOnly: true } : {})}
-                      >
-                        <option value="">Selecione um credor</option>
-                        {creditorsData?.data.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </NativeSelect.Field>
-                    <NativeSelect.Indicator />
-                    </NativeSelect.Root>
+                    {isEdit ? (
+                      <>
+                        <Input
+                          value={wallet?.creditor?.name ?? 'Credor atual'}
+                          readOnly
+                          aria-label="Credor da carteira"
+                        />
+                        <input type="hidden" {...register('creditorId')} />
+                      </>
+                    ) : (
+                      <NativeSelect.Root>
+                        <NativeSelect.Field {...register('creditorId')}>
+                          <option value="">Selecione um credor</option>
+                          {creditorsData?.data.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                      </NativeSelect.Root>
+                    )}
                     <Field.ErrorText>
                       {errors.creditorId?.message}
                     </Field.ErrorText>
