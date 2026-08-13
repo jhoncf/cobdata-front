@@ -55,26 +55,12 @@ export default function WalletsListPage() {
   // Load creditors for filter dropdown
   const { data: creditorsData } = useCreditorsQuery({ page: 1, limit: 100 });
 
-  const { data: rawData, isLoading } = useWalletsQuery({
-    page: 1,
-    limit: 100,
+  const { data, isLoading } = useWalletsQuery({
+    page,
+    limit,
     search,
+    creditorId: selectedCreditorId || undefined,
   });
-
-  // Filter by creditor client-side (until backend supports creditorId filter)
-  const filteredData = selectedCreditorId
-    ? rawData?.data.filter((w) => w.creditorId === selectedCreditorId) ?? []
-    : rawData?.data ?? [];
-
-  // Client-side pagination
-  const totalFiltered = filteredData.length;
-  const totalPages = Math.ceil(totalFiltered / limit) || 1;
-  const paginatedData = filteredData.slice((page - 1) * limit, page * limit);
-
-  const data = {
-    data: paginatedData,
-    meta: { total: totalFiltered, page, limit, totalPages },
-  };
   const createMutation = useCreateWalletMutation();
   const updateMutation = useUpdateWalletMutation();
   const deleteMutation = useDeleteWalletMutation();
@@ -119,7 +105,7 @@ export default function WalletsListPage() {
     updateParams({ page: newPage > 1 ? String(newPage) : undefined });
   };
 
-  const handleFormSubmit = (formData: { name: string; creditorId: string }) => {
+  const handleFormSubmit = (formData: { name: string; creditorId: string; providerId?: string }) => {
     if (editingWallet) {
       updateMutation.mutate(
         { id: editingWallet.id, data: { name: formData.name } },
@@ -127,7 +113,7 @@ export default function WalletsListPage() {
       );
     } else {
       createMutation.mutate(
-        { creditorId: formData.creditorId, data: { name: formData.name } },
+        { creditorId: formData.creditorId, data: { name: formData.name }, providerId: formData.providerId },
         { onSuccess: () => updateParams({ action: undefined, id: undefined }) },
       );
     }

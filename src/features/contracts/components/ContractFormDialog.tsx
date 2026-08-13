@@ -24,9 +24,9 @@ import type { CreateContractDto, UpdateContractDto } from '@/types/api';
 
 const contractFormSchema = z.object({
   walletId: z.string().min(1, 'Selecione uma carteira'),
-  debtorDocument: z.string().optional(),
+  debtorDocument: z.string().min(1, 'CPF ou CNPJ é obrigatório'),
   debtorName: z.string().min(1, 'Nome do devedor é obrigatório'),
-  contractNumber: z.string().optional(),
+  contractNumber: z.string().min(1, 'Número do contrato é obrigatório'),
   debtType: z.nativeEnum(DebtType),
   occurrenceDate: z.string().min(1, 'Data de contratação obrigatória'),
   dueDate: z.string().min(1, 'Data de vencimento obrigatória'),
@@ -37,7 +37,7 @@ const contractFormSchema = z.object({
   debtorStreet: z.string().optional(),
   debtorCity: z.string().optional(),
   debtorPhone: z.string().optional(),
-  debtorEmail: z.string().optional(),
+  debtorEmail: z.string().email('E-mail inválido').or(z.literal('')),
   isNegativated: z.boolean(),
   cancelledAt: z.string().optional(),
   status: z.nativeEnum(ContractStatus).optional(),

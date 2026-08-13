@@ -17,7 +17,7 @@ interface WalletDetail {
   summary: WalletSummary;
 }
 
-export function useWalletDetailQuery(id: string) {
+export function useWalletDetailQuery(id?: string) {
   return useQuery<WalletDetail>({
     queryKey: ['wallets', 'detail', id],
     queryFn: () => api.get(`/wallets/${id}`).then((r) => r.data),

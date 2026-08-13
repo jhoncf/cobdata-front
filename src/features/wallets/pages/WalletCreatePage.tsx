@@ -10,14 +10,17 @@ import {
   Card,
   Heading,
   Field,
+  NativeSelect,
 } from '@chakra-ui/react';
 import { LuArrowLeft } from 'react-icons/lu';
 import { toaster } from '@/components/ui/toaster';
 import { PageHeader } from '@/components/common';
 import { useCreateWalletMutation } from '../api/useWalletMutations';
+import { useCreditorsQuery } from '@/features/creditors/api/useCreditorsQuery';
 
 const walletSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
+  creditorId: z.string().min(1, 'Selecione um credor'),
 });
 
 type WalletFormValues = z.infer<typeof walletSchema>;
@@ -25,6 +28,7 @@ type WalletFormValues = z.infer<typeof walletSchema>;
 export default function WalletCreatePage() {
   const navigate = useNavigate();
   const createMutation = useCreateWalletMutation();
+  const { data: creditorsData } = useCreditorsQuery({ page: 1, limit: 100 });
 
   const {
     register,
@@ -32,12 +36,15 @@ export default function WalletCreatePage() {
     formState: { errors, isSubmitting },
   } = useForm<WalletFormValues>({
     resolver: zodResolver(walletSchema),
-    defaultValues: { name: '' },
+    defaultValues: { name: '', creditorId: '' },
   });
 
   async function onSubmit(data: WalletFormValues) {
     try {
-      await createMutation.mutateAsync(data);
+      await createMutation.mutateAsync({
+        creditorId: data.creditorId,
+        data: { name: data.name },
+      });
       toaster.create({
         type: 'success',
         title: 'Carteira criada com sucesso',
@@ -67,6 +74,21 @@ export default function WalletCreatePage() {
                 <Field.Label>Nome</Field.Label>
                 <Input placeholder="Nome da carteira" {...register('name')} />
                 <Field.ErrorText>{errors.name?.message}</Field.ErrorText>
+              </Field.Root>
+              <Field.Root invalid={!!errors.creditorId} required maxW="400px">
+                <Field.Label>Credor</Field.Label>
+                <NativeSelect.Root>
+                  <NativeSelect.Field {...register('creditorId')}>
+                    <option value="">Selecione um credor</option>
+                    {creditorsData?.data.map((creditor) => (
+                      <option key={creditor.id} value={creditor.id}>
+                        {creditor.name}
+                      </option>
+                    ))}
+                  </NativeSelect.Field>
+                  <NativeSelect.Indicator />
+                </NativeSelect.Root>
+                <Field.ErrorText>{errors.creditorId?.message}</Field.ErrorText>
               </Field.Root>
             </Card.Body>
           </Card.Root>

@@ -13,11 +13,17 @@ import {
   NativeSelect,
 } from '@chakra-ui/react';
 import { useCreditorsQuery } from '@/features/creditors/api/useCreditorsQuery';
+import { useProvidersQuery } from '@/features/providers/api/useProvidersQuery';
 import type { Wallet } from '@/types/models';
+
+const PROVIDER_TYPE_LABELS: Record<string, string> = {
+  SERASA_LNOP: 'Serasa LNOP',
+};
 
 const walletSchema = z.object({
   name: z.string().min(1, 'Nome obrigatório').max(120, 'Máximo 120 caracteres'),
   creditorId: z.string().min(1, 'Selecione um credor'),
+  providerId: z.string().optional(),
 });
 
 type WalletFormValues = z.infer<typeof walletSchema>;
@@ -26,7 +32,9 @@ interface WalletFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   wallet?: Wallet | null;
-  onSubmit: (data: { name: string; creditorId: string }) => void;
+  /** Pre-selected providerId for edit mode (from wallet mappings) */
+  currentProviderId?: string;
+  onSubmit: (data: { name: string; creditorId: string; providerId?: string }) => void;
   loading?: boolean;
 }
 
@@ -34,12 +42,14 @@ export function WalletFormDialog({
   open,
   onOpenChange,
   wallet,
+  currentProviderId,
   onSubmit,
   loading = false,
 }: WalletFormDialogProps) {
   const isEdit = !!wallet;
 
   const { data: creditorsData } = useCreditorsQuery({ page: 1, limit: 100 });
+  const { data: providersData } = useProvidersQuery();
 
   const {
     register,
@@ -48,18 +58,22 @@ export function WalletFormDialog({
     formState: { errors },
   } = useForm<WalletFormValues>({
     resolver: zodResolver(walletSchema),
-    defaultValues: { name: '', creditorId: '' },
+    defaultValues: { name: '', creditorId: '', providerId: '' },
   });
 
   useEffect(() => {
     if (open) {
       if (wallet) {
-        reset({ name: wallet.name, creditorId: (wallet as any).creditorId ?? '' });
+        reset({
+          name: wallet.name,
+          creditorId: (wallet as any).creditorId ?? '',
+          providerId: currentProviderId ?? '',
+        });
       } else {
-        reset({ name: '', creditorId: '' });
+        reset({ name: '', creditorId: '', providerId: '' });
       }
     }
-  }, [open, wallet, reset]);
+  }, [open, wallet, currentProviderId, reset]);
 
   const handleFormSubmit = (values: WalletFormValues) => {
     onSubmit(values);
@@ -94,7 +108,7 @@ export function WalletFormDialog({
                     <NativeSelect.Root>
                       <NativeSelect.Field
                         {...register('creditorId')}
-                        disabled={isEdit}
+                        {...(isEdit ? { _disabled: { opacity: 0.5 }, readOnly: true } : {})}
                       >
                         <option value="">Selecione um credor</option>
                         {creditorsData?.data.map((c) => (
@@ -108,6 +122,21 @@ export function WalletFormDialog({
                     <Field.ErrorText>
                       {errors.creditorId?.message}
                     </Field.ErrorText>
+                  </Field.Root>
+
+                  <Field.Root>
+                    <Field.Label>Canal</Field.Label>
+                    <NativeSelect.Root>
+                      <NativeSelect.Field {...register('providerId')}>
+                        <option value="">Nenhum (sem canal)</option>
+                        {providersData?.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {PROVIDER_TYPE_LABELS[p.type] ?? p.type} ({p.environment === 'PRODUCTION' ? 'Produção' : 'Homologação'})
+                          </option>
+                        ))}
+                      </NativeSelect.Field>
+                    <NativeSelect.Indicator />
+                    </NativeSelect.Root>
                   </Field.Root>
                 </Stack>
               </form>

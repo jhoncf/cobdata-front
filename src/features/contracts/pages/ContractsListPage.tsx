@@ -77,7 +77,7 @@ export default function ContractsListPage() {
   });
 
   // Load wallet detail (with summary) when selected
-  const { data: walletDetail } = useWalletDetailQuery(selectedWalletId || null);
+  const { data: walletDetail } = useWalletDetailQuery(selectedWalletId || undefined);
 
   // Load contracts when wallet is selected
   const { data: contractsData, isLoading: contractsLoading } = useContractsQuery({
