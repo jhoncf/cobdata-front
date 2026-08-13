@@ -102,12 +102,8 @@ export default function ImportUploadPage() {
     uploadMutation.mutate(
       { file, walletId, columnMapping: filteredMapping },
       {
-        onSuccess: () => {
-          if (preselectedWalletId) {
-            navigate(`/wallets/${preselectedWalletId}`);
-          } else {
-            navigate('/imports');
-          }
+        onSuccess: (response) => {
+          navigate(`/imports/${response.data.id}`);
         },
       },
     );
