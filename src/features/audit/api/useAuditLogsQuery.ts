@@ -27,8 +27,8 @@ export interface AuditLogsParams {
   action?: string;
   resourceType?: string;
   userId?: string;
-  dateFrom?: string;
-  dateTo?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export function useAuditLogsQuery(params: AuditLogsParams = {}) {

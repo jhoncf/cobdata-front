@@ -62,8 +62,8 @@ export default function AuditLogsPage() {
     page,
     limit,
     ...(resourceType && { resourceType }),
-    ...(dateFrom && { dateFrom }),
-    ...(dateTo && { dateTo }),
+    ...(dateFrom && { startDate: dateFrom }),
+    ...(dateTo && { endDate: dateTo }),
   });
 
   const handleResourceTypeChange = (value: string) => {
