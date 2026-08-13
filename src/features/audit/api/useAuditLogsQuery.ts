@@ -6,6 +6,11 @@ export interface AuditLog {
   id: string;
   action: string;
   userId: string | null;
+  user?: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
   resourceType: string;
   resourceId: string | null;
   requestId: string | null;

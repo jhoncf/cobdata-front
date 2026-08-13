@@ -109,6 +109,22 @@ export default function AuditLogsPage() {
       minW: '180px',
     },
     {
+      key: 'user',
+      header: 'Responsável',
+      cell: (row) => {
+        if (!row.user) return <Text fontSize="sm" color="fg.muted">Sistema</Text>;
+        return (
+          <Box>
+            <Text fontSize="sm">{row.user.name || row.user.email}</Text>
+            {row.user.name && (
+              <Text fontSize="xs" color="fg.muted">{row.user.email}</Text>
+            )}
+          </Box>
+        );
+      },
+      minW: '180px',
+    },
+    {
       key: 'resourceType',
       header: 'Recurso',
       cell: (row) => (
