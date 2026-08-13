@@ -23,6 +23,8 @@ import { usePermission } from '@/hooks/usePermission';
 import { formatDate } from '@/lib/formatters';
 import type { Wallet } from '@/types/models';
 
+const LAST_CREDITOR_SESSION_KEY = 'cobdata.wallets.lastCreditorId';
+
 export default function WalletsListPage() {
   const navigate = useNavigate();
   const { canCreate, canEdit, canDelete } = usePermission();
@@ -33,7 +35,10 @@ export default function WalletsListPage() {
   const editId = searchParams.get('id');
   const page = Number(searchParams.get('page')) || 1;
   const search = searchParams.get('search') || '';
-  const selectedCreditorId = searchParams.get('creditorId') || '';
+  const selectedCreditorId =
+    searchParams.get('creditorId') ??
+    sessionStorage.getItem(LAST_CREDITOR_SESSION_KEY) ??
+    '';
 
   const [searchInput, setSearchInput] = useState(search);
   const limit = 20;
@@ -88,6 +93,11 @@ export default function WalletsListPage() {
   };
 
   const handleCreditorChange = (creditorId: string) => {
+    if (creditorId) {
+      sessionStorage.setItem(LAST_CREDITOR_SESSION_KEY, creditorId);
+    } else {
+      sessionStorage.removeItem(LAST_CREDITOR_SESSION_KEY);
+    }
     updateParams({ creditorId: creditorId || undefined, page: undefined });
   };
 
