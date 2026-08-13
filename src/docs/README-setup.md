@@ -1,4 +1,4 @@
-# CobData Front-end — Setup e Build
+# CobCom - CRM — Front-end: Setup e Build
 
 ## Pré-requisitos
 

@@ -18,7 +18,7 @@ declare module 'axios' {
 }
 
 /**
- * Axios instance configured for the CobData API.
+ * Axios instance configured for the CobCom - CRM API.
  * - baseURL from environment variable
  * - withCredentials: true (sends refresh token cookie automatically)
  * - 30s timeout

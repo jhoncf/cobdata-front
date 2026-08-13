@@ -112,7 +112,7 @@ export default function LoginPage() {
         shadow={{ base: 'none', md: 'md' }}
       >
         <Card.Header textAlign="center">
-          <Heading size="lg">CobData</Heading>
+          <Heading size="lg">CobCom - CRM</Heading>
           <Text color="fg.muted" mt="1">
             Acesse sua conta
           </Text>

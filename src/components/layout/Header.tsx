@@ -83,11 +83,11 @@ export function Header({ onMenuClick }: HeaderProps) {
             justifyContent="center"
           >
             <Text fontSize="xs" fontWeight="bold" color="white">
-              CD
+              CC
             </Text>
           </Box>
           <Text fontWeight="bold" fontSize="md" color="fg">
-            CobData
+            CobCom - CRM
           </Text>
         </Flex>
       </HStack>
