@@ -63,6 +63,9 @@ export interface Wallet {
   status: WalletStatus;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    contracts: number;
+  };
 }
 
 export interface WalletSummary {

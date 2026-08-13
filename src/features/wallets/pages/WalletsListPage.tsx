@@ -149,6 +149,12 @@ export default function WalletsListPage() {
       cell: (row) => row.creditor?.name ?? '—',
     },
     {
+      key: 'contracts',
+      header: 'Contratos',
+      textAlign: 'end',
+      cell: (row) => row._count?.contracts ?? 0,
+    },
+    {
       key: 'status',
       header: 'Status',
       cell: (row) => <StatusBadge status={row.status} />,
