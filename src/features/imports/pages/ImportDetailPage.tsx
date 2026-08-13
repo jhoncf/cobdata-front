@@ -96,7 +96,7 @@ export default function ImportDetailPage() {
         </Box>
         <Box borderWidth="1px" rounded="md" p="4">
           <Text fontSize="sm" color="fg.muted">Total de Linhas</Text>
-          <Text fontWeight="bold" fontSize="lg">{batch.totalRows}</Text>
+          <Text fontWeight="bold" fontSize="lg">{batch.totalLines}</Text>
         </Box>
         <Box borderWidth="1px" rounded="md" p="4">
           <Text fontSize="sm" color="fg.muted">Carteira</Text>
@@ -107,19 +107,19 @@ export default function ImportDetailPage() {
       <SimpleGrid columns={{ base: 2, md: 4 }} gap="4">
         <Box borderWidth="1px" rounded="md" p="3">
           <Text fontSize="xs" color="fg.muted">Válidas</Text>
-          <Text fontWeight="bold" color="green.fg">{batch.validRows}</Text>
+          <Text fontWeight="bold" color="green.fg">{batch.validLines}</Text>
         </Box>
         <Box borderWidth="1px" rounded="md" p="3">
           <Text fontSize="xs" color="fg.muted">Inválidas</Text>
-          <Text fontWeight="bold" color="red.fg">{batch.invalidRows}</Text>
+          <Text fontWeight="bold" color="red.fg">{batch.invalidLines}</Text>
         </Box>
         <Box borderWidth="1px" rounded="md" p="3">
           <Text fontSize="xs" color="fg.muted">Criadas</Text>
-          <Text fontWeight="bold">{batch.createdRows}</Text>
+          <Text fontWeight="bold">{batch.createdCount}</Text>
         </Box>
         <Box borderWidth="1px" rounded="md" p="3">
           <Text fontSize="xs" color="fg.muted">Atualizadas</Text>
-          <Text fontWeight="bold">{batch.updatedRows}</Text>
+          <Text fontWeight="bold">{batch.updatedCount}</Text>
         </Box>
       </SimpleGrid>
 
@@ -136,19 +136,21 @@ export default function ImportDetailPage() {
                   <Table.ColumnHeader>Linha</Table.ColumnHeader>
                   <Table.ColumnHeader>Campo</Table.ColumnHeader>
                   <Table.ColumnHeader>Código</Table.ColumnHeader>
+                  <Table.ColumnHeader>Mensagem</Table.ColumnHeader>
                   <Table.ColumnHeader>Valor</Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {errorsData.data.map((err) => (
-                  <Table.Row key={err.id}>
-                    <Table.Cell>{err.row}</Table.Cell>
-                    <Table.Cell>{err.field}</Table.Cell>
+                {errorsData.data.map((err, index) => (
+                  <Table.Row key={`${err.lineNumber}-${err.fieldName}-${index}`}>
+                    <Table.Cell>{err.lineNumber}</Table.Cell>
+                    <Table.Cell>{err.fieldName}</Table.Cell>
                     <Table.Cell>
-                      <Badge variant="subtle" size="sm">{err.code}</Badge>
+                      <Badge variant="subtle" size="sm">{err.errorCode}</Badge>
                     </Table.Cell>
+                    <Table.Cell>{err.message}</Table.Cell>
                     <Table.Cell>
-                      <Text fontSize="sm" color="fg.muted">{err.value}</Text>
+                      <Text fontSize="sm" color="fg.muted">{err.fieldValue ?? '-'}</Text>
                     </Table.Cell>
                   </Table.Row>
                 ))}

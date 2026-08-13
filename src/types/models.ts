@@ -126,24 +126,23 @@ export interface ImportBatch {
   wallet?: Wallet;
   fileName: string;
   status: ImportBatchStatus;
-  totalRows: number;
-  validRows: number;
-  invalidRows: number;
-  createdRows: number;
-  updatedRows: number;
-  ignoredRows: number;
+  totalLines: number;
+  validLines: number;
+  invalidLines: number;
+  createdCount: number;
+  updatedCount: number;
+  ignoredCount: number;
   columnMapping: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ImportBatchError {
-  id: string;
-  batchId: string;
-  row: number;
-  field: string;
-  code: string;
-  value: string;
+  lineNumber: number;
+  fieldName: string;
+  errorCode: string;
+  message: string;
+  fieldValue: string | null;
 }
 
 // ─── Provider Operation ──────────────────────────────────────────────────────

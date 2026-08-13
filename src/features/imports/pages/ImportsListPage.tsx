@@ -130,7 +130,7 @@ export default function ImportsListPage() {
                         label={IMPORT_STATUS_LABELS[batch.status as ImportBatchStatus] ?? batch.status}
                       />
                     </Table.Cell>
-                    <Table.Cell>{batch.totalRows}</Table.Cell>
+                    <Table.Cell>{batch.totalLines}</Table.Cell>
                     <Table.Cell>
                       {new Date(batch.createdAt).toLocaleDateString('pt-BR')}
                     </Table.Cell>
