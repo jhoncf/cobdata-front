@@ -107,7 +107,7 @@ export function ProviderFormDialog({ open, onOpenChange, provider }: ProviderFor
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header>
-              <Dialog.Title>{isEditing ? 'Editar Provedor' : 'Novo Provedor'}</Dialog.Title>
+              <Dialog.Title>{isEditing ? 'Editar Canal' : 'Novo Canal'}</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body>
               <form id="provider-form" onSubmit={handleSubmit(onSubmit)}>
@@ -149,7 +149,7 @@ export function ProviderFormDialog({ open, onOpenChange, provider }: ProviderFor
                     <Field.Label>Usuário (credencial)</Field.Label>
                     <Input
                       {...register('credentials.username')}
-                      placeholder="Usuário do provedor"
+                      placeholder="Usuário do canal"
                     />
                     <Field.ErrorText>{errors.credentials?.username?.message}</Field.ErrorText>
                   </Field.Root>
@@ -159,7 +159,7 @@ export function ProviderFormDialog({ open, onOpenChange, provider }: ProviderFor
                     <Input
                       {...register('credentials.password')}
                       type="password"
-                      placeholder={isEditing ? '(nova senha)' : 'Senha do provedor'}
+                      placeholder={isEditing ? '(nova senha)' : 'Senha do canal'}
                     />
                     <Field.ErrorText>{errors.credentials?.password?.message}</Field.ErrorText>
                   </Field.Root>
@@ -176,7 +176,7 @@ export function ProviderFormDialog({ open, onOpenChange, provider }: ProviderFor
                 form="provider-form"
                 loading={createMutation.isPending || updateMutation.isPending}
               >
-                {isEditing ? 'Salvar' : 'Criar Provedor'}
+                {isEditing ? 'Salvar' : 'Criar Canal'}
               </Button>
             </Dialog.Footer>
             <Dialog.CloseTrigger asChild>

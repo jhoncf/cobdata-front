@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
   { label: 'Importações', path: '/imports', icon: LuUpload, section: 'Operacional' },
   { label: 'Operações', path: '/operations', icon: LuSend, section: 'Operacional' },
   { label: 'Usuários', path: '/users', icon: LuUsers, roles: ['ADMIN'], section: 'Administração' },
-  { label: 'Provedores', path: '/providers', icon: LuSettings, roles: ['ADMIN', 'OPERATIONAL'], section: 'Administração' },
+  { label: 'Canais', path: '/providers', icon: LuSettings, roles: ['ADMIN', 'OPERATIONAL'], section: 'Administração' },
   { label: 'Auditoria', path: '/audit', icon: LuScrollText, roles: ['ADMIN'], section: 'Administração' },
   { label: 'Sessões', path: '/sessions', icon: LuShield, section: 'Administração' },
 ];

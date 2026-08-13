@@ -160,7 +160,7 @@ export default function WalletDetailPage() {
                         <Table.ColumnHeader>Valor Original</Table.ColumnHeader>
                         <Table.ColumnHeader>Valor Atualizado</Table.ColumnHeader>
                         <Table.ColumnHeader>Status</Table.ColumnHeader>
-                        <Table.ColumnHeader>Provedor</Table.ColumnHeader>
+                        <Table.ColumnHeader>Canal</Table.ColumnHeader>
                         <Table.ColumnHeader>Data Ocorrência</Table.ColumnHeader>
                       </Table.Row>
                     </Table.Header>

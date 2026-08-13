@@ -167,7 +167,7 @@ export default function ContractsListPage() {
     },
     {
       key: 'providerStatus',
-      header: 'Provedor',
+      header: 'Canal',
       cell: (row) => <StatusBadge status={row.providerStatus} label={PROVIDER_STATUS_LABELS[row.providerStatus]} />,
     },
     { key: 'occurrenceDate', header: 'Ocorrência', cell: (row) => formatDate(row.occurrenceDate) },

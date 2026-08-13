@@ -9,12 +9,12 @@ export function useCreateProviderMutation() {
     mutationFn: (data: CreateProviderDto) => api.post('/providers', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['providers'] });
-      toaster.create({ type: 'success', title: 'Provedor criado com sucesso' });
+      toaster.create({ type: 'success', title: 'Canal criado com sucesso' });
     },
     onError: (error: unknown) => {
       const axiosErr = error as { response?: { status?: number; data?: { message?: string } } };
       if (axiosErr.response?.status === 409) {
-        toaster.create({ type: 'error', title: axiosErr.response.data?.message || 'Provedor já configurado' });
+        toaster.create({ type: 'error', title: axiosErr.response.data?.message || 'Canal já configurado' });
       }
     },
   });
@@ -27,7 +27,7 @@ export function useUpdateProviderMutation() {
       api.patch(`/providers/${providerId}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['providers'] });
-      toaster.create({ type: 'success', title: 'Provedor atualizado' });
+      toaster.create({ type: 'success', title: 'Canal atualizado' });
     },
   });
 }

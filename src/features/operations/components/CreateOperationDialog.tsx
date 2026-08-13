@@ -21,8 +21,8 @@ interface CreateOperationDialogProps {
 }
 
 const ACTION_OPTIONS = [
-  { value: OperationAction.CREATE_OR_UPDATE, label: 'Incluir/Atualizar no Provedor' },
-  { value: OperationAction.REMOVE, label: 'Remover do Provedor' },
+  { value: OperationAction.CREATE_OR_UPDATE, label: 'Incluir/Atualizar no Canal' },
+  { value: OperationAction.REMOVE, label: 'Remover do Canal' },
 ];
 
 export function CreateOperationDialog({ open, onOpenChange }: CreateOperationDialogProps) {

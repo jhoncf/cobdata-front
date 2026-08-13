@@ -36,10 +36,10 @@ export default function ProvidersPage() {
 
   return (
     <Stack gap="6">
-      <PageHeader title="Provedores">
+      <PageHeader title="Canais">
         {canManageProviders && (
           <Button colorPalette="blue" size="sm" onClick={() => setShowCreate(true)}>
-            <LuPlus /> Novo Provedor
+            <LuPlus /> Novo Canal
           </Button>
         )}
       </PageHeader>
@@ -47,7 +47,7 @@ export default function ProvidersPage() {
       {isLoading ? (
         <Spinner />
       ) : !providers?.length ? (
-        <EmptyState title="Nenhum provedor configurado" />
+        <EmptyState title="Nenhum canal configurado" />
       ) : (
         <Table.ScrollArea borderWidth="1px" rounded="md">
           <Table.Root size="sm" stickyHeader interactive>

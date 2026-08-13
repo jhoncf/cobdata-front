@@ -255,7 +255,7 @@ export function ContractFormDialog({
               <Dialog.Body>
                 <Text>
                   Este contrato não pode ser editado pois está com status de
-                  provedor &quot;{PROVIDER_STATUS_LABELS[contract.providerStatus]}&quot;.
+                  canal &quot;{PROVIDER_STATUS_LABELS[contract.providerStatus]}&quot;.
                 </Text>
               </Dialog.Body>
               <Dialog.Footer>
