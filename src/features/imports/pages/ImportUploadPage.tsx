@@ -9,9 +9,11 @@ import {
   Text,
   SimpleGrid,
   FileUpload,
+  Badge,
 } from '@chakra-ui/react';
 import { LuUpload } from 'react-icons/lu';
 import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 import { useAllWalletsQuery } from '@/features/wallets/api/useWalletsQuery';
 import { useUploadImportMutation } from '../api/useImportMutations';
 import { PageHeader } from '@/components/common';
@@ -31,11 +33,48 @@ const TARGET_FIELDS = [
   { value: 'debtOrigin', label: 'Origem da Dívida' },
   { value: 'productName', label: 'Produto' },
   { value: 'debtorStreet', label: 'Endereço (Rua)' },
+  { value: 'debtorAddressNumber', label: 'Número do Endereço' },
+  { value: 'debtorAddressComplement', label: 'Complemento' },
+  { value: 'debtorNeighborhood', label: 'Bairro' },
   { value: 'debtorCity', label: 'Cidade' },
+  { value: 'debtorState', label: 'UF' },
+  { value: 'debtorZipCode', label: 'CEP' },
   { value: 'debtorPhone', label: 'Telefone' },
   { value: 'debtorEmail', label: 'E-mail' },
   { value: 'cancelledAt', label: 'Mês Cancelamento' },
 ];
+
+const REQUIRED_TARGETS = ['debtorDocument', 'contractNumber', 'occurrenceDate', 'originalValue'];
+
+const HEADER_SUGGESTIONS: Record<string, string> = {
+  cpf: 'debtorDocument', cnpj: 'debtorDocument', documento: 'debtorDocument',
+  nome: 'debtorName', cliente: 'debtorName', nome_cliente: 'debtorName',
+  contrato: 'contractNumber', num_adm: 'contractNumber', numero_contrato: 'contractNumber',
+  m_contrato: 'occurrenceDate', mes_contrato: 'occurrenceDate', data_ocorrencia: 'occurrenceDate',
+  vencimento: 'dueDate', data_vencimento: 'dueDate',
+  valor: 'originalValue', vlr: 'originalValue', valor_divida: 'originalValue', valor_original: 'originalValue',
+  valor_atualizado: 'updatedValue', valor_atual: 'updatedValue',
+  tipo_divida: 'debtType', tipo: 'debtType', produto: 'productName',
+  endereco: 'debtorStreet', rua: 'debtorStreet', cidade: 'debtorCity',
+  telefone: 'debtorPhone', telefone_cliente: 'debtorPhone', email: 'debtorEmail',
+  cep: 'debtorZipCode', uf: 'debtorState', estado: 'debtorState', bairro: 'debtorNeighborhood',
+};
+
+function normalizedHeader(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_|_$/g, '');
+}
+
+function suggestedMapping(headers: string[]): Record<string, string> {
+  return Object.fromEntries(
+    headers.map((header) => [header, HEADER_SUGGESTIONS[normalizedHeader(header)] ?? '']),
+  );
+}
 
 export default function ImportUploadPage() {
   const navigate = useNavigate();
@@ -43,7 +82,7 @@ export default function ImportUploadPage() {
   const preselectedWalletId = searchParams.get('walletId') || '';
   const [walletId, setWalletId] = useState(preselectedWalletId);
   const [file, setFile] = useState<File | null>(null);
-  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [headers, setHeaders] = useState<string[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
 
   const { data: walletsData } = useAllWalletsQuery();
@@ -53,28 +92,42 @@ export default function ImportUploadPage() {
     const accepted = details.files[0];
     if (!accepted) return;
     setFile(accepted);
-    setCsvHeaders([]);
+    setHeaders([]);
     setColumnMapping({});
 
-    // Parse first row to get headers
+    const setDetectedHeaders = (sourceHeaders: unknown[]) => {
+      const uniqueHeaders = sourceHeaders
+        .map((header) => String(header ?? '').trim())
+        .filter((header, index, values) => header && values.indexOf(header) === index);
+      setHeaders(uniqueHeaders);
+      setColumnMapping(suggestedMapping(uniqueHeaders));
+    };
+
     if (accepted.name.endsWith('.csv')) {
       Papa.parse(accepted, {
         preview: 1,
         complete: (results) => {
-          const headers = (results.data[0] as string[]) || [];
-          setCsvHeaders(headers);
-          // Auto-initialize mapping
-          const initial: Record<string, string> = {};
-          headers.forEach((h) => { initial[h] = ''; });
-          setColumnMapping(initial);
+          setDetectedHeaders((results.data[0] as string[]) || []);
         },
         error: () => {
           toaster.create({ type: 'error', title: 'Erro ao ler headers do arquivo' });
         },
       });
     } else {
-      // For xlsx, we can't parse client-side without a library – show info
-      toaster.create({ type: 'info', title: 'Arquivo XLSX selecionado. Mapeamento de colunas será definido pelo servidor.' });
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const workbook = XLSX.read(reader.result, { type: 'array' });
+          const firstSheet = workbook.SheetNames[0];
+          const worksheet = firstSheet ? workbook.Sheets[firstSheet] : undefined;
+          const rows = worksheet ? XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, blankrows: false }) : [];
+          setDetectedHeaders(rows[0] ?? []);
+        } catch {
+          toaster.create({ type: 'error', title: 'Não foi possível ler os cabeçalhos do XLSX' });
+        }
+      };
+      reader.onerror = () => toaster.create({ type: 'error', title: 'Erro ao ler o arquivo XLSX' });
+      reader.readAsArrayBuffer(accepted);
     }
   }, []);
 
@@ -94,8 +147,11 @@ export default function ImportUploadPage() {
       if (val) filteredMapping[key] = val;
     });
 
-    if (Object.keys(filteredMapping).length === 0 && csvHeaders.length > 0) {
-      toaster.create({ type: 'warning', title: 'Mapeie ao menos uma coluna' });
+    const missingRequired = REQUIRED_TARGETS.filter(
+      (target) => !Object.values(filteredMapping).includes(target),
+    );
+    if (missingRequired.length > 0) {
+      toaster.create({ type: 'warning', title: 'Mapeie os campos obrigatórios antes de enviar' });
       return;
     }
 
@@ -164,18 +220,19 @@ export default function ImportUploadPage() {
         </FileUpload.Root>
       </Fieldset.Root>
 
-      {csvHeaders.length > 0 && (
+      {headers.length > 0 && (
         <Fieldset.Root>
           <Fieldset.Legend>Mapeamento de Colunas</Fieldset.Legend>
           <Text fontSize="sm" color="fg.muted" mb="3">
-            Para cada coluna do arquivo, selecione o campo de destino correspondente.
+            Confirme o destino de cada coluna. As sugestões podem ser alteradas livremente.
           </Text>
           <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
-            {csvHeaders.map((header) => (
+            {headers.map((header) => (
               <Box key={header} borderWidth="1px" rounded="md" p="3">
-                <Text fontSize="sm" fontWeight="medium" mb="1">
-                  {header}
-                </Text>
+                <Stack direction="row" justify="space-between" mb="1">
+                  <Text fontSize="sm" fontWeight="medium">{header}</Text>
+                  {REQUIRED_TARGETS.includes(columnMapping[header] ?? '') && <Badge colorPalette="orange">Obrigatório</Badge>}
+                </Stack>
                 <NativeSelect.Root size="sm">
                   <NativeSelect.Field
                     value={columnMapping[header] ?? ''}
