@@ -24,6 +24,7 @@ import { WalletFormDialog } from '../components/WalletFormDialog';
 import { formatDate, formatCurrency } from '@/lib/formatters';
 import { PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
+import type { ProviderStatus } from '@/types/enums';
 import type { CreateContractDto } from '@/types/api';
 
 type SortField = 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'providerStatus' | 'occurrenceDate';
