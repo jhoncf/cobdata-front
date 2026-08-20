@@ -174,9 +174,9 @@ export default function RegularizeDebtPage() {
               <Stack gap="4">
                 <Field.Root invalid={!!error && contracts.length === 0} required>
                   <Field.Label htmlFor="public-cpf">CPF</Field.Label>
-                  <HStack align="start">
-                    <Input id="public-cpf" size="lg" inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" value={cpf} onChange={(event) => setCpf(formatCpf(event.target.value))} onKeyDown={(event) => event.key === 'Enter' && lookup()} />
-                    <Button size="lg" bg="#0088ff" color="white" _hover={{ bg: '#0074dc' }} loading={loading} onClick={lookup} disabled={!hasValidCpf}>
+                  <HStack align="start" flexDir={{ base: 'column', sm: 'row' }} w="full">
+                    <Input id="public-cpf" size="lg" inputMode="numeric" autoComplete="off" placeholder="000.000.000-00" value={cpf} onChange={(event) => setCpf(formatCpf(event.target.value))} onKeyDown={(event) => event.key === 'Enter' && lookup()} w="full" />
+                    <Button size="lg" bg="#0088ff" color="white" _hover={{ bg: '#0074dc' }} loading={loading} onClick={lookup} disabled={!hasValidCpf} w={{ base: 'full', sm: 'auto' }}>
                       <LuSearch /> Consultar
                     </Button>
                   </HStack>
