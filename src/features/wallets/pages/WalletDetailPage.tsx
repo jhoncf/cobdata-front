@@ -10,7 +10,6 @@ import {
   Text,
   Stat,
   Table,
-  Badge,
   Spinner,
 } from '@chakra-ui/react';
 import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown } from 'react-icons/lu';
@@ -25,10 +24,9 @@ import { WalletFormDialog } from '../components/WalletFormDialog';
 import { formatDate, formatCurrency } from '@/lib/formatters';
 import { PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
-import type { ProviderStatus } from '@/types/enums';
 import type { CreateContractDto } from '@/types/api';
 
-type SortField = 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'status' | 'providerStatus' | 'occurrenceDate';
+type SortField = 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'providerStatus' | 'occurrenceDate';
 type SortDirection = 'asc' | 'desc';
 
 export default function WalletDetailPage() {
@@ -91,9 +89,6 @@ export default function WalletDetailPage() {
           break;
         case 'updatedValue':
           comparison = (a.updatedValue ?? 0) - (b.updatedValue ?? 0);
-          break;
-        case 'status':
-          comparison = a.status.localeCompare(b.status);
           break;
         case 'providerStatus':
           comparison = a.providerStatus.localeCompare(b.providerStatus);
@@ -248,8 +243,7 @@ export default function WalletDetailPage() {
                         <SortableHeader field="debtorDocument">Documento</SortableHeader>
                         <SortableHeader field="originalValue">Valor Original</SortableHeader>
                         <SortableHeader field="updatedValue">Valor Atualizado</SortableHeader>
-                        <SortableHeader field="status">Status</SortableHeader>
-                        <SortableHeader field="providerStatus">Canal</SortableHeader>
+                        <SortableHeader field="providerStatus">Status</SortableHeader>
                         <SortableHeader field="occurrenceDate">Data Ocorrência</SortableHeader>
                         {canEdit && <Table.ColumnHeader width="80px">Ações</Table.ColumnHeader>}
                       </Table.Row>
@@ -270,12 +264,10 @@ export default function WalletDetailPage() {
                               : '—'}
                           </Table.Cell>
                           <Table.Cell>
-                            <StatusBadge status={contract.status} />
-                          </Table.Cell>
-                          <Table.Cell>
-                            <Badge size="sm" variant="subtle">
-                              {PROVIDER_STATUS_LABELS[contract.providerStatus as ProviderStatus] ?? contract.providerStatus}
-                            </Badge>
+                            <StatusBadge
+                              status={contract.providerStatus}
+                              label={PROVIDER_STATUS_LABELS[contract.providerStatus] ?? contract.providerStatus}
+                            />
                           </Table.Cell>
                           <Table.Cell>
                             {formatDate(contract.occurrenceDate)}
