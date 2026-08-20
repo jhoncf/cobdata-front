@@ -25,6 +25,7 @@ const CreditorDetailPage = lazy(() => import('@/features/creditors/pages/Credito
 const WalletsListPage = lazy(() => import('@/features/wallets/pages/WalletsListPage'));
 const WalletDetailPage = lazy(() => import('@/features/wallets/pages/WalletDetailPage'));
 const ContractsListPage = lazy(() => import('@/features/contracts/pages/ContractsListPage'));
+const ContractDetailPage = lazy(() => import('@/features/contracts/pages/ContractDetailPage'));
 const ImportsListPage = lazy(() => import('@/features/imports/pages/ImportsListPage'));
 const ImportUploadPage = lazy(() => import('@/features/imports/pages/ImportUploadPage'));
 const ImportDetailPage = lazy(() => import('@/features/imports/pages/ImportDetailPage'));
@@ -36,6 +37,7 @@ const UsersListPage = lazy(() => import('@/features/users/pages/UsersListPage'))
 const ProvidersPage = lazy(() => import('@/features/providers/pages/ProvidersPage'));
 const AuditLogsPage = lazy(() => import('@/features/audit/pages/AuditLogsPage'));
 const PaymentGatewaysPage = lazy(() => import('@/features/payments/pages/PaymentGatewaysPage'));
+const RegularizeDebtPage = lazy(() => import('@/features/public/pages/RegularizeDebtPage'));
 
 // ─── Suspense wrapper ────────────────────────────────────────────────────────
 function SuspenseLayout({ children }: { children: React.ReactNode }) {
@@ -44,6 +46,10 @@ function SuspenseLayout({ children }: { children: React.ReactNode }) {
 
 // ─── Router definition ───────────────────────────────────────────────────────
 export const router = createBrowserRouter([
+  {
+    path: '/regularize',
+    element: <SuspenseLayout><RegularizeDebtPage /></SuspenseLayout>,
+  },
   // Public routes (redirect to dashboard if authenticated)
   {
     element: <PublicRoute />,
@@ -109,6 +115,10 @@ export const router = createBrowserRouter([
           {
             path: '/contracts',
             element: <SuspenseLayout><ContractsListPage /></SuspenseLayout>,
+          },
+          {
+            path: '/contracts/:id',
+            element: <SuspenseLayout><ContractDetailPage /></SuspenseLayout>,
           },
           {
             path: '/imports',
