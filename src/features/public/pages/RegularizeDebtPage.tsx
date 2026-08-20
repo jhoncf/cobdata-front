@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
+import { useSearchParams } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -55,6 +56,7 @@ function formatCnpj(value: string | null) {
 }
 
 export default function RegularizeDebtPage() {
+  const [searchParams] = useSearchParams();
   const [cpf, setCpf] = useState('');
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [selected, setSelected] = useState<Contract | null>(null);
@@ -63,6 +65,7 @@ export default function RegularizeDebtPage() {
   const [issuing, setIssuing] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [hasLoadedUrlCpf, setHasLoadedUrlCpf] = useState(false);
 
   const hasValidCpf = useMemo(() => onlyDigits(cpf).length === 11, [cpf]);
 
@@ -86,13 +89,30 @@ export default function RegularizeDebtPage() {
       setError('Informe os 11 números do seu CPF.');
       return;
     }
+    await lookupByDocument(onlyDigits(cpf));
+  }
+
+  useEffect(() => {
+    if (hasLoadedUrlCpf) return;
+
+    const cpfFromUrl = onlyDigits(searchParams.get('cpf') ?? '');
+    setHasLoadedUrlCpf(true);
+    if (cpfFromUrl.length !== 11) return;
+
+    setCpf(formatCpf(cpfFromUrl));
+    void lookupByDocument(cpfFromUrl);
+  // The URL is intentionally consumed only once when the page opens.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasLoadedUrlCpf, searchParams]);
+
+  async function lookupByDocument(document: string) {
     setLoading(true);
     setError('');
     setSelected(null);
     setPix(null);
     try {
       const { data } = await publicApi.post<{ contracts: Contract[] }>('/public/debts/lookup', {
-        debtorDocument: onlyDigits(cpf),
+        debtorDocument: document,
       });
       setContracts(data.contracts);
     } catch (requestError) {
