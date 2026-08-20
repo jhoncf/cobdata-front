@@ -36,7 +36,6 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import {
   DEBT_TYPE_LABELS,
   PROVIDER_STATUS_LABELS,
-  CONTRACT_STATUS_LABELS,
 } from '@/lib/constants';
 import type { Contract } from '@/types/models';
 import type { CreateContractDto, UpdateContractDto } from '@/types/api';
@@ -150,11 +149,6 @@ export default function ContractsListPage() {
     {
       key: 'status',
       header: 'Status',
-      cell: (row) => <StatusBadge status={row.status} label={CONTRACT_STATUS_LABELS[row.status]} />,
-    },
-    {
-      key: 'providerStatus',
-      header: 'Canal',
       cell: (row) => <StatusBadge status={row.providerStatus} label={PROVIDER_STATUS_LABELS[row.providerStatus]} />,
     },
     { key: 'occurrenceDate', header: 'Ocorrência', cell: (row) => formatDate(row.occurrenceDate) },
