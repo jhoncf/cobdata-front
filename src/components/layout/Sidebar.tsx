@@ -10,6 +10,7 @@ import {
   LuSettings,
   LuShield,
   LuScrollText,
+  LuCreditCard,
 } from 'react-icons/lu';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -30,7 +31,8 @@ const navItems: NavItem[] = [
   { label: 'Operações', path: '/operations', icon: LuSend, section: 'Operacional' },
   { label: 'Usuários', path: '/users', icon: LuUsers, roles: ['ADMIN'], section: 'Administração' },
   { label: 'Canais', path: '/providers', icon: LuSettings, roles: ['ADMIN', 'OPERATIONAL'], section: 'Administração' },
-  { label: 'Auditoria', path: '/audit', icon: LuScrollText, roles: ['ADMIN'], section: 'Administração' },
+  { label: 'Meios de pagamento', path: '/payment-gateways', icon: LuCreditCard, roles: ['ADMIN'], section: 'Administração' },
+    { label: 'Auditoria', path: '/audit', icon: LuScrollText, roles: ['ADMIN'], section: 'Administração' },
   { label: 'Sessões', path: '/sessions', icon: LuShield, section: 'Administração' },
 ];
 

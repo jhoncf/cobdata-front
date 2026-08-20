@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- This module exports the router configuration and its local Suspense wrapper. */
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ProtectedRoute, PublicRoute, MustResetGuard, RoleGuard } from '@/app/guards';
@@ -34,6 +35,7 @@ const OperationDetailPage = lazy(() => import('@/features/operations/pages/Opera
 const UsersListPage = lazy(() => import('@/features/users/pages/UsersListPage'));
 const ProvidersPage = lazy(() => import('@/features/providers/pages/ProvidersPage'));
 const AuditLogsPage = lazy(() => import('@/features/audit/pages/AuditLogsPage'));
+const PaymentGatewaysPage = lazy(() => import('@/features/payments/pages/PaymentGatewaysPage'));
 
 // ─── Suspense wrapper ────────────────────────────────────────────────────────
 function SuspenseLayout({ children }: { children: React.ReactNode }) {
@@ -140,6 +142,10 @@ export const router = createBrowserRouter([
               {
                 path: '/audit',
                 element: <SuspenseLayout><AuditLogsPage /></SuspenseLayout>,
+              },
+              {
+                path: '/payment-gateways',
+                element: <SuspenseLayout><PaymentGatewaysPage /></SuspenseLayout>,
               },
             ],
           },

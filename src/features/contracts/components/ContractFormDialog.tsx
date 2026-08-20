@@ -14,7 +14,6 @@ import {
   NativeSelect,
   Heading,
   Text,
-  Checkbox,
 } from '@chakra-ui/react';
 import { DebtType, ContractStatus, OfferType, ProviderStatus } from '@/types/enums';
 import { DEBT_TYPE_LABELS, CONTRACT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';

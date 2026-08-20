@@ -1,19 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import type { Wallet, WalletSummary } from '@/types/models';
 
-interface WalletSummary {
-  totalContracts: number;
-  contractsByStatus: Record<string, number>;
-  totalValue: number;
-}
-
-interface WalletDetail {
-  id: string;
-  name: string;
-  creditorId: string;
-  status: string;
-  createdAt: string;
-  creditor?: { id: string; name: string };
+interface WalletDetail extends Wallet {
   summary: WalletSummary;
 }
 

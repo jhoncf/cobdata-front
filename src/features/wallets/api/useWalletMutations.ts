@@ -7,15 +7,28 @@ import type { CreateWalletDto, UpdateWalletDto } from '@/types/api';
 export function useCreateWalletMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       creditorId,
       data,
+      providerId,
     }: {
       creditorId: string;
       data: CreateWalletDto;
-    }) => api.post(`/creditors/${creditorId}/wallets`, data),
+      providerId?: string;
+    }) => {
+      const res = await api.post(`/creditors/${creditorId}/wallets`, data);
+      // If a provider/channel was selected, create wallet mapping
+      if (providerId && res.data?.id) {
+        await api.post(`/providers/${providerId}/wallet-mappings`, {
+          walletId: res.data.id,
+          externalWalletId: res.data.id,
+        });
+      }
+      return res;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallets'] });
+      queryClient.invalidateQueries({ queryKey: ['providers'] });
       toaster.create({ type: 'success', title: 'Carteira criada com sucesso' });
     },
     onError: (error) => handleApiError(error),

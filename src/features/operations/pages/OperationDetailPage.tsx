@@ -9,7 +9,6 @@ import {
   Text,
   Button,
   SimpleGrid,
-  Badge,
 } from '@chakra-ui/react';
 import { useOperationQuery, useOperationItemsQuery } from '../api/useOperationsQuery';
 import { useCancelOperationMutation } from '../api/useOperationMutations';

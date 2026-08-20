@@ -10,5 +10,6 @@ export function usePermission() {
     canManageUsers: role === 'ADMIN',
     canManageProviders: role === 'ADMIN',
     canViewProviders: role === 'ADMIN' || role === 'OPERATIONAL',
+    canManagePaymentGateways: role === 'ADMIN',
   };
 }

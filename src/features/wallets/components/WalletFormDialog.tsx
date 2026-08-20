@@ -66,7 +66,7 @@ export function WalletFormDialog({
       if (wallet) {
         reset({
           name: wallet.name,
-          creditorId: (wallet as any).creditorId ?? '',
+          creditorId: wallet.creditorId,
           providerId: currentProviderId ?? '',
         });
       } else {

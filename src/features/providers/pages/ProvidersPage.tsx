@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import {
-  Box,
   Button,
   HStack,
   Spinner,
   Stack,
   Table,
-  Text,
   Badge,
 } from '@chakra-ui/react';
 import { LuPlus } from 'react-icons/lu';

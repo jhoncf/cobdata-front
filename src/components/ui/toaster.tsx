@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- Chakra's official toaster composition intentionally exports its controller and renderer together. */
 import {
   Toaster as ChakraToaster,
   Portal,

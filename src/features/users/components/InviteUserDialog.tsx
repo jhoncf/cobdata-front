@@ -10,7 +10,6 @@ import {
   Input,
   Field,
   Fieldset,
-  createListCollection,
 } from '@chakra-ui/react';
 import { NativeSelect } from '@chakra-ui/react';
 import { useInviteUserMutation } from '../api/useUserMutations';

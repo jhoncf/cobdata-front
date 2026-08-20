@@ -5,13 +5,10 @@ import {
   Card,
   HStack,
   SimpleGrid,
-  Stack,
   Text,
-  Badge,
-  Wrap,
 } from '@chakra-ui/react';
 import { NativeSelect } from '@chakra-ui/react';
-import { LuPlus, LuPencil, LuTrash2, LuX } from 'react-icons/lu';
+import { LuPlus, LuPencil, LuTrash2, LuBanknote } from 'react-icons/lu';
 import {
   PageHeader,
   DataTable,
@@ -32,6 +29,8 @@ import {
 } from '../api/useContractMutations';
 import { ContractFormDialog } from '../components/ContractFormDialog';
 import { TagsManager } from '../components/TagsManager';
+import { CreateChargeDialog } from '@/features/payments/components/CreateChargeDialog';
+import { GeneratePixAction } from '@/features/payments/components/GeneratePixAction';
 import { usePermission } from '@/hooks/usePermission';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import {
@@ -41,19 +40,6 @@ import {
 } from '@/lib/constants';
 import type { Contract } from '@/types/models';
 import type { CreateContractDto, UpdateContractDto } from '@/types/api';
-
-const PROVIDER_STATUS_COLORS: Record<string, string> = {
-  PENDING: 'gray',
-  SENT: 'blue',
-  REGISTERED: 'green',
-  UPDATED: 'green',
-  FAILED: 'red',
-  REMOVING: 'orange',
-  REMOVED: 'gray',
-  IN_AGREEMENT: 'purple',
-  AGREEMENT_BREACHED: 'red',
-  PAID: 'teal',
-};
 
 export default function ContractsListPage() {
   const { canCreate, canEdit, canDelete } = usePermission();
@@ -95,6 +81,7 @@ export default function ContractsListPage() {
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Contract | null>(null);
   const [tagsTarget, setTagsTarget] = useState<Contract | null>(null);
+  const [chargeTarget, setChargeTarget] = useState<Contract | null>(null);
 
   const handleCreditorChange = (creditorId: string) => {
     setSelectedCreditorId(creditorId);
@@ -178,6 +165,14 @@ export default function ContractsListPage() {
           textAlign: 'end' as const,
           cell: (row: Contract) => (
             <HStack gap="1" justify="end">
+              {(canEdit || canCreate) && (
+                <GeneratePixAction contract={row} />
+              )}
+              {(canEdit || canCreate) && (
+                <Button size="xs" variant="ghost" colorPalette="green" onClick={(e) => { e.stopPropagation(); setChargeTarget(row); }} aria-label="Gerar cobrança">
+                  <LuBanknote />
+                </Button>
+              )}
               {canEdit && canEditContract(row) && (
                 <Button size="xs" variant="ghost" onClick={(e) => { e.stopPropagation(); handleEdit(row); }} aria-label="Editar">
                   <LuPencil />
@@ -311,6 +306,14 @@ export default function ContractsListPage() {
           open={!!tagsTarget}
           onOpenChange={(open) => !open && setTagsTarget(null)}
           contract={tagsTarget}
+        />
+      )}
+
+      {chargeTarget && (
+        <CreateChargeDialog
+          open={!!chargeTarget}
+          onOpenChange={(open) => { if (!open) setChargeTarget(null); }}
+          contract={chargeTarget}
         />
       )}
     </>

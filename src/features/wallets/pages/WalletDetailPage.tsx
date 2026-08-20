@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
@@ -13,22 +13,33 @@ import {
   Badge,
   Spinner,
 } from '@chakra-ui/react';
-import { LuArrowLeft, LuUpload, LuPlus } from 'react-icons/lu';
+import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown } from 'react-icons/lu';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
+import { useUpdateWalletMutation } from '../api/useWalletMutations';
 import { useContractsQuery } from '@/features/contracts/api/useContractsQuery';
 import { useCreateContractMutation } from '@/features/contracts/api/useContractMutations';
 import { ContractFormDialog } from '@/features/contracts/components/ContractFormDialog';
+import { GeneratePixAction } from '@/features/payments/components/GeneratePixAction';
+import { WalletFormDialog } from '../components/WalletFormDialog';
 import { formatDate, formatCurrency } from '@/lib/formatters';
 import { PROVIDER_STATUS_LABELS } from '@/lib/constants';
+import { usePermission } from '@/hooks/usePermission';
 import type { ProviderStatus } from '@/types/enums';
 import type { CreateContractDto } from '@/types/api';
+
+type SortField = 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'status' | 'providerStatus' | 'occurrenceDate';
+type SortDirection = 'asc' | 'desc';
 
 export default function WalletDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { canEdit } = usePermission();
   const [contractsPage, setContractsPage] = useState(1);
   const [showContractForm, setShowContractForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const { data: wallet, isLoading } = useWalletDetailQuery(id ?? '');
   const { data: contractsData, isLoading: contractsLoading } = useContractsQuery({
@@ -37,14 +48,83 @@ export default function WalletDetailPage() {
     limit: 20,
   });
   const createContractMutation = useCreateContractMutation();
+  const updateWalletMutation = useUpdateWalletMutation();
 
   const handleCreateContract = (data: CreateContractDto) => {
-    // Pre-fill walletId from the current wallet
     const payload = { ...data, walletId: id! };
     createContractMutation.mutate(payload, {
       onSuccess: () => setShowContractForm(false),
     });
   };
+
+  const handleEditWallet = (formData: { name: string; creditorId: string; providerId?: string }) => {
+    updateWalletMutation.mutate(
+      { id: id!, data: { name: formData.name } },
+      { onSuccess: () => setShowEditForm(false) },
+    );
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedContracts = useMemo(() => {
+    if (!contractsData?.data || !sortField) return contractsData?.data ?? [];
+
+    return [...contractsData.data].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortField) {
+        case 'contractNumber':
+          comparison = (a.contractNumber ?? '').localeCompare(b.contractNumber ?? '');
+          break;
+        case 'debtorDocument':
+          comparison = (a.debtorDocument ?? '').localeCompare(b.debtorDocument ?? '');
+          break;
+        case 'originalValue':
+          comparison = a.originalValue - b.originalValue;
+          break;
+        case 'updatedValue':
+          comparison = (a.updatedValue ?? 0) - (b.updatedValue ?? 0);
+          break;
+        case 'status':
+          comparison = a.status.localeCompare(b.status);
+          break;
+        case 'providerStatus':
+          comparison = a.providerStatus.localeCompare(b.providerStatus);
+          break;
+        case 'occurrenceDate':
+          comparison = new Date(a.occurrenceDate).getTime() - new Date(b.occurrenceDate).getTime();
+          break;
+      }
+
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [contractsData?.data, sortField, sortDirection]);
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return null;
+    return sortDirection === 'asc' ? <LuArrowUp size={12} /> : <LuArrowDown size={12} />;
+  };
+
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <Table.ColumnHeader
+      cursor="pointer"
+      onClick={() => handleSort(field)}
+      _hover={{ color: 'fg.default' }}
+      userSelect="none"
+    >
+      <HStack gap="1">
+        <Text as="span">{children}</Text>
+        <SortIcon field={field} />
+      </HStack>
+    </Table.ColumnHeader>
+  );
 
   if (isLoading) return <LoadingOverlay />;
   if (!wallet) return <Text>Carteira não encontrada.</Text>;
@@ -53,6 +133,15 @@ export default function WalletDetailPage() {
     <>
       <PageHeader title={wallet.name}>
         <HStack gap="2">
+          {canEdit && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowEditForm(true)}
+            >
+              <LuPencil /> Editar
+            </Button>
+          )}
           <Button
             size="sm"
             colorPalette="green"
@@ -155,17 +244,18 @@ export default function WalletDetailPage() {
                   <Table.Root size="sm" stickyHeader interactive>
                     <Table.Header>
                       <Table.Row>
-                        <Table.ColumnHeader>Nº Contrato</Table.ColumnHeader>
-                        <Table.ColumnHeader>Documento</Table.ColumnHeader>
-                        <Table.ColumnHeader>Valor Original</Table.ColumnHeader>
-                        <Table.ColumnHeader>Valor Atualizado</Table.ColumnHeader>
-                        <Table.ColumnHeader>Status</Table.ColumnHeader>
-                        <Table.ColumnHeader>Canal</Table.ColumnHeader>
-                        <Table.ColumnHeader>Data Ocorrência</Table.ColumnHeader>
+                        <SortableHeader field="contractNumber">Nº Contrato</SortableHeader>
+                        <SortableHeader field="debtorDocument">Documento</SortableHeader>
+                        <SortableHeader field="originalValue">Valor Original</SortableHeader>
+                        <SortableHeader field="updatedValue">Valor Atualizado</SortableHeader>
+                        <SortableHeader field="status">Status</SortableHeader>
+                        <SortableHeader field="providerStatus">Canal</SortableHeader>
+                        <SortableHeader field="occurrenceDate">Data Ocorrência</SortableHeader>
+                        {canEdit && <Table.ColumnHeader width="80px">Ações</Table.ColumnHeader>}
                       </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                      {contractsData.data.map((contract) => (
+                      {sortedContracts.map((contract) => (
                         <Table.Row key={contract.id}>
                           <Table.Cell fontWeight="medium">
                             {contract.contractNumber}
@@ -190,6 +280,11 @@ export default function WalletDetailPage() {
                           <Table.Cell>
                             {formatDate(contract.occurrenceDate)}
                           </Table.Cell>
+                          {canEdit && (
+                            <Table.Cell>
+                              <GeneratePixAction contract={contract} />
+                            </Table.Cell>
+                          )}
                         </Table.Row>
                       ))}
                     </Table.Body>
@@ -209,6 +304,15 @@ export default function WalletDetailPage() {
           </Card.Body>
         </Card.Root>
       </Stack>
+
+      {/* Edit Wallet Dialog */}
+      <WalletFormDialog
+        open={showEditForm}
+        onOpenChange={setShowEditForm}
+        wallet={wallet}
+        onSubmit={handleEditWallet}
+        loading={updateWalletMutation.isPending}
+      />
 
       <ContractFormDialog
         open={showContractForm}

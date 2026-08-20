@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import api from '@/lib/api';
+import { GlobalSearchBar } from '@/features/search/components';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -92,8 +93,13 @@ export function Header({ onMenuClick }: HeaderProps) {
         </Flex>
       </HStack>
 
+      {/* Center: Global Search */}
+      <Flex flex="1" justify="center" mx="4" display={{ base: 'none', lg: 'flex' }}>
+        <GlobalSearchBar />
+      </Flex>
+
       {/* Right: User Menu */}
-      <HStack ml="auto" gap="1">
+      <HStack gap="1">
         <IconButton
           aria-label={colorMode === 'light' ? 'Modo escuro' : 'Modo claro'}
           variant="ghost"
