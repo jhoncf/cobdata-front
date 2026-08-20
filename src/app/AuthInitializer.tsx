@@ -32,7 +32,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
       // replacing it. Retry only network/5xx failures; an actual 401 remains a
       // definitive expired session and immediately follows the login flow.
       try {
-        for (let attempt = 0; attempt < 5; attempt += 1) {
+        for (let attempt = 0; attempt < 8; attempt += 1) {
           try {
             const newToken = await refreshToken();
             if (cancelled) return;
@@ -43,7 +43,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
             setUser(meRes.data);
             return;
           } catch (error) {
-            if (!isTransientFailure(error) || attempt === 4) {
+            if (!isTransientFailure(error) || attempt === 7) {
               return;
             }
 
