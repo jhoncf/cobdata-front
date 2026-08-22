@@ -12,7 +12,7 @@ import {
   Table,
   Spinner,
 } from '@chakra-ui/react';
-import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown } from 'react-icons/lu';
+import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio } from 'react-icons/lu';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
 import { useUpdateWalletMutation } from '../api/useWalletMutations';
@@ -21,6 +21,7 @@ import { useCreateContractMutation } from '@/features/contracts/api/useContractM
 import { ContractFormDialog } from '@/features/contracts/components/ContractFormDialog';
 import { GeneratePixAction } from '@/features/payments/components/GeneratePixAction';
 import { WalletFormDialog } from '../components/WalletFormDialog';
+import { LigueLeadDialog } from '../components/LigueLeadDialog';
 import { formatDate, formatCurrency } from '@/lib/formatters';
 import { PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
@@ -37,6 +38,7 @@ export default function WalletDetailPage() {
   const [contractsPage, setContractsPage] = useState(1);
   const [showContractForm, setShowContractForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showLigueLead, setShowLigueLead] = useState(false);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
@@ -138,6 +140,7 @@ export default function WalletDetailPage() {
               <LuPencil /> Editar
             </Button>
           )}
+          {canEdit && <Button size="sm" variant="outline" onClick={() => setShowLigueLead(true)}><LuRadio /> Comunicações</Button>}
           <Button
             size="sm"
             colorPalette="green"
@@ -306,6 +309,7 @@ export default function WalletDetailPage() {
         onSubmit={handleEditWallet}
         loading={updateWalletMutation.isPending}
       />
+      <LigueLeadDialog open={showLigueLead} onOpenChange={setShowLigueLead} walletId={id!} contracts={contractsData?.data ?? []} />
 
       <ContractFormDialog
         open={showContractForm}
