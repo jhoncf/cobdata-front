@@ -12,7 +12,7 @@ import {
   Table,
   Spinner,
 } from '@chakra-ui/react';
-import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall } from 'react-icons/lu';
+import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye } from 'react-icons/lu';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
 import { useUpdateWalletMutation } from '../api/useWalletMutations';
@@ -254,7 +254,7 @@ export default function WalletDetailPage() {
                         <SortableHeader field="paymentStatus">Status</SortableHeader>
                         <SortableHeader field="serasaStatus">Serasa</SortableHeader>
                         <SortableHeader field="occurrenceDate">Data Ocorrência</SortableHeader>
-                        {canEdit && <Table.ColumnHeader width="120px">Ações</Table.ColumnHeader>}
+                        {canEdit && <Table.ColumnHeader width="155px">Ações</Table.ColumnHeader>}
                       </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -290,6 +290,17 @@ export default function WalletDetailPage() {
                           {canEdit && (
                             <Table.Cell>
                               <HStack gap="1">
+                                <Button
+                                  asChild
+                                  size="xs"
+                                  variant="ghost"
+                                  aria-label="Ver detalhes do contrato"
+                                  title="Ver detalhes do contrato"
+                                >
+                                  <RouterLink to={`/contracts/${contract.id}`}>
+                                    <LuEye />
+                                  </RouterLink>
+                                </Button>
                                 <GeneratePixAction contract={contract} />
                                 <Button
                                   size="xs"
