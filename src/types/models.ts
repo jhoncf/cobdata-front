@@ -1,7 +1,8 @@
 import {
   Role,
   DebtType,
-  ProviderStatus,
+  SerasaStatus,
+  PaymentStatus,
   ContractStatus,
   ImportBatchStatus,
   OperationAction,
@@ -70,7 +71,7 @@ export interface Wallet {
 
 export interface WalletSummary {
   totalContracts: number;
-  contractsByStatus: Record<string, number>;
+  contractsByPaymentStatus: Record<string, number>;
   totalValue: number;
 }
 
@@ -112,7 +113,8 @@ export interface Contract {
   isNegativated: boolean;
   cancelledAt: string | null;
   status: ContractStatus;
-  providerStatus: ProviderStatus;
+  serasaStatus: SerasaStatus;
+  paymentStatus: PaymentStatus;
   offer: OfferDto | null;
   tags: string[];
   createdAt: string;

@@ -225,7 +225,7 @@ export interface ListContractsParams extends PaginationParams {
   walletId?: string;
   creditorId?: string;
   status?: ContractStatus;
-  providerStatus?: string;
+  serasaStatus?: string;
   dateFrom?: string;
   dateTo?: string;
   debtorDocument?: string;

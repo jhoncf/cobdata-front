@@ -15,7 +15,7 @@ import {
   Heading,
   Text,
 } from '@chakra-ui/react';
-import { DebtType, ContractStatus, OfferType, ProviderStatus } from '@/types/enums';
+import { DebtType, ContractStatus, OfferType, SerasaStatus } from '@/types/enums';
 import { DEBT_TYPE_LABELS, CONTRACT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { useWalletsQuery } from '@/features/wallets/api/useWalletsQuery';
 import type { Contract } from '@/types/models';
@@ -237,8 +237,8 @@ export function ContractFormDialog({
   const editDisabled =
     isEdit &&
     contract &&
-    ![ProviderStatus.PENDING, ProviderStatus.FAILED, ProviderStatus.REMOVED].includes(
-      contract.providerStatus,
+    ![SerasaStatus.PENDING, SerasaStatus.FAILED, SerasaStatus.REMOVED].includes(
+      contract.serasaStatus,
     );
 
   if (editDisabled) {
@@ -254,7 +254,7 @@ export function ContractFormDialog({
               <Dialog.Body>
                 <Text>
                   Este contrato não pode ser editado pois está com status de
-                  canal &quot;{PROVIDER_STATUS_LABELS[contract.providerStatus]}&quot;.
+                  canal &quot;{PROVIDER_STATUS_LABELS[contract.serasaStatus]}&quot;.
                 </Text>
               </Dialog.Body>
               <Dialog.Footer>

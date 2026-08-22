@@ -5,7 +5,7 @@ import api from '@/lib/api';
 import { toaster } from '@/components/ui/toaster';
 import { formatCurrency } from '@/lib/formatters';
 
-type Contract = { id: string; contractNumber: string; debtorName: string | null; debtorPhone: string | null; originalValue: number; updatedValue?: number | null; providerStatus: string; status: string };
+type Contract = { id: string; contractNumber: string; debtorName: string | null; debtorPhone: string | null; originalValue: number; updatedValue?: number | null; paymentStatus: string; status: string };
 type Agent = { name: string; prompt: string; greetings?: string | null; modelVersion: string; voiceId?: string | null; active: boolean };
 
 export function LigueLeadDialog({ open, onOpenChange, walletId, contracts }: { open: boolean; onOpenChange: (open: boolean) => void; walletId: string; contracts: Contract[] }) {
@@ -15,7 +15,7 @@ export function LigueLeadDialog({ open, onOpenChange, walletId, contracts }: { o
   const [message, setMessage] = useState('Olá! Identificamos uma pendência. Acesse a CobCom para consultar e regularizar sua situação.');
   const [loading, setLoading] = useState(false);
   const [voices, setVoices] = useState<{ id: string; name: string }[]>([]);
-  const eligible = useMemo(() => contracts.filter(c => c.debtorPhone && c.status === 'ACTIVE' && c.providerStatus !== 'PAID'), [contracts]);
+  const eligible = useMemo(() => contracts.filter(c => c.debtorPhone && c.status === 'ACTIVE' && c.paymentStatus !== 'PAID'), [contracts]);
 
   useEffect(() => {
     if (!open) return;

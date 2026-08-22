@@ -1,6 +1,7 @@
 import type {
   DebtType,
-  ProviderStatus,
+  SerasaStatus,
+  PaymentStatus,
   ContractStatus,
   ImportBatchStatus,
   OperationStatus,
@@ -19,7 +20,8 @@ export const DEBT_TYPE_LABELS: Record<DebtType, string> = {
   OTHER: 'Outro',
 };
 
-export const PROVIDER_STATUS_LABELS: Record<ProviderStatus, string> = {
+export const PROVIDER_STATUS_LABELS: Record<SerasaStatus, string> = {
+  NOT_ENABLED: 'Não habilitado',
   PENDING: 'Pendente',
   SENT: 'Enviado',
   REGISTERED: 'Registrado',
@@ -27,6 +29,10 @@ export const PROVIDER_STATUS_LABELS: Record<ProviderStatus, string> = {
   REMOVING: 'Removendo',
   REMOVED: 'Removido',
   FAILED: 'Falhou',
+};
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  OPEN: 'Em aberto',
   IN_AGREEMENT: 'Em acordo',
   AGREEMENT_BREACHED: 'Acordo quebrado',
   PAID: 'Pago',

@@ -23,12 +23,12 @@ import { GeneratePixAction } from '@/features/payments/components/GeneratePixAct
 import { WalletFormDialog } from '../components/WalletFormDialog';
 import { LigueLeadDialog } from '../components/LigueLeadDialog';
 import { formatDate, formatCurrency } from '@/lib/formatters';
-import { PROVIDER_STATUS_LABELS } from '@/lib/constants';
+import { PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
-import type { ProviderStatus } from '@/types/enums';
+import type { PaymentStatus, SerasaStatus } from '@/types/enums';
 import type { CreateContractDto } from '@/types/api';
 
-type SortField = 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'providerStatus' | 'occurrenceDate';
+type SortField = 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'paymentStatus' | 'serasaStatus' | 'occurrenceDate';
 type SortDirection = 'asc' | 'desc';
 
 export default function WalletDetailPage() {
@@ -93,8 +93,11 @@ export default function WalletDetailPage() {
         case 'updatedValue':
           comparison = (a.updatedValue ?? 0) - (b.updatedValue ?? 0);
           break;
-        case 'providerStatus':
-          comparison = a.providerStatus.localeCompare(b.providerStatus);
+        case 'paymentStatus':
+          comparison = a.paymentStatus.localeCompare(b.paymentStatus);
+          break;
+        case 'serasaStatus':
+          comparison = a.serasaStatus.localeCompare(b.serasaStatus);
           break;
         case 'occurrenceDate':
           comparison = new Date(a.occurrenceDate).getTime() - new Date(b.occurrenceDate).getTime();
@@ -211,12 +214,12 @@ export default function WalletDetailPage() {
                     {formatCurrency(wallet.summary.totalValue)}
                   </Stat.ValueText>
                 </Stat.Root>
-                {wallet.summary.contractsByStatus &&
-                  Object.entries(wallet.summary.contractsByStatus).map(
+                {wallet.summary.contractsByPaymentStatus &&
+                  Object.entries(wallet.summary.contractsByPaymentStatus).map(
                     ([status, count]) => (
                       <Stat.Root key={status}>
                         <Stat.Label>
-                          {PROVIDER_STATUS_LABELS[status as ProviderStatus] ?? status}
+                          {PAYMENT_STATUS_LABELS[status as PaymentStatus] ?? status}
                         </Stat.Label>
                         <Stat.ValueText>{count as number}</Stat.ValueText>
                       </Stat.Root>
@@ -247,7 +250,8 @@ export default function WalletDetailPage() {
                         <SortableHeader field="debtorDocument">Documento</SortableHeader>
                         <SortableHeader field="originalValue">Valor Original</SortableHeader>
                         <SortableHeader field="updatedValue">Valor Atualizado</SortableHeader>
-                        <SortableHeader field="providerStatus">Status</SortableHeader>
+                        <SortableHeader field="paymentStatus">Status</SortableHeader>
+                        <SortableHeader field="serasaStatus">Serasa</SortableHeader>
                         <SortableHeader field="occurrenceDate">Data Ocorrência</SortableHeader>
                         {canEdit && <Table.ColumnHeader width="80px">Ações</Table.ColumnHeader>}
                       </Table.Row>
@@ -269,8 +273,14 @@ export default function WalletDetailPage() {
                           </Table.Cell>
                           <Table.Cell>
                             <StatusBadge
-                              status={contract.providerStatus}
-                              label={PROVIDER_STATUS_LABELS[contract.providerStatus] ?? contract.providerStatus}
+                              status={contract.paymentStatus}
+                              label={PAYMENT_STATUS_LABELS[contract.paymentStatus] ?? contract.paymentStatus}
+                            />
+                          </Table.Cell>
+                          <Table.Cell>
+                            <StatusBadge
+                              status={contract.serasaStatus}
+                              label={PROVIDER_STATUS_LABELS[contract.serasaStatus] ?? contract.serasaStatus}
                             />
                           </Table.Cell>
                           <Table.Cell>

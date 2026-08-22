@@ -18,8 +18,9 @@ export enum DebtType {
   OTHER = 'OTHER',
 }
 
-// ─── Provider Status (contract at provider) ──────────────────────────────────
-export enum ProviderStatus {
+// ─── Serasa status (exclusive to the Serasa channel) ─────────────────────────
+export enum SerasaStatus {
+  NOT_ENABLED = 'NOT_ENABLED',
   PENDING = 'PENDING',
   SENT = 'SENT',
   REGISTERED = 'REGISTERED',
@@ -27,6 +28,10 @@ export enum ProviderStatus {
   REMOVING = 'REMOVING',
   REMOVED = 'REMOVED',
   FAILED = 'FAILED',
+}
+
+export enum PaymentStatus {
+  OPEN = 'OPEN',
   IN_AGREEMENT = 'IN_AGREEMENT',
   AGREEMENT_BREACHED = 'AGREEMENT_BREACHED',
   PAID = 'PAID',

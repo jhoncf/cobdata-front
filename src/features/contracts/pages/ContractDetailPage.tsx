@@ -137,12 +137,16 @@ export default function ContractDetailPage() {
           <Heading size="sm">Status</Heading>
           <HStack gap="8" wrap="wrap">
             <Stack gap="0">
-              <Text fontSize="xs" color="fg.muted">Status</Text>
+              <Text fontSize="xs" color="fg.muted">Situação administrativa</Text>
               <Badge>{contract.status}</Badge>
             </Stack>
             <Stack gap="0">
-              <Text fontSize="xs" color="fg.muted">Status Provedor</Text>
-              <Badge>{contract.providerStatus}</Badge>
+              <Text fontSize="xs" color="fg.muted">Situação financeira</Text>
+              <Badge>{contract.paymentStatus}</Badge>
+            </Stack>
+            <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Serasa</Text>
+              <Badge>{contract.serasaStatus}</Badge>
             </Stack>
             <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Negativado</Text>

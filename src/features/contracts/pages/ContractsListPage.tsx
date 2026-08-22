@@ -35,6 +35,7 @@ import { usePermission } from '@/hooks/usePermission';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import {
   DEBT_TYPE_LABELS,
+  PAYMENT_STATUS_LABELS,
   PROVIDER_STATUS_LABELS,
 } from '@/lib/constants';
 import type { Contract } from '@/types/models';
@@ -104,7 +105,7 @@ export default function ContractsListPage() {
   };
 
   const canEditContract = (contract: Contract) => {
-    return ['PENDING', 'FAILED', 'REMOVED'].includes(contract.providerStatus);
+    return ['PENDING', 'FAILED', 'REMOVED'].includes(contract.serasaStatus);
   };
 
   const handleFormSubmit = (formData: CreateContractDto | UpdateContractDto) => {
@@ -133,11 +134,10 @@ export default function ContractsListPage() {
   const summaryCards = summary
     ? [
         { label: 'Total', value: summary.totalContracts, color: 'blue' },
-        { label: 'Pendentes', value: summary.contractsByStatus['PENDING'] ?? 0, color: 'gray' },
-        { label: 'Enviados', value: summary.contractsByStatus['SENT'] ?? 0, color: 'blue' },
-        { label: 'Registrados', value: summary.contractsByStatus['REGISTERED'] ?? 0, color: 'green' },
-        { label: 'Pagos', value: summary.contractsByStatus['PAID'] ?? 0, color: 'teal' },
-        { label: 'Falhou', value: summary.contractsByStatus['FAILED'] ?? 0, color: 'red' },
+        { label: 'Em aberto', value: summary.contractsByPaymentStatus['OPEN'] ?? 0, color: 'gray' },
+        { label: 'Em acordo', value: summary.contractsByPaymentStatus['IN_AGREEMENT'] ?? 0, color: 'blue' },
+        { label: 'Pagos', value: summary.contractsByPaymentStatus['PAID'] ?? 0, color: 'teal' },
+        { label: 'Acordo quebrado', value: summary.contractsByPaymentStatus['AGREEMENT_BREACHED'] ?? 0, color: 'red' },
       ]
     : [];
 
@@ -149,8 +149,9 @@ export default function ContractsListPage() {
     {
       key: 'status',
       header: 'Status',
-      cell: (row) => <StatusBadge status={row.providerStatus} label={PROVIDER_STATUS_LABELS[row.providerStatus]} />,
+      cell: (row) => <StatusBadge status={row.paymentStatus} label={PAYMENT_STATUS_LABELS[row.paymentStatus]} />,
     },
+    { key: 'serasaStatus', header: 'Serasa', cell: (row) => <StatusBadge status={row.serasaStatus} label={PROVIDER_STATUS_LABELS[row.serasaStatus]} /> },
     { key: 'occurrenceDate', header: 'Ocorrência', cell: (row) => formatDate(row.occurrenceDate) },
     ...(canEdit || canDelete
       ? [{
