@@ -17,7 +17,7 @@ import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState } fr
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
 import { useUpdateWalletMutation } from '../api/useWalletMutations';
 import { useContractsQuery } from '@/features/contracts/api/useContractsQuery';
-import { useCreateContractMutation } from '@/features/contracts/api/useContractMutations';
+import { useCreateContractMutation, useUpdateContractMutation } from '@/features/contracts/api/useContractMutations';
 import { ContractFormDialog } from '@/features/contracts/components/ContractFormDialog';
 import { GeneratePixAction } from '@/features/payments/components/GeneratePixAction';
 import { WalletFormDialog } from '../components/WalletFormDialog';
@@ -26,7 +26,8 @@ import { formatDate, formatCurrency } from '@/lib/formatters';
 import { PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
 import type { PaymentStatus, SerasaStatus } from '@/types/enums';
-import type { CreateContractDto } from '@/types/api';
+import type { CreateContractDto, UpdateContractDto } from '@/types/api';
+import type { Contract } from '@/types/models';
 
 type SortField = 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'paymentStatus' | 'serasaStatus' | 'occurrenceDate';
 type SortDirection = 'asc' | 'desc';
@@ -37,6 +38,7 @@ export default function WalletDetailPage() {
   const { canEdit } = usePermission();
   const [contractsPage, setContractsPage] = useState(1);
   const [showContractForm, setShowContractForm] = useState(false);
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showLigueLead, setShowLigueLead] = useState(false);
   const [ligueLeadContractId, setLigueLeadContractId] = useState<string>();
@@ -50,6 +52,7 @@ export default function WalletDetailPage() {
     limit: 20,
   });
   const createContractMutation = useCreateContractMutation();
+  const updateContractMutation = useUpdateContractMutation();
   const updateWalletMutation = useUpdateWalletMutation();
 
   const handleCreateContract = (data: CreateContractDto) => {
@@ -57,6 +60,14 @@ export default function WalletDetailPage() {
     createContractMutation.mutate(payload, {
       onSuccess: () => setShowContractForm(false),
     });
+  };
+
+  const handleUpdateContract = (data: UpdateContractDto) => {
+    if (!editingContract) return;
+    updateContractMutation.mutate(
+      { id: editingContract.id, data },
+      { onSuccess: () => setEditingContract(null) },
+    );
   };
 
   const handleEditWallet = (formData: { name: string; creditorId: string; providerId?: string }) => {
@@ -254,7 +265,7 @@ export default function WalletDetailPage() {
                         <SortableHeader field="paymentStatus">Status</SortableHeader>
                         <SortableHeader field="serasaStatus">Serasa</SortableHeader>
                         <SortableHeader field="occurrenceDate">Data Ocorrência</SortableHeader>
-                        {canEdit && <Table.ColumnHeader width="155px">Ações</Table.ColumnHeader>}
+                        {canEdit && <Table.ColumnHeader width="190px">Ações</Table.ColumnHeader>}
                       </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -300,6 +311,15 @@ export default function WalletDetailPage() {
                                   <RouterLink to={`/contracts/${contract.id}`}>
                                     <LuEye />
                                   </RouterLink>
+                                </Button>
+                                <Button
+                                  size="xs"
+                                  variant="ghost"
+                                  aria-label="Editar contrato"
+                                  title="Editar contrato"
+                                  onClick={() => setEditingContract(contract)}
+                                >
+                                  <LuPencil />
                                 </Button>
                                 <GeneratePixAction contract={contract} />
                                 <Button
@@ -363,6 +383,15 @@ export default function WalletDetailPage() {
         onOpenChange={setShowContractForm}
         onSubmit={(data) => handleCreateContract(data as CreateContractDto)}
         loading={createContractMutation.isPending}
+      />
+      <ContractFormDialog
+        open={!!editingContract}
+        onOpenChange={(open) => {
+          if (!open) setEditingContract(null);
+        }}
+        contract={editingContract}
+        onSubmit={(data) => handleUpdateContract(data as UpdateContractDto)}
+        loading={updateContractMutation.isPending}
       />
     </>
   );

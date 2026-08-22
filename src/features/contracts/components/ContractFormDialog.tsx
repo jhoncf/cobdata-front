@@ -13,10 +13,9 @@ import {
   Field,
   NativeSelect,
   Heading,
-  Text,
 } from '@chakra-ui/react';
-import { DebtType, ContractStatus, OfferType, SerasaStatus } from '@/types/enums';
-import { DEBT_TYPE_LABELS, CONTRACT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
+import { DebtType, ContractStatus, OfferType } from '@/types/enums';
+import { DEBT_TYPE_LABELS, CONTRACT_STATUS_LABELS } from '@/lib/constants';
 import { useWalletsQuery } from '@/features/wallets/api/useWalletsQuery';
 import type { Contract } from '@/types/models';
 import type { CreateContractDto, UpdateContractDto } from '@/types/api';
@@ -233,44 +232,6 @@ export function ContractFormDialog({
       onSubmit(dto);
     }
   };
-
-  const editDisabled =
-    isEdit &&
-    contract &&
-    ![SerasaStatus.PENDING, SerasaStatus.FAILED, SerasaStatus.REMOVED].includes(
-      contract.serasaStatus,
-    );
-
-  if (editDisabled) {
-    return (
-      <Dialog.Root open={open} onOpenChange={(e) => onOpenChange(e.open)} size="sm">
-        <Portal>
-          <Dialog.Backdrop />
-          <Dialog.Positioner>
-            <Dialog.Content>
-              <Dialog.Header>
-                <Dialog.Title>Edição não permitida</Dialog.Title>
-              </Dialog.Header>
-              <Dialog.Body>
-                <Text>
-                  Este contrato não pode ser editado pois está com status de
-                  canal &quot;{PROVIDER_STATUS_LABELS[contract.serasaStatus]}&quot;.
-                </Text>
-              </Dialog.Body>
-              <Dialog.Footer>
-                <Dialog.ActionTrigger asChild>
-                  <Button variant="outline">Fechar</Button>
-                </Dialog.ActionTrigger>
-              </Dialog.Footer>
-              <Dialog.CloseTrigger asChild>
-                <CloseButton size="sm" />
-              </Dialog.CloseTrigger>
-            </Dialog.Content>
-          </Dialog.Positioner>
-        </Portal>
-      </Dialog.Root>
-    );
-  }
 
   return (
     <Dialog.Root
