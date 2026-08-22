@@ -20,7 +20,18 @@ export function LigueLeadDialog({ open, onOpenChange, walletId, contracts, initi
 
   useEffect(() => {
     if (!open) return;
-    api.get(`/wallets/${walletId}/liguelead-agent`).then(r => r.data && setAgent({ ...r.data, greetings: r.data.greetings ?? '', voiceId: r.data.voiceId ?? '' })).catch(() => undefined);
+    api.get(`/wallets/${walletId}/liguelead-agent`).then((r) => {
+      if (!r.data) return;
+      const { name, prompt, greetings, modelVersion, voiceId, active } = r.data;
+      setAgent({
+        name,
+        prompt,
+        greetings: greetings ?? '',
+        modelVersion,
+        voiceId: voiceId ?? '',
+        active,
+      });
+    }).catch(() => undefined);
     api.get('/liguelead/voices').then(r => setVoices((r.data?.engines ?? []).find((engine: { version: string }) => engine.version === 'lumen-1')?.voices ?? [])).catch(() => undefined);
     setSelected(initialContractId ? [initialContractId] : []);
     setActiveTab(initialTab);
