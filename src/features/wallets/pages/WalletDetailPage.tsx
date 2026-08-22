@@ -12,7 +12,7 @@ import {
   Table,
   Spinner,
 } from '@chakra-ui/react';
-import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio } from 'react-icons/lu';
+import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall } from 'react-icons/lu';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
 import { useUpdateWalletMutation } from '../api/useWalletMutations';
@@ -39,6 +39,7 @@ export default function WalletDetailPage() {
   const [showContractForm, setShowContractForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showLigueLead, setShowLigueLead] = useState(false);
+  const [ligueLeadContractId, setLigueLeadContractId] = useState<string>();
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
@@ -143,7 +144,7 @@ export default function WalletDetailPage() {
               <LuPencil /> Editar
             </Button>
           )}
-          {canEdit && <Button size="sm" variant="outline" onClick={() => setShowLigueLead(true)}><LuRadio /> Comunicações</Button>}
+          {canEdit && <Button size="sm" variant="outline" onClick={() => { setLigueLeadContractId(undefined); setShowLigueLead(true); }}><LuRadio /> Comunicações</Button>}
           <Button
             size="sm"
             colorPalette="green"
@@ -253,7 +254,7 @@ export default function WalletDetailPage() {
                         <SortableHeader field="paymentStatus">Status</SortableHeader>
                         <SortableHeader field="serasaStatus">Serasa</SortableHeader>
                         <SortableHeader field="occurrenceDate">Data Ocorrência</SortableHeader>
-                        {canEdit && <Table.ColumnHeader width="80px">Ações</Table.ColumnHeader>}
+                        {canEdit && <Table.ColumnHeader width="120px">Ações</Table.ColumnHeader>}
                       </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -288,7 +289,22 @@ export default function WalletDetailPage() {
                           </Table.Cell>
                           {canEdit && (
                             <Table.Cell>
-                              <GeneratePixAction contract={contract} />
+                              <HStack gap="1">
+                                <GeneratePixAction contract={contract} />
+                                <Button
+                                  size="xs"
+                                  variant="ghost"
+                                  aria-label="Iniciar ligação com IA"
+                                  title={contract.debtorPhone ? 'Iniciar ligação com IA' : 'Contrato sem telefone cadastrado'}
+                                  disabled={!contract.debtorPhone || contract.status !== 'ACTIVE' || contract.paymentStatus === 'PAID'}
+                                  onClick={() => {
+                                    setLigueLeadContractId(contract.id);
+                                    setShowLigueLead(true);
+                                  }}
+                                >
+                                  <LuPhoneCall />
+                                </Button>
+                              </HStack>
                             </Table.Cell>
                           )}
                         </Table.Row>
@@ -319,7 +335,17 @@ export default function WalletDetailPage() {
         onSubmit={handleEditWallet}
         loading={updateWalletMutation.isPending}
       />
-      <LigueLeadDialog open={showLigueLead} onOpenChange={setShowLigueLead} walletId={id!} contracts={contractsData?.data ?? []} />
+      <LigueLeadDialog
+        open={showLigueLead}
+        onOpenChange={(open) => {
+          setShowLigueLead(open);
+          if (!open) setLigueLeadContractId(undefined);
+        }}
+        walletId={id!}
+        contracts={contractsData?.data ?? []}
+        initialContractId={ligueLeadContractId}
+        initialTab={ligueLeadContractId ? 'calls' : 'agent'}
+      />
 
       <ContractFormDialog
         open={showContractForm}

@@ -8,21 +8,23 @@ import { formatCurrency } from '@/lib/formatters';
 type Contract = { id: string; contractNumber: string; debtorName: string | null; debtorPhone: string | null; originalValue: number; updatedValue?: number | null; paymentStatus: string; status: string };
 type Agent = { name: string; prompt: string; greetings?: string | null; modelVersion: string; voiceId?: string | null; active: boolean };
 
-export function LigueLeadDialog({ open, onOpenChange, walletId, contracts }: { open: boolean; onOpenChange: (open: boolean) => void; walletId: string; contracts: Contract[] }) {
+export function LigueLeadDialog({ open, onOpenChange, walletId, contracts, initialContractId, initialTab = 'agent' }: { open: boolean; onOpenChange: (open: boolean) => void; walletId: string; contracts: Contract[]; initialContractId?: string; initialTab?: 'agent' | 'sms' | 'calls' }) {
   const [agent, setAgent] = useState<Agent>({ name: '', prompt: '', greetings: '', modelVersion: 'lumen-1', voiceId: '', active: true });
   const [selected, setSelected] = useState<string[]>([]);
   const [title, setTitle] = useState('Cobrança CobCom');
   const [message, setMessage] = useState('Olá! Identificamos uma pendência. Acesse a CobCom para consultar e regularizar sua situação.');
   const [loading, setLoading] = useState(false);
   const [voices, setVoices] = useState<{ id: string; name: string }[]>([]);
+  const [activeTab, setActiveTab] = useState<'agent' | 'sms' | 'calls'>(initialTab);
   const eligible = useMemo(() => contracts.filter(c => c.debtorPhone && c.status === 'ACTIVE' && c.paymentStatus !== 'PAID'), [contracts]);
 
   useEffect(() => {
     if (!open) return;
     api.get(`/wallets/${walletId}/liguelead-agent`).then(r => r.data && setAgent({ ...r.data, greetings: r.data.greetings ?? '', voiceId: r.data.voiceId ?? '' })).catch(() => undefined);
     api.get('/liguelead/voices').then(r => setVoices((r.data?.engines ?? []).find((engine: { version: string }) => engine.version === 'lumen-1')?.voices ?? [])).catch(() => undefined);
-    setSelected([]);
-  }, [open, walletId]);
+    setSelected(initialContractId ? [initialContractId] : []);
+    setActiveTab(initialTab);
+  }, [open, walletId, initialContractId, initialTab]);
 
   const saveAgent = async () => {
     setLoading(true);
@@ -44,7 +46,7 @@ export function LigueLeadDialog({ open, onOpenChange, walletId, contracts }: { o
   return <Dialog.Root open={open} onOpenChange={e => onOpenChange(e.open)} size={{ mdDown: 'full', md: 'xl' }}>
     <Portal><Dialog.Backdrop /><Dialog.Positioner><Dialog.Content>
       <Dialog.Header><Dialog.Title>Comunicações — LigueLead</Dialog.Title></Dialog.Header>
-      <Dialog.Body><Tabs.Root defaultValue="agent"><Tabs.List><Tabs.Trigger value="agent"><LuSettings2 /> Agente IA</Tabs.Trigger><Tabs.Trigger value="sms"><LuMessageSquare /> SMS</Tabs.Trigger><Tabs.Trigger value="calls"><LuPhoneCall /> Ligação IA</Tabs.Trigger></Tabs.List>
+      <Dialog.Body><Tabs.Root value={activeTab} onValueChange={event => setActiveTab(event.value as 'agent' | 'sms' | 'calls')}><Tabs.List><Tabs.Trigger value="agent"><LuSettings2 /> Agente IA</Tabs.Trigger><Tabs.Trigger value="sms"><LuMessageSquare /> SMS</Tabs.Trigger><Tabs.Trigger value="calls"><LuPhoneCall /> Ligação IA</Tabs.Trigger></Tabs.List>
         <Tabs.Content value="agent"><Stack gap="4" pt="4"><Text fontSize="sm" color="fg.muted">Este agente fica vinculado exclusivamente a esta carteira. O contexto de cada ligação inclui nome, CPF, contrato e valor atualizado.</Text><Field.Root required><Field.Label>Nome do agente</Field.Label><Input value={agent.name} onChange={e => setAgent({ ...agent, name: e.target.value })} /></Field.Root><Field.Root required><Field.Label>Prompt do agente</Field.Label><Textarea rows={8} value={agent.prompt} onChange={e => setAgent({ ...agent, prompt: e.target.value })} placeholder="Defina a abordagem, regras e tom de voz do agente." /></Field.Root><Field.Root><Field.Label>Saudação inicial</Field.Label><Textarea value={agent.greetings ?? ''} onChange={e => setAgent({ ...agent, greetings: e.target.value })} /></Field.Root><Field.Root required><Field.Label>Voz</Field.Label><NativeSelect.Root><NativeSelect.Field value={agent.voiceId ?? ''} onChange={e => setAgent({ ...agent, voiceId: e.target.value })}><option value="">Selecione uma voz</option>{voices.map(voice => <option key={voice.id} value={voice.id}>{voice.name}</option>)}</NativeSelect.Field><NativeSelect.Indicator /></NativeSelect.Root></Field.Root><Button alignSelf="start" colorPalette="blue" loading={loading} onClick={saveAgent}>Salvar agente</Button></Stack></Tabs.Content>
         <Tabs.Content value="sms"><Stack gap="4" pt="4"><Field.Root required><Field.Label>Título da campanha</Field.Label><Input value={title} onChange={e => setTitle(e.target.value)} /></Field.Root><Field.Root required><Field.Label>Mensagem</Field.Label><Textarea rows={4} maxLength={1600} value={message} onChange={e => setMessage(e.target.value)} /></Field.Root><ContractSelector contracts={eligible} selected={selected} toggle={toggle} /><Button colorPalette="blue" loading={loading} onClick={() => dispatch('sms')}>Enviar SMS para {selected.length} contrato(s)</Button></Stack></Tabs.Content>
         <Tabs.Content value="calls"><Stack gap="4" pt="4"><Text fontSize="sm" color="fg.muted">As ligações usam o agente salvo nesta carteira. Nenhuma informação da dívida é inserida no prompt: ela é entregue como contexto individual e temporário para cada ligação.</Text><Field.Root required><Field.Label>Título da campanha</Field.Label><Input value={title} onChange={e => setTitle(e.target.value)} /></Field.Root><ContractSelector contracts={eligible} selected={selected} toggle={toggle} /><Button colorPalette="blue" loading={loading} onClick={() => dispatch('calls')}>Iniciar ligação IA para {selected.length} contrato(s)</Button></Stack></Tabs.Content>
