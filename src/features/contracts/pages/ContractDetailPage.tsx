@@ -10,8 +10,9 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import { LuArrowLeft } from 'react-icons/lu';
-import { useContractQuery } from '../api/useContractsQuery';
-import { PageHeader } from '@/components/common';
+import { useContractInteractionsQuery, useContractQuery } from '../api/useContractsQuery';
+import { DataTable, PageHeader } from '@/components/common';
+import type { ContractInteraction } from '@/types/models';
 
 function formatCPF(cpf: string): string {
   const digits = cpf.replace(/\D/g, '');
@@ -27,10 +28,24 @@ function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('pt-BR');
 }
 
+const channelLabels: Record<ContractInteraction['channel'], string> = {
+  AI_VOICE_CALL: 'Ligação com IA',
+  SMS: 'SMS',
+  WHATSAPP: 'WhatsApp',
+  EMAIL: 'E-mail',
+};
+
+const statusLabels: Record<ContractInteraction['status'], string> = {
+  QUEUED: 'Na fila', SENT: 'Enviado', DELIVERED: 'Entregue', READ: 'Lido',
+  ANSWERED: 'Atendido', COMPLETED: 'Concluído', FAILED: 'Falhou',
+  NO_ANSWER: 'Não atendido', REJECTED: 'Recusado',
+};
+
 export default function ContractDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: contract, isLoading } = useContractQuery(id!);
+  const { data: interactions = [], isLoading: isLoadingInteractions } = useContractInteractionsQuery(id!);
 
   if (isLoading) {
     return <Spinner />;
@@ -180,6 +195,33 @@ export default function ContractDetailPage() {
           </Card.Body>
         </Card.Root>
       )}
+
+      <Card.Root>
+        <Card.Body gap="3">
+          <Heading size="sm">Histórico de interações</Heading>
+          <DataTable<ContractInteraction>
+            loading={isLoadingInteractions}
+            data={interactions}
+            keyExtractor={(interaction) => interaction.id}
+            columns={[
+              { key: 'channel', header: 'Canal', cell: (interaction) => channelLabels[interaction.channel] },
+              { key: 'status', header: 'Status', cell: (interaction) => <Badge>{statusLabels[interaction.status]}</Badge> },
+              { key: 'summary', header: 'Resumo', minW: '260px', cell: (interaction) => (
+                <Stack gap="1">
+                  <Text>{interaction.summary ?? '—'}</Text>
+                  {Boolean(interaction.conversation) && (
+                    <details>
+                      <summary>Ver conversa</summary>
+                      <Text mt="1" fontSize="xs" whiteSpace="pre-wrap">{String(JSON.stringify(interaction.conversation, null, 2))}</Text>
+                    </details>
+                  )}
+                </Stack>
+              ) },
+              { key: 'occurredAt', header: 'Data', cell: (interaction) => new Date(interaction.occurredAt).toLocaleString('pt-BR') },
+            ]}
+          />
+        </Card.Body>
+      </Card.Root>
     </Stack>
   );
 }

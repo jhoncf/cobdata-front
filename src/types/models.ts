@@ -121,6 +121,20 @@ export interface Contract {
   updatedAt: string;
 }
 
+export type InteractionChannel = 'AI_VOICE_CALL' | 'SMS' | 'WHATSAPP' | 'EMAIL';
+export type InteractionStatus = 'QUEUED' | 'SENT' | 'DELIVERED' | 'READ' | 'ANSWERED' | 'COMPLETED' | 'FAILED' | 'NO_ANSWER' | 'REJECTED';
+
+export interface ContractInteraction {
+  id: string;
+  channel: InteractionChannel;
+  status: InteractionStatus;
+  provider: string | null;
+  contact: string | null;
+  summary: string | null;
+  conversation: unknown | null;
+  occurredAt: string;
+}
+
 // ─── Import Batch ────────────────────────────────────────────────────────────
 export interface ImportBatch {
   id: string;
