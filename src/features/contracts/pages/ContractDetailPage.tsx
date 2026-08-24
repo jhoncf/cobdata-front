@@ -58,7 +58,7 @@ export default function ContractDetailPage() {
   return (
     <Stack gap="4">
       <HStack>
-        <Button variant="ghost" size="sm" onClick={() => navigate('/contracts')}>
+        <Button variant="ghost" size="sm" onClick={() => navigate(`/wallets/${contract.walletId}`)}>
           <LuArrowLeft /> Voltar
         </Button>
       </HStack>
