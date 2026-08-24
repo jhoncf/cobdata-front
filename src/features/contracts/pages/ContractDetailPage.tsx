@@ -215,6 +215,9 @@ export default function ContractDetailPage() {
                       <Text mt="1" fontSize="xs" whiteSpace="pre-wrap">{String(JSON.stringify(interaction.conversation, null, 2))}</Text>
                     </details>
                   )}
+                  {interaction.recordingUrl && (
+                    <a href={interaction.recordingUrl} target="_blank" rel="noreferrer">Ouvir gravação</a>
+                  )}
                 </Stack>
               ) },
               { key: 'occurredAt', header: 'Data', cell: (interaction) => new Date(interaction.occurredAt).toLocaleString('pt-BR') },

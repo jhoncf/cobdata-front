@@ -132,6 +132,7 @@ export interface ContractInteraction {
   contact: string | null;
   summary: string | null;
   conversation: unknown | null;
+  recordingUrl: string | null;
   occurredAt: string;
 }
 
