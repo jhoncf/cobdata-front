@@ -18,6 +18,7 @@ import { LuArrowLeft, LuMessageSquare, LuVolume2 } from 'react-icons/lu';
 import { useContractInteractionsQuery, useContractQuery } from '../api/useContractsQuery';
 import { DataTable, PageHeader } from '@/components/common';
 import type { ContractInteraction } from '@/types/models';
+import api from '@/lib/api';
 
 function formatCPF(cpf: string): string {
   const digits = cpf.replace(/\D/g, '');
@@ -69,6 +70,18 @@ export default function ContractDetailPage() {
   const { data: contract, isLoading } = useContractQuery(id!);
   const { data: interactions = [], isLoading: isLoadingInteractions } = useContractInteractionsQuery(id!);
   const [selectedInteraction, setSelectedInteraction] = useState<ContractInteraction | null>(null);
+
+  const downloadRecording = async (interaction: ContractInteraction) => {
+    const response = await api.get(`/contracts/${id}/interactions/${interaction.id}/recording`, { responseType: 'blob' });
+    const url = URL.createObjectURL(response.data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ligacao-${new Date(interaction.occurredAt).toISOString()}.wav`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
 
   if (isLoading) {
     return <Spinner />;
@@ -238,9 +251,12 @@ export default function ContractDetailPage() {
                     </Button>
                   )}
                   {interaction.recordingUrl && (
-                    <Button size="xs" variant="outline" alignSelf="start" asChild>
-                      <a href={interaction.recordingUrl} target="_blank" rel="noreferrer"><LuVolume2 /> Ouvir gravação</a>
-                    </Button>
+                    <HStack gap="2" wrap="wrap">
+                      <Button size="xs" variant="outline" asChild>
+                        <a href={interaction.recordingUrl} target="_blank" rel="noreferrer"><LuVolume2 /> Ouvir gravação</a>
+                      </Button>
+                      <Button size="xs" variant="outline" onClick={() => void downloadRecording(interaction)}>Baixar áudio</Button>
+                    </HStack>
                   )}
                 </Stack>
               ) },
@@ -280,9 +296,12 @@ export default function ContractDetailPage() {
               </Dialog.Body>
               <Dialog.Footer>
                 {selectedInteraction?.recordingUrl && (
-                  <Button variant="outline" asChild>
-                    <a href={selectedInteraction.recordingUrl} target="_blank" rel="noreferrer"><LuVolume2 /> Ouvir gravação</a>
-                  </Button>
+                  <HStack gap="2" wrap="wrap">
+                    <Button variant="outline" asChild>
+                      <a href={selectedInteraction.recordingUrl} target="_blank" rel="noreferrer"><LuVolume2 /> Ouvir gravação</a>
+                    </Button>
+                    <Button variant="outline" onClick={() => void downloadRecording(selectedInteraction)}>Baixar áudio</Button>
+                  </HStack>
                 )}
                 <Button onClick={() => setSelectedInteraction(null)}>Fechar</Button>
               </Dialog.Footer>
