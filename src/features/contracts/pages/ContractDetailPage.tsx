@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Stack,
@@ -8,8 +9,12 @@ import {
   Card,
   Heading,
   Badge,
+  Box,
+  CloseButton,
+  Dialog,
+  Portal,
 } from '@chakra-ui/react';
-import { LuArrowLeft } from 'react-icons/lu';
+import { LuArrowLeft, LuMessageSquare, LuVolume2 } from 'react-icons/lu';
 import { useContractInteractionsQuery, useContractQuery } from '../api/useContractsQuery';
 import { DataTable, PageHeader } from '@/components/common';
 import type { ContractInteraction } from '@/types/models';
@@ -41,11 +46,29 @@ const statusLabels: Record<ContractInteraction['status'], string> = {
   NO_ANSWER: 'Não atendido', REJECTED: 'Recusado',
 };
 
+interface TranscriptMessage {
+  role: 'assistant' | 'user';
+  content: string;
+}
+
+function transcriptMessages(conversation: unknown): TranscriptMessage[] {
+  if (!conversation || typeof conversation !== 'object' || !Array.isArray((conversation as { messages?: unknown }).messages)) return [];
+  return (conversation as { messages: unknown[] }).messages.filter(
+    (message): message is TranscriptMessage => Boolean(
+      message
+      && typeof message === 'object'
+      && (((message as TranscriptMessage).role === 'assistant') || ((message as TranscriptMessage).role === 'user'))
+      && typeof (message as TranscriptMessage).content === 'string',
+    ),
+  );
+}
+
 export default function ContractDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: contract, isLoading } = useContractQuery(id!);
   const { data: interactions = [], isLoading: isLoadingInteractions } = useContractInteractionsQuery(id!);
+  const [selectedInteraction, setSelectedInteraction] = useState<ContractInteraction | null>(null);
 
   if (isLoading) {
     return <Spinner />;
@@ -209,14 +232,15 @@ export default function ContractDetailPage() {
               { key: 'summary', header: 'Resumo', minW: '260px', cell: (interaction) => (
                 <Stack gap="1">
                   <Text>{interaction.summary ?? '—'}</Text>
-                  {Boolean(interaction.conversation) && (
-                    <details>
-                      <summary>Ver conversa</summary>
-                      <Text mt="1" fontSize="xs" whiteSpace="pre-wrap">{String(JSON.stringify(interaction.conversation, null, 2))}</Text>
-                    </details>
+                  {transcriptMessages(interaction.conversation).length > 0 && (
+                    <Button size="xs" variant="outline" alignSelf="start" onClick={() => setSelectedInteraction(interaction)}>
+                      <LuMessageSquare /> Ver conversa
+                    </Button>
                   )}
                   {interaction.recordingUrl && (
-                    <a href={interaction.recordingUrl} target="_blank" rel="noreferrer">Ouvir gravação</a>
+                    <Button size="xs" variant="outline" alignSelf="start" asChild>
+                      <a href={interaction.recordingUrl} target="_blank" rel="noreferrer"><LuVolume2 /> Ouvir gravação</a>
+                    </Button>
                   )}
                 </Stack>
               ) },
@@ -225,6 +249,48 @@ export default function ContractDetailPage() {
           />
         </Card.Body>
       </Card.Root>
+
+      <Dialog.Root open={selectedInteraction !== null} onOpenChange={(details) => { if (!details.open) setSelectedInteraction(null); }} size={{ mdDown: 'full', md: 'lg' }}>
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>
+                <Stack gap="0">
+                  <Dialog.Title>Conversa da ligação</Dialog.Title>
+                  <Text fontSize="sm" color="fg.muted">
+                    {selectedInteraction ? new Date(selectedInteraction.occurredAt).toLocaleString('pt-BR') : ''}
+                  </Text>
+                </Stack>
+              </Dialog.Header>
+              <Dialog.Body>
+                <Stack gap="3" maxH="60vh" overflowY="auto" pr="1">
+                  {selectedInteraction && transcriptMessages(selectedInteraction.conversation).map((message, index) => {
+                    const isAgent = message.role === 'assistant';
+                    return (
+                      <Stack key={`${message.role}-${index}`} gap="1" alignItems={isAgent ? 'flex-start' : 'flex-end'}>
+                        <Text fontSize="xs" color="fg.muted">{isAgent ? 'CobCom IA' : 'Cliente'}</Text>
+                        <Box maxW="85%" px="3" py="2" rounded="lg" bg={isAgent ? 'bg.muted' : 'blue.500'} color={isAgent ? 'fg' : 'white'}>
+                          <Text whiteSpace="pre-wrap">{message.content}</Text>
+                        </Box>
+                      </Stack>
+                    );
+                  })}
+                </Stack>
+              </Dialog.Body>
+              <Dialog.Footer>
+                {selectedInteraction?.recordingUrl && (
+                  <Button variant="outline" asChild>
+                    <a href={selectedInteraction.recordingUrl} target="_blank" rel="noreferrer"><LuVolume2 /> Ouvir gravação</a>
+                  </Button>
+                )}
+                <Button onClick={() => setSelectedInteraction(null)}>Fechar</Button>
+              </Dialog.Footer>
+              <Dialog.CloseTrigger asChild><CloseButton size="sm" /></Dialog.CloseTrigger>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
     </Stack>
   );
 }
