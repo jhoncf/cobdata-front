@@ -13,7 +13,7 @@ import {
   Spinner,
 } from '@chakra-ui/react';
 import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw, LuUnlink } from 'react-icons/lu';
-import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState } from '@/components/common';
+import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState, ConfirmDialog } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
 import { useUpdateWalletMutation } from '../api/useWalletMutations';
 import { useContractsQuery } from '@/features/contracts/api/useContractsQuery';
@@ -24,9 +24,11 @@ import { WalletFormDialog } from '../components/WalletFormDialog';
 import { LigueLeadDialog } from '../components/LigueLeadDialog';
 import { formatDate, formatCurrency } from '@/lib/formatters';
 import { toaster } from '@/components/ui/toaster';
+import { useCreateOperationMutation } from '@/features/operations/api/useOperationMutations';
+import { useOperationPreviewQuery } from '@/features/operations/api/useOperationsQuery';
 import { PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
-import type { PaymentStatus, SerasaStatus } from '@/types/enums';
+import { OperationAction, type PaymentStatus, type SerasaStatus } from '@/types/enums';
 import type { CreateContractDto, UpdateContractDto } from '@/types/api';
 import type { Contract } from '@/types/models';
 
@@ -45,6 +47,7 @@ export default function WalletDetailPage() {
   const [ligueLeadContractId, setLigueLeadContractId] = useState<string>();
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [showBulkSyncConfirm, setShowBulkSyncConfirm] = useState(false);
 
   const { data: wallet, isLoading } = useWalletDetailQuery(id ?? '');
   const { data: contractsData, isLoading: contractsLoading } = useContractsQuery({
@@ -55,6 +58,11 @@ export default function WalletDetailPage() {
   const createContractMutation = useCreateContractMutation();
   const updateContractMutation = useUpdateContractMutation();
   const updateWalletMutation = useUpdateWalletMutation();
+  const createOperationMutation = useCreateOperationMutation();
+  const { data: bulkSyncPreview, isLoading: bulkSyncPreviewLoading } = useOperationPreviewQuery(
+    wallet?.serasaWalletId ? id : undefined,
+    OperationAction.CREATE_OR_UPDATE,
+  );
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
   const removeFromSerasaMutation = useRemoveContractFromSerasaMutation();
 
@@ -70,6 +78,13 @@ export default function WalletDetailPage() {
       return;
     }
     syncWithSerasaMutation.mutate(contract.id);
+  };
+  const handleBulkSync = () => {
+    if (!wallet?.serasaWalletId) {
+      toaster.create({ type: 'warning', title: 'Selecione uma Carteira Serasa', description: 'Clique em Editar, selecione a Carteira Serasa e salve antes de sincronizar.' });
+      return;
+    }
+    setShowBulkSyncConfirm(true);
   };
 
   const handleCreateContract = (data: CreateContractDto) => {
@@ -170,6 +185,11 @@ export default function WalletDetailPage() {
               onClick={() => setShowEditForm(true)}
             >
               <LuPencil /> Editar
+            </Button>
+          )}
+          {canEdit && (
+            <Button size="sm" colorPalette="blue" variant="outline" onClick={handleBulkSync}>
+              <LuRefreshCw /> Sincronizar com Serasa
             </Button>
           )}
           {canEdit && <Button size="sm" variant="outline" onClick={() => { setLigueLeadContractId(undefined); setShowLigueLead(true); }}><LuRadio /> Comunicações</Button>}
@@ -440,6 +460,23 @@ export default function WalletDetailPage() {
         contract={editingContract}
         onSubmit={(data) => handleUpdateContract(data as UpdateContractDto)}
         loading={updateContractMutation.isPending}
+      />
+      <ConfirmDialog
+        open={showBulkSyncConfirm}
+        onOpenChange={setShowBulkSyncConfirm}
+        title="Sincronizar carteira com Serasa"
+        message={bulkSyncPreviewLoading
+          ? 'Calculando os contratos elegíveis...'
+          : `Serão enviados ${bulkSyncPreview?.eligibleCount ?? 0} contrato(s) elegível(is) para a carteira Serasa vinculada. Deseja continuar?`}
+        confirmLabel="Sincronizar"
+        loading={createOperationMutation.isPending || bulkSyncPreviewLoading}
+        onConfirm={() => {
+          if (!id) return;
+          createOperationMutation.mutate(
+            { walletId: id, action: OperationAction.CREATE_OR_UPDATE },
+            { onSuccess: () => setShowBulkSyncConfirm(false) },
+          );
+        }}
       />
     </>
   );
