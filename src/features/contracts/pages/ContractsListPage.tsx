@@ -171,15 +171,16 @@ export default function ContractsListPage() {
               {(canEdit || canCreate) && (
                 <GeneratePixAction contract={row} />
               )}
-              {(canEdit || canCreate) && canSyncWithSerasa(row) && (
+              {(canEdit || canCreate) && row.status === 'ACTIVE' && row.paymentStatus !== 'PAID' && (
                 <Button
                   size="xs"
                   variant="ghost"
                   colorPalette="blue"
+                  disabled={!canSyncWithSerasa(row)}
                   loading={syncWithSerasaMutation.isPending && syncWithSerasaMutation.variables === row.id}
                   onClick={(e) => { e.stopPropagation(); syncWithSerasaMutation.mutate(row.id); }}
                   aria-label="Sincronizar com Serasa"
-                  title="Sincronizar com Serasa"
+                  title={canSyncWithSerasa(row) ? 'Sincronizar com Serasa' : 'Contrato já enviado à Serasa; aguarde o retorno antes de uma nova sincronização'}
                 >
                   <LuRefreshCw />
                 </Button>

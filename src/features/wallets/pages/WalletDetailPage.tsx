@@ -329,14 +329,18 @@ export default function WalletDetailPage() {
                                   <LuPencil />
                                 </Button>
                                 <GeneratePixAction contract={contract} />
-                                {canSyncWithSerasa(contract) && (
+                                {contract.status === 'ACTIVE' && contract.paymentStatus !== 'PAID' && (
                                   <Button
                                     size="xs"
                                     variant="ghost"
                                     colorPalette="blue"
                                     aria-label="Sincronizar com Serasa"
-                                    title={wallet?.serasaWalletId ? 'Sincronizar com Serasa' : 'Vincule uma carteira Serasa a esta carteira CRM antes de sincronizar'}
-                                    disabled={!wallet?.serasaWalletId}
+                                    title={!wallet?.serasaWalletId
+                                      ? 'Vincule uma carteira Serasa a esta carteira CRM antes de sincronizar'
+                                      : canSyncWithSerasa(contract)
+                                        ? 'Sincronizar com Serasa'
+                                        : 'Contrato já enviado à Serasa; aguarde o retorno antes de uma nova sincronização'}
+                                    disabled={!wallet?.serasaWalletId || !canSyncWithSerasa(contract)}
                                     loading={syncWithSerasaMutation.isPending && syncWithSerasaMutation.variables === contract.id}
                                     onClick={() => syncWithSerasaMutation.mutate(contract.id)}
                                   >
