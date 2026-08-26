@@ -41,6 +41,19 @@ export function useDeleteContractMutation() {
   });
 }
 
+export function useSyncContractWithSerasaMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/operations/contracts/${id}/sync`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['operations'] });
+      toaster.create({ type: 'success', title: 'Contrato enviado para sincronização com a Serasa' });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
 export function useAddTagsMutation() {
   const queryClient = useQueryClient();
   return useMutation({

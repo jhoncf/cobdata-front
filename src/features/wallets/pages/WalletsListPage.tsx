@@ -105,15 +105,15 @@ export default function WalletsListPage() {
     updateParams({ page: newPage > 1 ? String(newPage) : undefined });
   };
 
-  const handleFormSubmit = (formData: { name: string; creditorId: string; providerId?: string }) => {
+  const handleFormSubmit = (formData: { name: string; creditorId: string; serasaWalletId?: string }) => {
     if (editingWallet) {
       updateMutation.mutate(
-        { id: editingWallet.id, data: { name: formData.name } },
+        { id: editingWallet.id, data: { name: formData.name, serasaWalletId: formData.serasaWalletId || null } },
         { onSuccess: () => updateParams({ action: undefined, id: undefined }) },
       );
     } else {
       createMutation.mutate(
-        { creditorId: formData.creditorId, data: { name: formData.name }, providerId: formData.providerId },
+        { creditorId: formData.creditorId, data: { name: formData.name, serasaWalletId: formData.serasaWalletId || undefined } },
         { onSuccess: () => updateParams({ action: undefined, id: undefined }) },
       );
     }

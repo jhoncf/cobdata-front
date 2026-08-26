@@ -101,11 +101,13 @@ export interface UpdateCreditorDto {
 // ─── Wallet DTOs ─────────────────────────────────────────────────────────────
 export interface CreateWalletDto {
   name: string;
+  serasaWalletId?: string;
 }
 
 export interface UpdateWalletDto {
   name?: string;
   status?: WalletStatus;
+  serasaWalletId?: string | null;
 }
 
 // ─── Contract DTOs ───────────────────────────────────────────────────────────

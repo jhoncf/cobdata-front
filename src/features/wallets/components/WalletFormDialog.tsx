@@ -13,17 +13,13 @@ import {
   NativeSelect,
 } from '@chakra-ui/react';
 import { useCreditorsQuery } from '@/features/creditors/api/useCreditorsQuery';
-import { useProvidersQuery } from '@/features/providers/api/useProvidersQuery';
+import { useSerasaWalletsQuery } from '@/features/providers/api/useSerasaWallets';
 import type { Wallet } from '@/types/models';
-
-const PROVIDER_TYPE_LABELS: Record<string, string> = {
-  SERASA_LNOP: 'Serasa LNOP',
-};
 
 const walletSchema = z.object({
   name: z.string().min(1, 'Nome obrigatório').max(120, 'Máximo 120 caracteres'),
   creditorId: z.string().min(1, 'Selecione um credor'),
-  providerId: z.string().optional(),
+  serasaWalletId: z.string().optional(),
 });
 
 type WalletFormValues = z.infer<typeof walletSchema>;
@@ -32,9 +28,7 @@ interface WalletFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   wallet?: Wallet | null;
-  /** Pre-selected providerId for edit mode (from wallet mappings) */
-  currentProviderId?: string;
-  onSubmit: (data: { name: string; creditorId: string; providerId?: string }) => void;
+  onSubmit: (data: { name: string; creditorId: string; serasaWalletId?: string }) => void;
   loading?: boolean;
 }
 
@@ -42,14 +36,13 @@ export function WalletFormDialog({
   open,
   onOpenChange,
   wallet,
-  currentProviderId,
   onSubmit,
   loading = false,
 }: WalletFormDialogProps) {
   const isEdit = !!wallet;
 
   const { data: creditorsData } = useCreditorsQuery({ page: 1, limit: 100 });
-  const { data: providersData } = useProvidersQuery();
+  const { data: serasaWallets } = useSerasaWalletsQuery();
 
   const {
     register,
@@ -58,7 +51,7 @@ export function WalletFormDialog({
     formState: { errors },
   } = useForm<WalletFormValues>({
     resolver: zodResolver(walletSchema),
-    defaultValues: { name: '', creditorId: '', providerId: '' },
+    defaultValues: { name: '', creditorId: '', serasaWalletId: '' },
   });
 
   useEffect(() => {
@@ -67,13 +60,13 @@ export function WalletFormDialog({
         reset({
           name: wallet.name,
           creditorId: wallet.creditorId,
-          providerId: currentProviderId ?? '',
+          serasaWalletId: wallet.serasaWalletId ?? '',
         });
       } else {
-        reset({ name: '', creditorId: '', providerId: '' });
+        reset({ name: '', creditorId: '', serasaWalletId: '' });
       }
     }
-  }, [open, wallet, currentProviderId, reset]);
+  }, [open, wallet, reset]);
 
   const handleFormSubmit = (values: WalletFormValues) => {
     onSubmit(values);
@@ -133,13 +126,13 @@ export function WalletFormDialog({
                   </Field.Root>
 
                   <Field.Root>
-                    <Field.Label>Canal</Field.Label>
+                    <Field.Label>Carteira Serasa</Field.Label>
                     <NativeSelect.Root>
-                      <NativeSelect.Field {...register('providerId')}>
-                        <option value="">Nenhum (sem canal)</option>
-                        {providersData?.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {PROVIDER_TYPE_LABELS[p.type] ?? p.type} ({p.environment === 'PRODUCTION' ? 'Produção' : 'Homologação'})
+                      <NativeSelect.Field {...register('serasaWalletId')}>
+                        <option value="">Nenhuma (sincronização não disponível)</option>
+                        {serasaWallets?.filter((item) => item.active).map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name} — ID {item.externalWalletId}
                           </option>
                         ))}
                       </NativeSelect.Field>

@@ -10,20 +10,13 @@ export function useCreateWalletMutation() {
     mutationFn: async ({
       creditorId,
       data,
-      providerId,
+      serasaWalletId,
     }: {
       creditorId: string;
       data: CreateWalletDto;
-      providerId?: string;
+      serasaWalletId?: string;
     }) => {
       const res = await api.post(`/creditors/${creditorId}/wallets`, data);
-      // If a provider/channel was selected, create wallet mapping
-      if (providerId && res.data?.id) {
-        await api.post(`/providers/${providerId}/wallet-mappings`, {
-          walletId: res.data.id,
-          externalWalletId: res.data.id,
-        });
-      }
       return res;
     },
     onSuccess: () => {

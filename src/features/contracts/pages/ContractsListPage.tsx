@@ -8,7 +8,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { NativeSelect } from '@chakra-ui/react';
-import { LuPlus, LuPencil, LuTrash2, LuBanknote } from 'react-icons/lu';
+import { LuPlus, LuPencil, LuTrash2, LuBanknote, LuRefreshCw } from 'react-icons/lu';
 import {
   PageHeader,
   DataTable,
@@ -26,6 +26,7 @@ import {
   useCreateContractMutation,
   useUpdateContractMutation,
   useDeleteContractMutation,
+  useSyncContractWithSerasaMutation,
 } from '../api/useContractMutations';
 import { ContractFormDialog } from '../components/ContractFormDialog';
 import { TagsManager } from '../components/TagsManager';
@@ -75,6 +76,7 @@ export default function ContractsListPage() {
   const createMutation = useCreateContractMutation();
   const updateMutation = useUpdateContractMutation();
   const deleteMutation = useDeleteContractMutation();
+  const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
 
   // Dialog states
   const [formOpen, setFormOpen] = useState(false);
@@ -162,6 +164,19 @@ export default function ContractsListPage() {
             <HStack gap="1" justify="end">
               {(canEdit || canCreate) && (
                 <GeneratePixAction contract={row} />
+              )}
+              {(canEdit || canCreate) && canEditContract(row) && (
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  colorPalette="blue"
+                  loading={syncWithSerasaMutation.isPending && syncWithSerasaMutation.variables === row.id}
+                  onClick={(e) => { e.stopPropagation(); syncWithSerasaMutation.mutate(row.id); }}
+                  aria-label="Sincronizar com Serasa"
+                  title="Sincronizar com Serasa"
+                >
+                  <LuRefreshCw />
+                </Button>
               )}
               {(canEdit || canCreate) && (
                 <Button size="xs" variant="ghost" colorPalette="green" onClick={(e) => { e.stopPropagation(); setChargeTarget(row); }} aria-label="Gerar cobrança">

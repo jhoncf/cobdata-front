@@ -35,6 +35,7 @@ const OperationDetailPage = lazy(() => import('@/features/operations/pages/Opera
 // Admin
 const UsersListPage = lazy(() => import('@/features/users/pages/UsersListPage'));
 const ProvidersPage = lazy(() => import('@/features/providers/pages/ProvidersPage'));
+const SerasaWalletsPage = lazy(() => import('@/features/providers/pages/SerasaWalletsPage'));
 const AuditLogsPage = lazy(() => import('@/features/audit/pages/AuditLogsPage'));
 const PaymentGatewaysPage = lazy(() => import('@/features/payments/pages/PaymentGatewaysPage'));
 const RegularizeDebtPage = lazy(() => import('@/features/public/pages/RegularizeDebtPage'));
@@ -167,6 +168,10 @@ export const router = createBrowserRouter([
               {
                 path: '/providers',
                 element: <SuspenseLayout><ProvidersPage /></SuspenseLayout>,
+              },
+              {
+                path: '/serasa-wallets',
+                element: <SuspenseLayout><SerasaWalletsPage /></SuspenseLayout>,
               },
             ],
           },

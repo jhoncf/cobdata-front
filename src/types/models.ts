@@ -60,6 +60,8 @@ export interface Wallet {
   id: string;
   name: string;
   creditorId: string;
+  serasaWalletId?: string | null;
+  serasaWallet?: SerasaWallet | null;
   creditor?: Creditor;
   status: WalletStatus;
   createdAt: string;
@@ -67,6 +69,17 @@ export interface Wallet {
   _count?: {
     contracts: number;
   };
+}
+
+export interface SerasaWallet {
+  id: string;
+  externalWalletId: string;
+  name: string;
+  criteria: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { crmWallets: number };
 }
 
 export interface WalletSummary {

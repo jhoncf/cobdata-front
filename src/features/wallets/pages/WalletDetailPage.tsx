@@ -70,9 +70,9 @@ export default function WalletDetailPage() {
     );
   };
 
-  const handleEditWallet = (formData: { name: string; creditorId: string; providerId?: string }) => {
+  const handleEditWallet = (formData: { name: string; creditorId: string; serasaWalletId?: string }) => {
     updateWalletMutation.mutate(
-      { id: id!, data: { name: formData.name } },
+      { id: id!, data: { name: formData.name, serasaWalletId: formData.serasaWalletId || null } },
       { onSuccess: () => setShowEditForm(false) },
     );
   };
