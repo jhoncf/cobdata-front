@@ -12,12 +12,12 @@ import {
   Table,
   Spinner,
 } from '@chakra-ui/react';
-import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye } from 'react-icons/lu';
+import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw } from 'react-icons/lu';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
 import { useUpdateWalletMutation } from '../api/useWalletMutations';
 import { useContractsQuery } from '@/features/contracts/api/useContractsQuery';
-import { useCreateContractMutation, useUpdateContractMutation } from '@/features/contracts/api/useContractMutations';
+import { useCreateContractMutation, useUpdateContractMutation, useSyncContractWithSerasaMutation } from '@/features/contracts/api/useContractMutations';
 import { ContractFormDialog } from '@/features/contracts/components/ContractFormDialog';
 import { GeneratePixAction } from '@/features/payments/components/GeneratePixAction';
 import { WalletFormDialog } from '../components/WalletFormDialog';
@@ -54,6 +54,13 @@ export default function WalletDetailPage() {
   const createContractMutation = useCreateContractMutation();
   const updateContractMutation = useUpdateContractMutation();
   const updateWalletMutation = useUpdateWalletMutation();
+  const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
+
+  const canSyncWithSerasa = (contract: Contract) => (
+    ['NOT_ENABLED', 'PENDING', 'FAILED', 'REMOVED'].includes(contract.serasaStatus)
+    && contract.status === 'ACTIVE'
+    && contract.paymentStatus !== 'PAID'
+  );
 
   const handleCreateContract = (data: CreateContractDto) => {
     const payload = { ...data, walletId: id! };
@@ -322,6 +329,20 @@ export default function WalletDetailPage() {
                                   <LuPencil />
                                 </Button>
                                 <GeneratePixAction contract={contract} />
+                                {canSyncWithSerasa(contract) && (
+                                  <Button
+                                    size="xs"
+                                    variant="ghost"
+                                    colorPalette="blue"
+                                    aria-label="Sincronizar com Serasa"
+                                    title={wallet?.serasaWalletId ? 'Sincronizar com Serasa' : 'Vincule uma carteira Serasa a esta carteira CRM antes de sincronizar'}
+                                    disabled={!wallet?.serasaWalletId}
+                                    loading={syncWithSerasaMutation.isPending && syncWithSerasaMutation.variables === contract.id}
+                                    onClick={() => syncWithSerasaMutation.mutate(contract.id)}
+                                  >
+                                    <LuRefreshCw />
+                                  </Button>
+                                )}
                                 <Button
                                   size="xs"
                                   variant="ghost"

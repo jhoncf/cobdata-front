@@ -110,6 +110,12 @@ export default function ContractsListPage() {
     return ['PENDING', 'FAILED', 'REMOVED'].includes(contract.serasaStatus);
   };
 
+  const canSyncWithSerasa = (contract: Contract) => (
+    ['NOT_ENABLED', 'PENDING', 'FAILED', 'REMOVED'].includes(contract.serasaStatus)
+    && contract.status === 'ACTIVE'
+    && contract.paymentStatus !== 'PAID'
+  );
+
   const handleFormSubmit = (formData: CreateContractDto | UpdateContractDto) => {
     if (editingContract) {
       updateMutation.mutate(
@@ -165,7 +171,7 @@ export default function ContractsListPage() {
               {(canEdit || canCreate) && (
                 <GeneratePixAction contract={row} />
               )}
-              {(canEdit || canCreate) && canEditContract(row) && (
+              {(canEdit || canCreate) && canSyncWithSerasa(row) && (
                 <Button
                   size="xs"
                   variant="ghost"
