@@ -8,7 +8,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { NativeSelect } from '@chakra-ui/react';
-import { LuPlus, LuPencil, LuTrash2, LuBanknote, LuRefreshCw } from 'react-icons/lu';
+import { LuPlus, LuPencil, LuTrash2, LuBanknote, LuRefreshCw, LuUnlink } from 'react-icons/lu';
 import {
   PageHeader,
   DataTable,
@@ -27,6 +27,7 @@ import {
   useUpdateContractMutation,
   useDeleteContractMutation,
   useSyncContractWithSerasaMutation,
+  useRemoveContractFromSerasaMutation,
 } from '../api/useContractMutations';
 import { ContractFormDialog } from '../components/ContractFormDialog';
 import { TagsManager } from '../components/TagsManager';
@@ -77,6 +78,7 @@ export default function ContractsListPage() {
   const updateMutation = useUpdateContractMutation();
   const deleteMutation = useDeleteContractMutation();
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
+  const removeFromSerasaMutation = useRemoveContractFromSerasaMutation();
 
   // Dialog states
   const [formOpen, setFormOpen] = useState(false);
@@ -115,6 +117,7 @@ export default function ContractsListPage() {
     && contract.status === 'ACTIVE'
     && contract.paymentStatus !== 'PAID'
   );
+  const canRemoveFromSerasa = (contract: Contract) => ['SENT', 'REGISTERED', 'UPDATED'].includes(contract.serasaStatus);
 
   const handleFormSubmit = (formData: CreateContractDto | UpdateContractDto) => {
     if (editingContract) {
@@ -183,6 +186,19 @@ export default function ContractsListPage() {
                   title={canSyncWithSerasa(row) ? 'Sincronizar com Serasa' : 'Contrato já enviado à Serasa; aguarde o retorno antes de uma nova sincronização'}
                 >
                   <LuRefreshCw />
+                </Button>
+              )}
+              {(canEdit || canCreate) && canRemoveFromSerasa(row) && (
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  colorPalette="red"
+                  loading={removeFromSerasaMutation.isPending && removeFromSerasaMutation.variables === row.id}
+                  onClick={(e) => { e.stopPropagation(); removeFromSerasaMutation.mutate(row.id); }}
+                  aria-label="Remover da Serasa"
+                  title="Remover da Serasa"
+                >
+                  <LuUnlink />
                 </Button>
               )}
               {(canEdit || canCreate) && (

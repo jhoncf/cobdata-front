@@ -12,12 +12,12 @@ import {
   Table,
   Spinner,
 } from '@chakra-ui/react';
-import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw } from 'react-icons/lu';
+import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw, LuUnlink } from 'react-icons/lu';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
 import { useUpdateWalletMutation } from '../api/useWalletMutations';
 import { useContractsQuery } from '@/features/contracts/api/useContractsQuery';
-import { useCreateContractMutation, useUpdateContractMutation, useSyncContractWithSerasaMutation } from '@/features/contracts/api/useContractMutations';
+import { useCreateContractMutation, useUpdateContractMutation, useSyncContractWithSerasaMutation, useRemoveContractFromSerasaMutation } from '@/features/contracts/api/useContractMutations';
 import { ContractFormDialog } from '@/features/contracts/components/ContractFormDialog';
 import { GeneratePixAction } from '@/features/payments/components/GeneratePixAction';
 import { WalletFormDialog } from '../components/WalletFormDialog';
@@ -55,12 +55,14 @@ export default function WalletDetailPage() {
   const updateContractMutation = useUpdateContractMutation();
   const updateWalletMutation = useUpdateWalletMutation();
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
+  const removeFromSerasaMutation = useRemoveContractFromSerasaMutation();
 
   const canSyncWithSerasa = (contract: Contract) => (
     ['NOT_ENABLED', 'PENDING', 'FAILED', 'REMOVED'].includes(contract.serasaStatus)
     && contract.status === 'ACTIVE'
     && contract.paymentStatus !== 'PAID'
   );
+  const canRemoveFromSerasa = (contract: Contract) => ['SENT', 'REGISTERED', 'UPDATED'].includes(contract.serasaStatus);
 
   const handleCreateContract = (data: CreateContractDto) => {
     const payload = { ...data, walletId: id! };
@@ -345,6 +347,19 @@ export default function WalletDetailPage() {
                                     onClick={() => syncWithSerasaMutation.mutate(contract.id)}
                                   >
                                     <LuRefreshCw />
+                                  </Button>
+                                )}
+                                {canRemoveFromSerasa(contract) && (
+                                  <Button
+                                    size="xs"
+                                    variant="ghost"
+                                    colorPalette="red"
+                                    aria-label="Remover da Serasa"
+                                    title="Remover da Serasa"
+                                    loading={removeFromSerasaMutation.isPending && removeFromSerasaMutation.variables === contract.id}
+                                    onClick={() => removeFromSerasaMutation.mutate(contract.id)}
+                                  >
+                                    <LuUnlink />
                                   </Button>
                                 )}
                                 <Button
