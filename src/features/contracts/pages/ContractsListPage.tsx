@@ -35,6 +35,7 @@ import { CreateChargeDialog } from '@/features/payments/components/CreateChargeD
 import { GeneratePixAction } from '@/features/payments/components/GeneratePixAction';
 import { usePermission } from '@/hooks/usePermission';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { toaster } from '@/components/ui/toaster';
 import {
   DEBT_TYPE_LABELS,
   PAYMENT_STATUS_LABELS,
@@ -118,6 +119,13 @@ export default function ContractsListPage() {
     && contract.paymentStatus !== 'PAID'
   );
   const canRemoveFromSerasa = (contract: Contract) => ['SENT', 'REGISTERED', 'UPDATED'].includes(contract.serasaStatus);
+  const handleSyncWithSerasa = (contract: Contract) => {
+    if (!walletDetail?.serasaWalletId) {
+      toaster.create({ type: 'warning', title: 'Selecione uma Carteira Serasa', description: 'Edite a carteira CRM, selecione a Carteira Serasa e salve antes de sincronizar.' });
+      return;
+    }
+    syncWithSerasaMutation.mutate(contract.id);
+  };
 
   const handleFormSubmit = (formData: CreateContractDto | UpdateContractDto) => {
     if (editingContract) {
@@ -181,7 +189,7 @@ export default function ContractsListPage() {
                   colorPalette="blue"
                   disabled={!canSyncWithSerasa(row)}
                   loading={syncWithSerasaMutation.isPending && syncWithSerasaMutation.variables === row.id}
-                  onClick={(e) => { e.stopPropagation(); syncWithSerasaMutation.mutate(row.id); }}
+                  onClick={(e) => { e.stopPropagation(); handleSyncWithSerasa(row); }}
                   aria-label="Sincronizar com Serasa"
                   title={canSyncWithSerasa(row) ? 'Sincronizar com Serasa' : 'Contrato já enviado à Serasa; aguarde o retorno antes de uma nova sincronização'}
                 >

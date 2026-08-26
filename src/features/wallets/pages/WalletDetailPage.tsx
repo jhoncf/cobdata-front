@@ -23,6 +23,7 @@ import { GeneratePixAction } from '@/features/payments/components/GeneratePixAct
 import { WalletFormDialog } from '../components/WalletFormDialog';
 import { LigueLeadDialog } from '../components/LigueLeadDialog';
 import { formatDate, formatCurrency } from '@/lib/formatters';
+import { toaster } from '@/components/ui/toaster';
 import { PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
 import type { PaymentStatus, SerasaStatus } from '@/types/enums';
@@ -63,6 +64,13 @@ export default function WalletDetailPage() {
     && contract.paymentStatus !== 'PAID'
   );
   const canRemoveFromSerasa = (contract: Contract) => ['SENT', 'REGISTERED', 'UPDATED'].includes(contract.serasaStatus);
+  const handleSyncWithSerasa = (contract: Contract) => {
+    if (!wallet?.serasaWalletId) {
+      toaster.create({ type: 'warning', title: 'Selecione uma Carteira Serasa', description: 'Clique em Editar, selecione a Carteira Serasa e salve antes de sincronizar.' });
+      return;
+    }
+    syncWithSerasaMutation.mutate(contract.id);
+  };
 
   const handleCreateContract = (data: CreateContractDto) => {
     const payload = { ...data, walletId: id! };
@@ -342,9 +350,9 @@ export default function WalletDetailPage() {
                                       : canSyncWithSerasa(contract)
                                         ? 'Sincronizar com Serasa'
                                         : 'Contrato já enviado à Serasa; aguarde o retorno antes de uma nova sincronização'}
-                                    disabled={!wallet?.serasaWalletId || !canSyncWithSerasa(contract)}
+                                    disabled={!canSyncWithSerasa(contract)}
                                     loading={syncWithSerasaMutation.isPending && syncWithSerasaMutation.variables === contract.id}
-                                    onClick={() => syncWithSerasaMutation.mutate(contract.id)}
+                                    onClick={() => handleSyncWithSerasa(contract)}
                                   >
                                     <LuRefreshCw />
                                   </Button>
