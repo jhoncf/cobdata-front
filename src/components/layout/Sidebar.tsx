@@ -12,6 +12,7 @@ import {
   LuScrollText,
   LuCreditCard,
   LuLandmark,
+  LuKeyRound,
 } from 'react-icons/lu';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -34,6 +35,7 @@ const navItems: NavItem[] = [
   { label: 'Canais', path: '/providers', icon: LuSettings, roles: ['ADMIN', 'OPERATIONAL'], section: 'Administração' },
   { label: 'Integração Serasa', path: '/serasa-wallets', icon: LuLandmark, roles: ['ADMIN', 'OPERATIONAL'], section: 'Administração' },
   { label: 'Meios de pagamento', path: '/payment-gateways', icon: LuCreditCard, roles: ['ADMIN'], section: 'Administração' },
+  { label: 'Chaves de API', path: '/api-keys', icon: LuKeyRound, roles: ['ADMIN'], section: 'Administração' },
     { label: 'Auditoria', path: '/audit', icon: LuScrollText, roles: ['ADMIN'], section: 'Administração' },
   { label: 'Sessões', path: '/sessions', icon: LuShield, section: 'Administração' },
 ];

@@ -82,6 +82,16 @@ export interface SerasaWallet {
   _count?: { crmWallets: number };
 }
 
+export interface IntegrationApiKey {
+  id: string;
+  name: string;
+  tokenPrefix: string;
+  scopes: string[];
+  lastUsedAt: string | null;
+  revokedAt: string | null;
+  createdAt: string;
+}
+
 export interface WalletSummary {
   totalContracts: number;
   contractsByPaymentStatus: Record<string, number>;
