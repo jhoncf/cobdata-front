@@ -95,6 +95,8 @@ export interface IntegrationApiKey {
 export interface WalletSummary {
   totalContracts: number;
   contractsByPaymentStatus: Record<string, number>;
+  paymentStatusTotals: Record<string, { count: number; amount: number }>;
+  serasaTotal: { count: number; amount: number };
   totalValue: number;
 }
 

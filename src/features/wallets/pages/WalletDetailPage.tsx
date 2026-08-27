@@ -243,7 +243,7 @@ export default function WalletDetailPage() {
               <Card.Title>Resumo da Carteira</Card.Title>
             </Card.Header>
             <Card.Body>
-              <SimpleGrid columns={{ base: 2, md: 4 }} gap="6">
+            <SimpleGrid columns={{ base: 2, md: 3, lg: 6 }} gap="6">
                 <Stat.Root>
                   <Stat.Label>Total de Contratos</Stat.Label>
                   <Stat.ValueText>{wallet.summary.totalContracts}</Stat.ValueText>
@@ -254,17 +254,19 @@ export default function WalletDetailPage() {
                     {formatCurrency(wallet.summary.totalValue)}
                   </Stat.ValueText>
                 </Stat.Root>
-                {wallet.summary.contractsByPaymentStatus &&
-                  Object.entries(wallet.summary.contractsByPaymentStatus).map(
-                    ([status, count]) => (
-                      <Stat.Root key={status}>
-                        <Stat.Label>
-                          {PAYMENT_STATUS_LABELS[status as PaymentStatus] ?? status}
-                        </Stat.Label>
-                        <Stat.ValueText>{count as number}</Stat.ValueText>
-                      </Stat.Root>
-                    ),
-                  )}
+                {(['OPEN', 'PAID', 'AGREEMENT_BREACHED'] as PaymentStatus[]).map((status) => {
+                  const stat = wallet.summary.paymentStatusTotals?.[status] ?? { count: 0, amount: 0 };
+                  return <Stat.Root key={status}>
+                    <Stat.Label>{PAYMENT_STATUS_LABELS[status]}</Stat.Label>
+                    <Stat.ValueText>{stat.count}</Stat.ValueText>
+                    <Text fontSize="sm" color="fg.muted">{formatCurrency(stat.amount)}</Text>
+                  </Stat.Root>;
+                })}
+                <Stat.Root>
+                  <Stat.Label>No Serasa</Stat.Label>
+                  <Stat.ValueText>{wallet.summary.serasaTotal?.count ?? 0}</Stat.ValueText>
+                  <Text fontSize="sm" color="fg.muted">{formatCurrency(wallet.summary.serasaTotal?.amount ?? 0)}</Text>
+                </Stat.Root>
               </SimpleGrid>
             </Card.Body>
           </Card.Root>

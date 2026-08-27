@@ -159,11 +159,11 @@ export default function ContractsListPage() {
   const summary = walletDetail?.summary;
   const summaryCards = summary
     ? [
-        { label: 'Total', value: summary.totalContracts, color: 'blue' },
-        { label: 'Em aberto', value: summary.contractsByPaymentStatus['OPEN'] ?? 0, color: 'gray' },
-        { label: 'Em acordo', value: summary.contractsByPaymentStatus['IN_AGREEMENT'] ?? 0, color: 'blue' },
-        { label: 'Pagos', value: summary.contractsByPaymentStatus['PAID'] ?? 0, color: 'teal' },
-        { label: 'Acordo quebrado', value: summary.contractsByPaymentStatus['AGREEMENT_BREACHED'] ?? 0, color: 'red' },
+        { label: 'Total', count: summary.totalContracts, amount: summary.totalValue, color: 'blue' },
+        { label: 'Em aberto', count: summary.paymentStatusTotals?.OPEN?.count ?? 0, amount: summary.paymentStatusTotals?.OPEN?.amount ?? 0, color: 'gray' },
+        { label: 'Pagos', count: summary.paymentStatusTotals?.PAID?.count ?? 0, amount: summary.paymentStatusTotals?.PAID?.amount ?? 0, color: 'teal' },
+        { label: 'Acordo quebrado', count: summary.paymentStatusTotals?.AGREEMENT_BREACHED?.count ?? 0, amount: summary.paymentStatusTotals?.AGREEMENT_BREACHED?.amount ?? 0, color: 'red' },
+        { label: 'No Serasa', count: summary.serasaTotal?.count ?? 0, amount: summary.serasaTotal?.amount ?? 0, color: 'purple' },
       ]
     : [];
 
@@ -323,8 +323,9 @@ export default function ContractsListPage() {
                   {card.label}
                 </Text>
                 <Text fontSize="2xl" fontWeight="bold" color={`${card.color}.fg`} mt="1">
-                  {card.value}
-                </Text>
+                {card.count}
+              </Text>
+              <Text fontSize="sm" color="fg.muted">{formatCurrency(card.amount)}</Text>
               </Card.Body>
             </Card.Root>
           ))}
