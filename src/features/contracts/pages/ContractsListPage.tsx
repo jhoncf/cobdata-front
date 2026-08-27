@@ -43,6 +43,7 @@ import {
 } from '@/lib/constants';
 import type { Contract } from '@/types/models';
 import type { CreateContractDto, UpdateContractDto } from '@/types/api';
+import type { PaymentStatus, SerasaStatus } from '@/types/enums';
 
 export default function ContractsListPage() {
   const { canCreate, canEdit, canDelete } = usePermission();
@@ -50,6 +51,9 @@ export default function ContractsListPage() {
   // Credor/Carteira selection
   const [selectedCreditorId, setSelectedCreditorId] = useState<string>('');
   const [selectedWalletId, setSelectedWalletId] = useState<string>('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | ''>('');
+  const [serasaStatusFilter, setSerasaStatusFilter] = useState<SerasaStatus | ''>('');
+  const [installmentOnly, setInstallmentOnly] = useState('');
 
   // Contracts pagination
   const [page, setPage] = useState(1);
@@ -73,6 +77,9 @@ export default function ContractsListPage() {
     page,
     limit,
     walletId: selectedWalletId || undefined,
+    paymentStatus: paymentStatusFilter || undefined,
+    serasaStatus: serasaStatusFilter || undefined,
+    installmentOnly: installmentOnly === 'yes' ? true : undefined,
   });
 
   const createMutation = useCreateContractMutation();
@@ -171,6 +178,13 @@ export default function ContractsListPage() {
       cell: (row) => <StatusBadge status={row.paymentStatus} label={PAYMENT_STATUS_LABELS[row.paymentStatus]} />,
     },
     { key: 'serasaStatus', header: 'Serasa', cell: (row) => <StatusBadge status={row.serasaStatus} label={PROVIDER_STATUS_LABELS[row.serasaStatus]} /> },
+    {
+      key: 'agreement',
+      header: 'Acordo',
+      cell: (row) => row.totalInstallments
+        ? `${row.paidInstallments}/${row.totalInstallments} parcela(s)${row.agreementTotalAmount != null ? ` · ${formatCurrency(row.agreementTotalAmount)}` : ''}`
+        : 'À vista',
+    },
     { key: 'occurrenceDate', header: 'Ocorrência', cell: (row) => formatDate(row.occurrenceDate) },
     ...(canEdit || canDelete
       ? [{
@@ -264,6 +278,36 @@ export default function ContractsListPage() {
             {walletsData?.data.map((w) => (
               <option key={w.id} value={w.id}>{w.name}</option>
             ))}
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
+        <NativeSelect.Root size="sm" width="190px">
+          <NativeSelect.Field value={paymentStatusFilter} onChange={(e) => { setPaymentStatusFilter(e.target.value as PaymentStatus | ''); setPage(1); }}>
+            <option value="">Todos os pagamentos</option>
+            <option value="OPEN">Em aberto</option>
+            <option value="IN_AGREEMENT">Em acordo</option>
+            <option value="AGREEMENT_BREACHED">Acordo quebrado</option>
+            <option value="PAID">Pago</option>
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
+        <NativeSelect.Root size="sm" width="190px">
+          <NativeSelect.Field value={serasaStatusFilter} onChange={(e) => { setSerasaStatusFilter(e.target.value as SerasaStatus | ''); setPage(1); }}>
+            <option value="">Todos no Serasa</option>
+            <option value="NOT_ENABLED">Não enviado</option>
+            <option value="SENT">Enviado</option>
+            <option value="REGISTERED">Registrado</option>
+            <option value="UPDATED">Atualizado</option>
+            <option value="FAILED">Falhou</option>
+            <option value="REMOVING">Removendo</option>
+            <option value="REMOVED">Removido</option>
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
+        <NativeSelect.Root size="sm" width="180px">
+          <NativeSelect.Field value={installmentOnly} onChange={(e) => { setInstallmentOnly(e.target.value); setPage(1); }}>
+            <option value="">Todos os acordos</option>
+            <option value="yes">Parcelados</option>
           </NativeSelect.Field>
           <NativeSelect.Indicator />
         </NativeSelect.Root>

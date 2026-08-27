@@ -11,8 +11,10 @@ import {
   Stat,
   Table,
   Spinner,
+  Menu,
+  Portal,
 } from '@chakra-ui/react';
-import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw, LuUnlink } from 'react-icons/lu';
+import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw, LuUnlink, LuEllipsis } from 'react-icons/lu';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState, ConfirmDialog } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
 import { useUpdateWalletMutation } from '../api/useWalletMutations';
@@ -47,7 +49,7 @@ export default function WalletDetailPage() {
   const [ligueLeadContractId, setLigueLeadContractId] = useState<string>();
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [showBulkSyncConfirm, setShowBulkSyncConfirm] = useState(false);
+  const [bulkAction, setBulkAction] = useState<OperationAction | null>(null);
 
   const { data: wallet, isLoading } = useWalletDetailQuery(id ?? '');
   const { data: contractsData, isLoading: contractsLoading } = useContractsQuery({
@@ -59,9 +61,9 @@ export default function WalletDetailPage() {
   const updateContractMutation = useUpdateContractMutation();
   const updateWalletMutation = useUpdateWalletMutation();
   const createOperationMutation = useCreateOperationMutation();
-  const { data: bulkSyncPreview, isLoading: bulkSyncPreviewLoading } = useOperationPreviewQuery(
+  const { data: bulkPreview, isLoading: bulkPreviewLoading } = useOperationPreviewQuery(
     wallet?.serasaWalletId ? id : undefined,
-    OperationAction.CREATE_OR_UPDATE,
+    bulkAction ?? undefined,
   );
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
   const removeFromSerasaMutation = useRemoveContractFromSerasaMutation();
@@ -79,12 +81,12 @@ export default function WalletDetailPage() {
     }
     syncWithSerasaMutation.mutate(contract.id);
   };
-  const handleBulkSync = () => {
+  const handleBulkAction = (action: OperationAction) => {
     if (!wallet?.serasaWalletId) {
       toaster.create({ type: 'warning', title: 'Selecione uma Carteira Serasa', description: 'Clique em Editar, selecione a Carteira Serasa e salve antes de sincronizar.' });
       return;
     }
-    setShowBulkSyncConfirm(true);
+    setBulkAction(action);
   };
 
   const handleCreateContract = (data: CreateContractDto) => {
@@ -178,37 +180,26 @@ export default function WalletDetailPage() {
     <>
       <PageHeader title={wallet.name}>
         <HStack gap="2">
-          {canEdit && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowEditForm(true)}
-            >
-              <LuPencil /> Editar
-            </Button>
-          )}
-          {canEdit && (
-            <Button size="sm" colorPalette="blue" variant="outline" onClick={handleBulkSync}>
-              <LuRefreshCw /> Sincronizar com Serasa
-            </Button>
-          )}
-          {canEdit && <Button size="sm" variant="outline" onClick={() => { setLigueLeadContractId(undefined); setShowLigueLead(true); }}><LuRadio /> Comunicações</Button>}
-          <Button
-            size="sm"
-            colorPalette="green"
-            onClick={() => setShowContractForm(true)}
-          >
-            <LuPlus /> Novo Contrato
-          </Button>
-          <Button
-            asChild
-            size="sm"
-            colorPalette="blue"
-          >
-            <RouterLink to={`/imports/new?walletId=${id}`}>
-              <LuUpload /> Importar Contratos
-            </RouterLink>
-          </Button>
+          <Menu.Root>
+            <Menu.Trigger asChild>
+              <Button size="sm" colorPalette="blue">
+                <LuEllipsis /> Ações
+              </Button>
+            </Menu.Trigger>
+            <Portal>
+              <Menu.Positioner>
+                <Menu.Content>
+                  {canEdit && <Menu.Item value="edit" onClick={() => setShowEditForm(true)}><LuPencil /> Editar carteira</Menu.Item>}
+                  <Menu.Item value="new-contract" onClick={() => setShowContractForm(true)}><LuPlus /> Novo contrato</Menu.Item>
+                  <Menu.Item value="import" asChild><RouterLink to={`/imports/new?walletId=${id}`}><LuUpload /> Importar contratos</RouterLink></Menu.Item>
+                  {canEdit && <Menu.Item value="communications" onClick={() => { setLigueLeadContractId(undefined); setShowLigueLead(true); }}><LuRadio /> Comunicações</Menu.Item>}
+                  {canEdit && <Menu.Separator />}
+                  {canEdit && <Menu.Item value="sync-serasa" onClick={() => handleBulkAction(OperationAction.CREATE_OR_UPDATE)}><LuRefreshCw /> Enviar em massa ao Serasa</Menu.Item>}
+                  {canEdit && <Menu.Item value="remove-serasa" color="fg.error" onClick={() => handleBulkAction(OperationAction.REMOVE)}><LuUnlink /> Remover em massa do Serasa</Menu.Item>}
+                </Menu.Content>
+              </Menu.Positioner>
+            </Portal>
+          </Menu.Root>
           <Button size="sm" variant="outline" onClick={() => navigate('/wallets')}>
             <LuArrowLeft /> Voltar
           </Button>
@@ -451,6 +442,7 @@ export default function WalletDetailPage() {
         onOpenChange={setShowContractForm}
         onSubmit={(data) => handleCreateContract(data as CreateContractDto)}
         loading={createContractMutation.isPending}
+        defaultWalletId={id}
       />
       <ContractFormDialog
         open={!!editingContract}
@@ -462,19 +454,21 @@ export default function WalletDetailPage() {
         loading={updateContractMutation.isPending}
       />
       <ConfirmDialog
-        open={showBulkSyncConfirm}
-        onOpenChange={setShowBulkSyncConfirm}
-        title="Sincronizar carteira com Serasa"
-        message={bulkSyncPreviewLoading
+        open={!!bulkAction}
+        onOpenChange={(open) => !open && setBulkAction(null)}
+        title={bulkAction === OperationAction.REMOVE ? 'Remover carteira do Serasa' : 'Enviar carteira ao Serasa'}
+        message={bulkPreviewLoading
           ? 'Calculando os contratos elegíveis...'
-          : `Serão enviados ${bulkSyncPreview?.eligibleCount ?? 0} contrato(s) elegível(is) para a carteira Serasa vinculada. Deseja continuar?`}
-        confirmLabel="Sincronizar"
-        loading={createOperationMutation.isPending || bulkSyncPreviewLoading}
+          : bulkAction === OperationAction.REMOVE
+            ? `Serão removidos ${bulkPreview?.eligibleCount ?? 0} contrato(s) elegível(is) da Serasa. Deseja continuar?`
+            : `Serão enviados ${bulkPreview?.eligibleCount ?? 0} contrato(s) elegível(is) para a carteira Serasa vinculada. Deseja continuar?`}
+        confirmLabel={bulkAction === OperationAction.REMOVE ? 'Remover' : 'Enviar'}
+        loading={createOperationMutation.isPending || bulkPreviewLoading}
         onConfirm={() => {
-          if (!id) return;
+          if (!id || !bulkAction) return;
           createOperationMutation.mutate(
-            { walletId: id, action: OperationAction.CREATE_OR_UPDATE },
-            { onSuccess: () => setShowBulkSyncConfirm(false) },
+            { walletId: id, action: bulkAction },
+            { onSuccess: () => setBulkAction(null) },
           );
         }}
       />

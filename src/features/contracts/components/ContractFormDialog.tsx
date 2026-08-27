@@ -57,6 +57,8 @@ interface ContractFormDialogProps {
   contract?: Contract | null;
   onSubmit: (data: CreateContractDto | UpdateContractDto) => void;
   loading?: boolean;
+  /** Preselects the wallet when opened from a wallet detail screen. */
+  defaultWalletId?: string;
 }
 
 export function ContractFormDialog({
@@ -65,6 +67,7 @@ export function ContractFormDialog({
   contract,
   onSubmit,
   loading = false,
+  defaultWalletId,
 }: ContractFormDialogProps) {
   const isEdit = !!contract;
   const { data: walletsData } = useWalletsQuery({ page: 1, limit: 100 });
@@ -142,7 +145,7 @@ export function ContractFormDialog({
         });
       } else {
         reset({
-          walletId: '',
+          walletId: defaultWalletId ?? '',
           debtorDocument: '',
           debtorName: '',
           contractNumber: '',
@@ -171,7 +174,7 @@ export function ContractFormDialog({
         });
       }
     }
-  }, [open, contract, reset]);
+  }, [open, contract, defaultWalletId, reset]);
 
   const handleFormSubmit = (values: ContractFormValues) => {
     const offer = values.hasOffer

@@ -8,6 +8,7 @@ import type {
   OfferType,
   ContactType,
   WalletStatus,
+  PaymentStatus,
 } from './enums';
 import type { Address, Contact, OfferDto } from './models';
 
@@ -228,6 +229,8 @@ export interface ListContractsParams extends PaginationParams {
   creditorId?: string;
   status?: ContractStatus;
   serasaStatus?: string;
+  paymentStatus?: PaymentStatus;
+  installmentOnly?: boolean;
   dateFrom?: string;
   dateTo?: string;
   debtorDocument?: string;

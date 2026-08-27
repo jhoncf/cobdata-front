@@ -138,6 +138,12 @@ export interface Contract {
   status: ContractStatus;
   serasaStatus: SerasaStatus;
   paymentStatus: PaymentStatus;
+  agreementReference: string | null;
+  agreementTotalAmount: number | null;
+  totalInstallments: number | null;
+  paidInstallments: number;
+  totalPaidAmount: number;
+  lastPaymentAt: string | null;
   offer: OfferDto | null;
   tags: string[];
   createdAt: string;

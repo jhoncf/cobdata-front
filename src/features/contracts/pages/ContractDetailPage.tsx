@@ -211,7 +211,36 @@ export default function ContractDetailPage() {
         </Card.Body>
       </Card.Root>
 
-      {/* Card 5: Carteira */}
+      {/* Card 5: Acordo e pagamentos */}
+      <Card.Root>
+        <Card.Body gap="3">
+          <Heading size="sm">Acordo e pagamentos</Heading>
+          <HStack gap="8" wrap="wrap">
+            <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Referência do acordo</Text>
+              <Text>{contract.agreementReference ?? '—'}</Text>
+            </Stack>
+            <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Valor do acordo</Text>
+              <Text>{contract.agreementTotalAmount != null ? formatCurrency(contract.agreementTotalAmount) : '—'}</Text>
+            </Stack>
+            <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Parcelas</Text>
+              <Text>{contract.totalInstallments ? `${contract.paidInstallments}/${contract.totalInstallments} pagas` : 'À vista'}</Text>
+            </Stack>
+            <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Total pago</Text>
+              <Text>{formatCurrency(contract.totalPaidAmount)}</Text>
+            </Stack>
+            <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Último pagamento</Text>
+              <Text>{contract.lastPaymentAt ? formatDate(contract.lastPaymentAt) : '—'}</Text>
+            </Stack>
+          </HStack>
+        </Card.Body>
+      </Card.Root>
+
+      {/* Card 6: Carteira */}
       {contract.wallet && (
         <Card.Root>
           <Card.Body gap="3">
