@@ -1,6 +1,6 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import api from '@/lib/api';
-import type { PaginatedResponse, ListOperationsParams, OperationPreviewResponse } from '@/types/api';
+import type { PaginatedResponse, ListOperationsParams, OperationContractFilters, OperationPreviewResponse } from '@/types/api';
 import type { ProviderOperation, OperationItem } from '@/types/models';
 import type { OperationAction } from '@/types/enums';
 
@@ -41,11 +41,12 @@ export function useOperationItemsQuery(
 export function useOperationPreviewQuery(
   walletId: string | undefined,
   action: OperationAction | undefined,
+  filters: OperationContractFilters = {},
 ) {
   return useQuery<OperationPreviewResponse>({
-    queryKey: ['operations', 'preview', walletId, action],
+    queryKey: ['operations', 'preview', walletId, action, filters],
     queryFn: () =>
-      api.get('/operations/preview', { params: { walletId, action } }).then((r) => r.data),
+      api.get('/operations/preview', { params: { walletId, action, ...filters } }).then((r) => r.data),
     enabled: !!walletId && !!action,
   });
 }

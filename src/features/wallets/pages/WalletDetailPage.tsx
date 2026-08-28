@@ -13,6 +13,8 @@ import {
   Spinner,
   Menu,
   Portal,
+  Input,
+  NativeSelect,
 } from '@chakra-ui/react';
 import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw, LuUnlink, LuEllipsis } from 'react-icons/lu';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState, ConfirmDialog } from '@/components/common';
@@ -31,7 +33,7 @@ import { useOperationPreviewQuery } from '@/features/operations/api/useOperation
 import { PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
 import { OperationAction, type PaymentStatus, type SerasaStatus } from '@/types/enums';
-import type { CreateContractDto, UpdateContractDto } from '@/types/api';
+import type { CreateContractDto, OperationContractFilters, UpdateContractDto } from '@/types/api';
 import type { Contract } from '@/types/models';
 
 type SortField = 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'paymentStatus' | 'serasaStatus' | 'occurrenceDate';
@@ -50,12 +52,30 @@ export default function WalletDetailPage() {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [bulkAction, setBulkAction] = useState<OperationAction | null>(null);
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | ''>('');
+  const [serasaStatusFilter, setSerasaStatusFilter] = useState<SerasaStatus | ''>('');
+  const [installmentOnly, setInstallmentOnly] = useState(false);
+  const [minOriginalValue, setMinOriginalValue] = useState('');
+  const [maxOriginalValue, setMaxOriginalValue] = useState('');
+  const [minUpdatedValue, setMinUpdatedValue] = useState('');
+  const [maxUpdatedValue, setMaxUpdatedValue] = useState('');
+
+  const operationFilters = useMemo<OperationContractFilters>(() => ({
+    ...(paymentStatusFilter ? { paymentStatus: paymentStatusFilter } : {}),
+    ...(serasaStatusFilter ? { serasaStatus: serasaStatusFilter } : {}),
+    ...(installmentOnly ? { installmentOnly: true } : {}),
+    ...(minOriginalValue ? { minOriginalValue: Number(minOriginalValue) } : {}),
+    ...(maxOriginalValue ? { maxOriginalValue: Number(maxOriginalValue) } : {}),
+    ...(minUpdatedValue ? { minUpdatedValue: Number(minUpdatedValue) } : {}),
+    ...(maxUpdatedValue ? { maxUpdatedValue: Number(maxUpdatedValue) } : {}),
+  }), [paymentStatusFilter, serasaStatusFilter, installmentOnly, minOriginalValue, maxOriginalValue, minUpdatedValue, maxUpdatedValue]);
 
   const { data: wallet, isLoading } = useWalletDetailQuery(id ?? '');
   const { data: contractsData, isLoading: contractsLoading } = useContractsQuery({
     walletId: id,
     page: contractsPage,
     limit: 20,
+    ...operationFilters,
   });
   const createContractMutation = useCreateContractMutation();
   const updateContractMutation = useUpdateContractMutation();
@@ -64,6 +84,7 @@ export default function WalletDetailPage() {
   const { data: bulkPreview, isLoading: bulkPreviewLoading } = useOperationPreviewQuery(
     wallet?.serasaWalletId ? id : undefined,
     bulkAction ?? undefined,
+    operationFilters,
   );
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
   const removeFromSerasaMutation = useRemoveContractFromSerasaMutation();
@@ -278,6 +299,41 @@ export default function WalletDetailPage() {
             <Card.Title>Contratos</Card.Title>
           </Card.Header>
           <Card.Body>
+            <HStack gap="3" wrap="wrap" mb="4">
+              <NativeSelect.Root size="sm" width="180px">
+                <NativeSelect.Field value={paymentStatusFilter} onChange={(event) => { setPaymentStatusFilter(event.target.value as PaymentStatus | ''); setContractsPage(1); }}>
+                  <option value="">Status financeiro</option>
+                  <option value="OPEN">Em aberto</option>
+                  <option value="IN_AGREEMENT">Em acordo</option>
+                  <option value="INSTALLMENT">Parcelado</option>
+                  <option value="AGREEMENT_BREACHED">Acordo quebrado</option>
+                  <option value="PAID">Pago</option>
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+              <NativeSelect.Root size="sm" width="170px">
+                <NativeSelect.Field value={serasaStatusFilter} onChange={(event) => { setSerasaStatusFilter(event.target.value as SerasaStatus | ''); setContractsPage(1); }}>
+                  <option value="">Status Serasa</option>
+                  <option value="NOT_ENABLED">Não enviado</option>
+                  <option value="SENT">Enviado</option>
+                  <option value="REGISTERED">Registrado</option>
+                  <option value="FAILED">Falhou</option>
+                  <option value="REMOVED">Removido</option>
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+              <NativeSelect.Root size="sm" width="150px">
+                <NativeSelect.Field value={installmentOnly ? 'yes' : ''} onChange={(event) => { setInstallmentOnly(event.target.value === 'yes'); setContractsPage(1); }}>
+                  <option value="">Todos os acordos</option>
+                  <option value="yes">Parcelados</option>
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+              <Input size="sm" width="145px" type="number" min="0" placeholder="Valor original mín." value={minOriginalValue} onChange={(event) => { setMinOriginalValue(event.target.value); setContractsPage(1); }} />
+              <Input size="sm" width="145px" type="number" min="0" placeholder="Valor original máx." value={maxOriginalValue} onChange={(event) => { setMaxOriginalValue(event.target.value); setContractsPage(1); }} />
+              <Input size="sm" width="155px" type="number" min="0" placeholder="Valor atualizado mín." value={minUpdatedValue} onChange={(event) => { setMinUpdatedValue(event.target.value); setContractsPage(1); }} />
+              <Input size="sm" width="155px" type="number" min="0" placeholder="Valor atualizado máx." value={maxUpdatedValue} onChange={(event) => { setMaxUpdatedValue(event.target.value); setContractsPage(1); }} />
+            </HStack>
             {contractsLoading ? (
               <Spinner />
             ) : !contractsData?.data.length ? (
@@ -469,7 +525,7 @@ export default function WalletDetailPage() {
         onConfirm={() => {
           if (!id || !bulkAction) return;
           createOperationMutation.mutate(
-            { walletId: id, action: bulkAction },
+            { walletId: id, action: bulkAction, filters: operationFilters },
             { onSuccess: () => setBulkAction(null) },
           );
         }}

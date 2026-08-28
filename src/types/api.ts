@@ -9,6 +9,7 @@ import type {
   ContactType,
   WalletStatus,
   PaymentStatus,
+  SerasaStatus,
 } from './enums';
 import type { Address, Contact, OfferDto } from './models';
 
@@ -179,6 +180,19 @@ export interface CreateWalletMappingDto {
 export interface CreateOperationDto {
   walletId: string;
   action: OperationAction;
+  filters?: OperationContractFilters;
+}
+
+export interface OperationContractFilters {
+  paymentStatus?: PaymentStatus;
+  serasaStatus?: SerasaStatus;
+  installmentOnly?: boolean;
+  minOriginalValue?: number;
+  maxOriginalValue?: number;
+  minUpdatedValue?: number;
+  maxUpdatedValue?: number;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export interface OperationPreviewResponse {
@@ -231,6 +245,10 @@ export interface ListContractsParams extends PaginationParams {
   serasaStatus?: string;
   paymentStatus?: PaymentStatus;
   installmentOnly?: boolean;
+  minOriginalValue?: number;
+  maxOriginalValue?: number;
+  minUpdatedValue?: number;
+  maxUpdatedValue?: number;
   dateFrom?: string;
   dateTo?: string;
   debtorDocument?: string;
