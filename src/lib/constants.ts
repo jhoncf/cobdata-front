@@ -34,6 +34,7 @@ export const PROVIDER_STATUS_LABELS: Record<SerasaStatus, string> = {
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   OPEN: 'Em aberto',
   IN_AGREEMENT: 'Em acordo',
+  INSTALLMENT: 'Parcelado',
   AGREEMENT_BREACHED: 'Acordo quebrado',
   PAID: 'Pago',
 };

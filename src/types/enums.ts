@@ -33,6 +33,7 @@ export enum SerasaStatus {
 export enum PaymentStatus {
   OPEN = 'OPEN',
   IN_AGREEMENT = 'IN_AGREEMENT',
+  INSTALLMENT = 'INSTALLMENT',
   AGREEMENT_BREACHED = 'AGREEMENT_BREACHED',
   PAID = 'PAID',
 }

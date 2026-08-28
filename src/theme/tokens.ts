@@ -19,6 +19,7 @@ export const STATUS_COLORS: Record<string, string> = {
   REMOVING: 'orange',
   REMOVED: 'gray',
   IN_AGREEMENT: 'purple',
+  INSTALLMENT: 'purple',
   AGREEMENT_BREACHED: 'red',
   PAID: 'teal',
   ACTIVE: 'green',

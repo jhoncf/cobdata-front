@@ -286,6 +286,7 @@ export default function ContractsListPage() {
             <option value="">Todos os pagamentos</option>
             <option value="OPEN">Em aberto</option>
             <option value="IN_AGREEMENT">Em acordo</option>
+            <option value="INSTALLMENT">Parcelado</option>
             <option value="AGREEMENT_BREACHED">Acordo quebrado</option>
             <option value="PAID">Pago</option>
           </NativeSelect.Field>
