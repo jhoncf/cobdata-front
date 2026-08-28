@@ -115,7 +115,7 @@ export interface UpdateWalletDto {
 export interface CreateContractDto {
   walletId: string;
   debtorDocument: string;
-  debtorName: string;
+  debtorName?: string;
   contractNumber: string;
   debtType: DebtType;
   occurrenceDate: string;

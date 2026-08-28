@@ -23,7 +23,7 @@ import type { CreateContractDto, UpdateContractDto } from '@/types/api';
 const contractFormSchema = z.object({
   walletId: z.string().min(1, 'Selecione uma carteira'),
   debtorDocument: z.string().min(1, 'CPF ou CNPJ é obrigatório'),
-  debtorName: z.string().min(1, 'Nome do devedor é obrigatório'),
+  debtorName: z.string().max(200, 'Nome deve ter no máximo 200 caracteres'),
   contractNumber: z.string().min(1, 'Número do contrato é obrigatório'),
   debtType: z.nativeEnum(DebtType),
   occurrenceDate: z.string().min(1, 'Data de contratação obrigatória'),
@@ -286,7 +286,7 @@ export function ContractFormDialog({
                       </>
                     )}
 
-                    <Field.Root invalid={!!errors.debtorName} required>
+                    <Field.Root invalid={!!errors.debtorName}>
                       <Field.Label>Nome do Devedor</Field.Label>
                       <Input {...register('debtorName')} placeholder="Nome completo" />
                       <Field.ErrorText>{errors.debtorName?.message}</Field.ErrorText>
