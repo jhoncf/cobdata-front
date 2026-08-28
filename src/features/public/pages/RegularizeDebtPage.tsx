@@ -115,6 +115,12 @@ export default function RegularizeDebtPage() {
         debtorDocument: document,
       });
       setContracts(data.contracts);
+      // SMS links carry a contract id. It is only selected after the backend
+      // has confirmed that it belongs to the informed CPF and is payable.
+      const contractIdFromUrl = searchParams.get('contract');
+      if (contractIdFromUrl) {
+        setSelected(data.contracts.find((contract) => contract.id === contractIdFromUrl) ?? null);
+      }
     } catch (requestError) {
       const status = axios.isAxiosError(requestError) ? requestError.response?.status : undefined;
       setContracts([]);
