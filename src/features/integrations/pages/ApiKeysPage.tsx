@@ -10,6 +10,7 @@ import type { IntegrationApiKey } from '@/types/models';
 import { useAllCreditorsQuery } from '@/features/creditors/api/useCreditorsQuery';
 
 const SCOPES = [
+  { value: 'CONTRACTS_WRITE', label: 'Enviar contratos', description: 'Permite incluir contratos na carteira padrão de entrada da API.' },
   { value: 'PIX_CREATE', label: 'Gerar Pix', description: 'Permite gerar ou reutilizar Pix para um contrato.' },
   { value: 'CONTRACTS_READ', label: 'Consultar contratos', description: 'Permite consultar contratos pendentes por CPF/CNPJ.' },
   { value: 'CONTRACT_CONTACTS_WRITE', label: 'Atualizar contatos', description: 'Permite atualizar telefone e e-mail do contrato.' },
