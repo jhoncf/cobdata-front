@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Card,
+  Dialog,
   HStack,
   SimpleGrid,
   Stack,
@@ -21,7 +22,7 @@ import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState, Con
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
 import { useUpdateWalletMutation } from '../api/useWalletMutations';
 import { useContractsQuery } from '@/features/contracts/api/useContractsQuery';
-import { useCreateContractMutation, useUpdateContractMutation, useSyncContractWithSerasaMutation, useRemoveContractFromSerasaMutation } from '@/features/contracts/api/useContractMutations';
+import { useBulkTransferContractsMutation, useCreateContractMutation, useUpdateContractMutation, useSyncContractWithSerasaMutation, useRemoveContractFromSerasaMutation } from '@/features/contracts/api/useContractMutations';
 import { ContractFormDialog } from '@/features/contracts/components/ContractFormDialog';
 import { GeneratePixAction } from '@/features/payments/components/GeneratePixAction';
 import { WalletFormDialog } from '../components/WalletFormDialog';
@@ -32,6 +33,7 @@ import { useCreateOperationMutation } from '@/features/operations/api/useOperati
 import { useOperationPreviewQuery } from '@/features/operations/api/useOperationsQuery';
 import { PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
+import { useAllWalletsQuery } from '../api/useWalletsQuery';
 import { OperationAction, type PaymentStatus, type SerasaStatus } from '@/types/enums';
 import type { CreateContractDto, OperationContractFilters, UpdateContractDto } from '@/types/api';
 import type { Contract } from '@/types/models';
@@ -59,6 +61,8 @@ export default function WalletDetailPage() {
   const [maxOriginalValue, setMaxOriginalValue] = useState('');
   const [minUpdatedValue, setMinUpdatedValue] = useState('');
   const [maxUpdatedValue, setMaxUpdatedValue] = useState('');
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [destinationWalletId, setDestinationWalletId] = useState('');
 
   const operationFilters = useMemo<OperationContractFilters>(() => ({
     ...(paymentStatusFilter ? { paymentStatus: paymentStatusFilter } : {}),
@@ -80,6 +84,8 @@ export default function WalletDetailPage() {
   const createContractMutation = useCreateContractMutation();
   const updateContractMutation = useUpdateContractMutation();
   const updateWalletMutation = useUpdateWalletMutation();
+  const bulkTransferMutation = useBulkTransferContractsMutation();
+  const { data: allWallets } = useAllWalletsQuery();
   const createOperationMutation = useCreateOperationMutation();
   const { data: bulkPreview, isLoading: bulkPreviewLoading } = useOperationPreviewQuery(
     wallet?.serasaWalletId ? id : undefined,
@@ -88,6 +94,10 @@ export default function WalletDetailPage() {
   );
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
   const removeFromSerasaMutation = useRemoveContractFromSerasaMutation();
+  const destinationWallets = useMemo(
+    () => allWallets?.data.filter((candidate) => candidate.id !== id && candidate.creditorId === wallet?.creditorId && candidate.status === 'ACTIVE') ?? [],
+    [allWallets?.data, id, wallet?.creditorId],
+  );
 
   const canSyncWithSerasa = (contract: Contract) => (
     ['NOT_ENABLED', 'PENDING', 'FAILED', 'REMOVED'].includes(contract.serasaStatus)
@@ -333,6 +343,9 @@ export default function WalletDetailPage() {
               <Input size="sm" width="145px" type="number" min="0" placeholder="Valor original máx." value={maxOriginalValue} onChange={(event) => { setMaxOriginalValue(event.target.value); setContractsPage(1); }} />
               <Input size="sm" width="155px" type="number" min="0" placeholder="Valor atualizado mín." value={minUpdatedValue} onChange={(event) => { setMinUpdatedValue(event.target.value); setContractsPage(1); }} />
               <Input size="sm" width="155px" type="number" min="0" placeholder="Valor atualizado máx." value={maxUpdatedValue} onChange={(event) => { setMaxUpdatedValue(event.target.value); setContractsPage(1); }} />
+              {canEdit && <Button size="sm" variant="outline" colorPalette="blue" onClick={() => { setDestinationWalletId(''); setTransferOpen(true); }} disabled={!contractsData?.meta.total}>
+                Transferir filtrados
+              </Button>}
             </HStack>
             {contractsLoading ? (
               <Spinner />
@@ -530,6 +543,48 @@ export default function WalletDetailPage() {
           );
         }}
       />
+      <Dialog.Root open={transferOpen} onOpenChange={(event) => !event.open && setTransferOpen(false)}>
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header><Dialog.Title>Transferir contratos filtrados</Dialog.Title></Dialog.Header>
+              <Dialog.Body>
+                <Stack gap="4">
+                  <Text>
+                    Serão transferidos os {contractsData?.meta.total ?? 0} contrato(s) encontrados pelos filtros atuais.
+                    Contratos ainda sincronizados com a Serasa não serão transferidos.
+                  </Text>
+                  <NativeSelect.Root>
+                    <NativeSelect.Field value={destinationWalletId} onChange={(event) => setDestinationWalletId(event.target.value)}>
+                      <option value="">Selecione a carteira de destino</option>
+                      {destinationWallets.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.name}</option>)}
+                    </NativeSelect.Field>
+                    <NativeSelect.Indicator />
+                  </NativeSelect.Root>
+                  {!destinationWallets.length && <Text fontSize="sm" color="fg.muted">Não há outra carteira ativa deste credor disponível como destino.</Text>}
+                </Stack>
+              </Dialog.Body>
+              <Dialog.Footer>
+                <HStack>
+                  <Button variant="outline" onClick={() => setTransferOpen(false)}>Cancelar</Button>
+                  <Button
+                    colorPalette="blue"
+                    disabled={!destinationWalletId}
+                    loading={bulkTransferMutation.isPending}
+                    onClick={() => id && bulkTransferMutation.mutate(
+                      { sourceWalletId: id, destinationWalletId, filters: operationFilters },
+                      { onSuccess: () => setTransferOpen(false) },
+                    )}
+                  >
+                    Transferir contratos
+                  </Button>
+                </HStack>
+              </Dialog.Footer>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
     </>
   );
 }

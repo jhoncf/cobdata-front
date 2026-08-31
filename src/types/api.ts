@@ -202,6 +202,17 @@ export interface OperationPreviewResponse {
   batchCount: number;
 }
 
+export interface BulkTransferContractsDto {
+  sourceWalletId: string;
+  destinationWalletId: string;
+  filters?: OperationContractFilters;
+}
+
+export interface BulkTransferContractsResult {
+  matchedCount: number;
+  transferredCount: number;
+}
+
 // ─── Import DTOs ─────────────────────────────────────────────────────────────
 export interface UploadImportDto {
   file: File;
