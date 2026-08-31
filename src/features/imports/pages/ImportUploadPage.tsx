@@ -117,10 +117,12 @@ export default function ImportUploadPage() {
       const reader = new FileReader();
       reader.onload = () => {
         try {
-          const workbook = XLSX.read(reader.result, { type: 'array' });
+          // O mapeamento precisa apenas do cabeçalho. Limitar a leitura à
+          // primeira linha evita converter toda a planilha no navegador.
+          const workbook = XLSX.read(reader.result, { type: 'array', sheetRows: 1 });
           const firstSheet = workbook.SheetNames[0];
           const worksheet = firstSheet ? workbook.Sheets[firstSheet] : undefined;
-          const rows = worksheet ? XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, blankrows: false }) : [];
+          const rows = worksheet ? XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, blankrows: false, range: 0 }) : [];
           setDetectedHeaders(rows[0] ?? []);
         } catch {
           toaster.create({ type: 'error', title: 'Não foi possível ler os cabeçalhos do XLSX' });
