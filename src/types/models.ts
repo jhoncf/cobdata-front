@@ -139,6 +139,7 @@ export interface Contract {
   cancelledAt: string | null;
   status: ContractStatus;
   serasaStatus: SerasaStatus;
+  debtId: string | null;
   paymentStatus: PaymentStatus;
   agreementReference: string | null;
   agreementTotalAmount: number | null;

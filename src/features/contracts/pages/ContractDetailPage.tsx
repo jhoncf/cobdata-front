@@ -200,6 +200,10 @@ export default function ContractDetailPage() {
               <Badge>{contract.serasaStatus}</Badge>
             </Stack>
             <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Debt ID Serasa</Text>
+              <Text fontFamily="mono" fontSize="sm">{contract.debtId ?? '—'}</Text>
+            </Stack>
+            <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Negativado</Text>
               <Text>{contract.isNegativated ? 'Sim' : 'Não'}</Text>
             </Stack>
