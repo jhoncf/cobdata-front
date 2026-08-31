@@ -16,6 +16,7 @@ import {
   Field,
   NativeSelect,
   Text,
+  Textarea,
   Tabs,
 } from '@chakra-ui/react';
 import { LuPlus, LuTrash2 } from 'react-icons/lu';
@@ -364,7 +365,7 @@ export function CreditorFormDialog({
                         <Text fontSize="xs" color="fg.muted">Enviada como <code>Authorization: Bearer sua-chave</code>. A chave é armazenada criptografada.</Text>
                       </Field.Root>
                       <Text fontWeight="medium">Exemplo de envio</Text>
-                      <Input as="textarea" rows={12} readOnly fontFamily="mono" fontSize="xs" value={'curl -X POST ' + (watch('webhookUrl') || 'https://suaempresa.com/webhooks/cobcom') + " \\\n  -H 'Content-Type: application/json' \\\n  -H 'X-CobCom-Event: contract.status.updated' \\\n  -d '{\"event\":\"contract.status.updated\",\"data\":{\"contract\":{\"number\":\"12345\"},\"status\":{\"paymentStatus\":\"PAID\"}}}'"} />
+                      <Textarea rows={12} readOnly fontFamily="mono" fontSize="xs" value={'curl -X POST ' + (watch('webhookUrl') || 'https://suaempresa.com/webhooks/cobcom') + " \\\n  -H 'Content-Type: application/json' \\\n  -H 'X-CobCom-Event: contract.status.updated' \\\n  -d '{\"event\":\"contract.status.updated\",\"data\":{\"contract\":{\"number\":\"12345\"},\"status\":{\"paymentStatus\":\"PAID\"}}}'"} />
                     </Stack>
                   </Tabs.Content>
                 </Tabs.Root>
