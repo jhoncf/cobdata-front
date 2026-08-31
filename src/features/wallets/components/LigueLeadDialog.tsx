@@ -5,7 +5,7 @@ import api from '@/lib/api';
 import { toaster } from '@/components/ui/toaster';
 import { formatCurrency } from '@/lib/formatters';
 
-type Contract = { id: string; contractNumber: string; debtorName: string | null; debtorPhone: string | null; originalValue: number; updatedValue?: number | null; paymentStatus: string; status: string };
+type Contract = { id: string; contractNumber: string; debtorName: string | null; debtorPhone: string | null; originalValue: number; updatedValue: number; paymentStatus: string; status: string };
 type Agent = { name: string; prompt: string; greetings?: string | null; modelVersion: string; voiceId?: string | null; active: boolean };
 
 export function LigueLeadDialog({ open, onOpenChange, walletId, contracts, initialContractId, initialTab = 'agent' }: { open: boolean; onOpenChange: (open: boolean) => void; walletId: string; contracts: Contract[]; initialContractId?: string; initialTab?: 'agent' | 'sms' | 'calls' }) {
@@ -72,6 +72,6 @@ function ContractSelector({ contracts, withoutPhoneCount, selected, toggle, sele
   return <Stack gap="2">
     <Text fontSize="sm" color="fg.muted">{contracts.length} contrato(s) elegível(is) nesta página.{withoutPhoneCount ? ` ${withoutPhoneCount} contrato(s) sem telefone foram bloqueados.` : ''}</Text>
     <HStack gap="2"><Button size="xs" variant="outline" onClick={selectAll}>Selecionar todos</Button><Button size="xs" variant="ghost" onClick={clearSelection} disabled={!selected.length}>Limpar seleção</Button><Text fontSize="sm">{selected.length} selecionado(s)</Text></HStack>
-    <Stack gap="2" maxH="220px" overflowY="auto" borderWidth="1px" rounded="md" p="3">{contracts.map(c => <label key={c.id}><input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggle(c.id)} style={{ marginRight: 8 }} />{c.contractNumber} — {c.debtorName || 'Sem nome'} — {formatCurrency(c.updatedValue ?? c.originalValue)}</label>)}</Stack>
+    <Stack gap="2" maxH="220px" overflowY="auto" borderWidth="1px" rounded="md" p="3">{contracts.map(c => <label key={c.id}><input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggle(c.id)} style={{ marginRight: 8 }} />{c.contractNumber} — {c.debtorName || 'Sem nome'} — {formatCurrency(c.updatedValue)}</label>)}</Stack>
   </Stack>;
 }

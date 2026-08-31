@@ -75,7 +75,7 @@ export function CreateChargeDialog({
   useEffect(() => {
     if (open) {
       setAmount(
-        contract.updatedValue?.toString() ?? contract.originalValue?.toString() ?? '',
+        contract.updatedValue.toString(),
       );
       setDueDate(contract.dueDate ?? '');
       setChargeResult(null);

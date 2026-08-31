@@ -122,7 +122,7 @@ export interface CreateContractDto {
   occurrenceDate: string;
   dueDate: string;
   originalValue: number;
-  updatedValue?: number;
+  updatedValue: number;
   debtOrigin?: string;
   productName?: string;
   debtorStreet?: string;

@@ -128,7 +128,7 @@ export interface Contract {
   occurrenceDate: string;
   dueDate: string | null;
   originalValue: number;
-  updatedValue: number | null;
+  updatedValue: number;
   debtOrigin: string | null;
   productName: string | null;
   debtorStreet: string | null;
