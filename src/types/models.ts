@@ -90,6 +90,7 @@ export interface IntegrationApiKey {
   lastUsedAt: string | null;
   revokedAt: string | null;
   createdAt: string;
+  creditor: Pick<Creditor, 'id' | 'name' | 'cnpj'> | null;
 }
 
 export interface WalletSummary {
