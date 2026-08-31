@@ -11,7 +11,9 @@ export function useUploadImportMutation() {
       formData.append('walletId', data.walletId);
       formData.append('columnMapping', JSON.stringify(data.columnMapping));
       return api.post('/imports', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        // Arquivos grandes podem levar mais de 30 segundos para chegar ao servidor.
+        // Não alteramos o timeout padrão das demais chamadas da aplicação.
+        timeout: 5 * 60 * 1000,
       });
     },
     onSuccess: () => {
