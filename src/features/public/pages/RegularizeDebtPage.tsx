@@ -21,6 +21,8 @@ type Contract = {
   contractNumber: string;
   dueDate: string | null;
   amount: string;
+  updatedAmount?: string;
+  cobcomDiscountPercent?: string;
   creditor: { name: string; cnpj: string | null };
 };
 
@@ -201,7 +203,10 @@ export default function RegularizeDebtPage() {
                   <Box key={contract.id} borderWidth="2px" borderColor={selected?.id === contract.id ? '#0088ff' : 'gray.100'} rounded="md" p="4" cursor="pointer" bg={selected?.id === contract.id ? '#f0f8ff' : 'white'} onClick={() => setSelected(contract)}>
                     <HStack justify="space-between" align="start" gap="4">
                       <Stack gap="1"><Text fontWeight="bold">{contract.creditor.name}</Text><Text fontSize="sm" color="gray.600">CNPJ: {formatCnpj(contract.creditor.cnpj)}</Text><Text fontSize="sm" color="gray.600">Contrato: {contract.contractNumber}{contract.dueDate ? ` · Vencimento: ${new Date(contract.dueDate).toLocaleDateString('pt-BR')}` : ''}</Text></Stack>
-                      <Text fontWeight="bold" color="#006dc9" whiteSpace="nowrap">{formatMoney(contract.amount)}</Text>
+                      <Stack gap="0" align="end">
+                        {Number(contract.cobcomDiscountPercent ?? 0) > 0 && <Text fontSize="sm" color="gray.600">Valor atualizado: {formatMoney(contract.updatedAmount ?? contract.amount)}</Text>}
+                        <Text fontWeight="bold" color="#006dc9" whiteSpace="nowrap">{Number(contract.cobcomDiscountPercent ?? 0) > 0 ? `Com Desconto CobCom: ${formatMoney(contract.amount)}` : formatMoney(contract.amount)}</Text>
+                      </Stack>
                     </HStack>
                   </Box>
                 ))}
