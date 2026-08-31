@@ -39,6 +39,7 @@ const channelLabels: Record<ContractInteraction['channel'], string> = {
   SMS: 'SMS',
   WHATSAPP: 'WhatsApp',
   EMAIL: 'E-mail',
+  SERASA: 'Serasa',
 };
 
 const statusLabels: Record<ContractInteraction['status'], string> = {
