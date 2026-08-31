@@ -343,9 +343,22 @@ export default function WalletDetailPage() {
               <Input size="sm" width="145px" type="number" min="0" placeholder="Valor original máx." value={maxOriginalValue} onChange={(event) => { setMaxOriginalValue(event.target.value); setContractsPage(1); }} />
               <Input size="sm" width="155px" type="number" min="0" placeholder="Valor atualizado mín." value={minUpdatedValue} onChange={(event) => { setMinUpdatedValue(event.target.value); setContractsPage(1); }} />
               <Input size="sm" width="155px" type="number" min="0" placeholder="Valor atualizado máx." value={maxUpdatedValue} onChange={(event) => { setMaxUpdatedValue(event.target.value); setContractsPage(1); }} />
-              {canEdit && <Button size="sm" variant="outline" colorPalette="blue" onClick={() => { setDestinationWalletId(''); setTransferOpen(true); }} disabled={!contractsData?.meta.total}>
-                Transferir filtrados
-              </Button>}
+              {canEdit && <Menu.Root>
+                <Menu.Trigger asChild>
+                  <Button size="sm" variant="outline" colorPalette="blue" disabled={!contractsData?.meta.total}>
+                    <LuEllipsis /> Ações
+                  </Button>
+                </Menu.Trigger>
+                <Portal>
+                  <Menu.Positioner>
+                    <Menu.Content>
+                      <Menu.Item value="transfer-filtered" onClick={() => { setDestinationWalletId(''); setTransferOpen(true); }}>
+                        Transferir contratos filtrados
+                      </Menu.Item>
+                    </Menu.Content>
+                  </Menu.Positioner>
+                </Portal>
+              </Menu.Root>}
             </HStack>
             {contractsLoading ? (
               <Spinner />
