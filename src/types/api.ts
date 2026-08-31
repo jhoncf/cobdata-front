@@ -91,6 +91,8 @@ export interface CreateCreditorDto {
   cnpj?: string;
   contacts?: Contact[];
   address?: Address;
+  webhookUrl?: string;
+  webhookAuthKey?: string;
 }
 
 export interface UpdateCreditorDto {
@@ -98,6 +100,8 @@ export interface UpdateCreditorDto {
   cnpj?: string;
   contacts?: Contact[];
   address?: Address;
+  webhookUrl?: string;
+  webhookAuthKey?: string;
 }
 
 // ─── Wallet DTOs ─────────────────────────────────────────────────────────────

@@ -16,6 +16,7 @@ import {
   Field,
   NativeSelect,
   Text,
+  Tabs,
 } from '@chakra-ui/react';
 import { LuPlus, LuTrash2 } from 'react-icons/lu';
 import { ContactType } from '@/types/enums';
@@ -55,6 +56,8 @@ const creditorSchema = z.object({
     state: z.string(),
     zipCode: z.string(),
   }).optional(),
+  webhookUrl: z.string().url('Informe uma URL válida').optional().or(z.literal('')),
+  webhookAuthKey: z.string().max(1000).optional(),
 }).superRefine((data, ctx) => {
   if (data.hasAddress && data.address) {
     const result = addressSchema.safeParse(data.address);
@@ -85,6 +88,8 @@ interface CreditorFormDialogProps {
       state: string;
       zipCode: string;
     };
+    webhookUrl?: string;
+    webhookAuthKey?: string;
   }) => void;
   loading?: boolean;
 }
@@ -121,6 +126,8 @@ export function CreditorFormDialog({
         state: '',
         zipCode: '',
       },
+      webhookUrl: '',
+      webhookAuthKey: '',
     },
   });
 
@@ -147,6 +154,8 @@ export function CreditorFormDialog({
             state: '',
             zipCode: '',
           },
+          webhookUrl: creditor.webhookUrl ?? '',
+          webhookAuthKey: '',
         });
       } else {
         reset({
@@ -163,6 +172,8 @@ export function CreditorFormDialog({
             state: '',
             zipCode: '',
           },
+          webhookUrl: '',
+          webhookAuthKey: '',
         });
       }
     }
@@ -174,6 +185,8 @@ export function CreditorFormDialog({
       cnpj: values.cnpj || undefined,
       contacts: values.contacts.length > 0 ? values.contacts : undefined,
       address: values.hasAddress ? values.address : undefined,
+      webhookUrl: values.webhookUrl || undefined,
+      webhookAuthKey: values.webhookAuthKey || undefined,
     });
   };
 
@@ -194,10 +207,15 @@ export function CreditorFormDialog({
             </Dialog.Header>
             <Dialog.Body>
               <form id="creditor-form" onSubmit={handleSubmit(handleFormSubmit)}>
-                <Stack gap="4">
+                <Tabs.Root defaultValue="general">
+                  <Tabs.List mb="4">
+                    <Tabs.Trigger value="general">Dados do credor</Tabs.Trigger>
+                    <Tabs.Trigger value="webhook">Webhook</Tabs.Trigger>
+                  </Tabs.List>
+                  <Tabs.Content value="general"><Stack gap="4">
                   <SimpleGrid columns={{ base: 1, md: 2 }} gap="4">
                     <Field.Root invalid={!!errors.name} required>
-                      <Field.Label>Nome</Field.Label>
+                      <Field.Label>Razão Social</Field.Label>
                       <Input {...register('name')} />
                       <Field.ErrorText>{errors.name?.message}</Field.ErrorText>
                     </Field.Root>
@@ -331,7 +349,25 @@ export function CreditorFormDialog({
                       </Field.Root>
                     </SimpleGrid>
                   )}
-                </Stack>
+                  </Stack></Tabs.Content>
+                  <Tabs.Content value="webhook">
+                    <Stack gap="4">
+                      <Text fontSize="sm" color="fg.muted">Receba atualizações de status dos contratos deste credor.</Text>
+                      <Field.Root invalid={!!errors.webhookUrl} required>
+                        <Field.Label>URL do webhook</Field.Label>
+                        <Input {...register('webhookUrl')} placeholder="https://suaempresa.com/webhooks/cobcom" />
+                        <Field.ErrorText>{errors.webhookUrl?.message}</Field.ErrorText>
+                      </Field.Root>
+                      <Field.Root>
+                        <Field.Label>Chave de autenticação (opcional)</Field.Label>
+                        <Input type="password" {...register('webhookAuthKey')} placeholder={creditor?.hasWebhookAuthKey ? 'Chave já configurada — deixe em branco para manter' : 'Chave compartilhada'} />
+                        <Text fontSize="xs" color="fg.muted">Enviada como <code>Authorization: Bearer sua-chave</code>. A chave é armazenada criptografada.</Text>
+                      </Field.Root>
+                      <Text fontWeight="medium">Exemplo de envio</Text>
+                      <Input as="textarea" rows={12} readOnly fontFamily="mono" fontSize="xs" value={'curl -X POST ' + (watch('webhookUrl') || 'https://suaempresa.com/webhooks/cobcom') + " \\\n  -H 'Content-Type: application/json' \\\n  -H 'X-CobCom-Event: contract.status.updated' \\\n  -d '{\"event\":\"contract.status.updated\",\"data\":{\"contract\":{\"number\":\"12345\"},\"status\":{\"paymentStatus\":\"PAID\"}}}'"} />
+                    </Stack>
+                  </Tabs.Content>
+                </Tabs.Root>
               </form>
             </Dialog.Body>
             <Dialog.Footer>

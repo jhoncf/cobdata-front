@@ -51,6 +51,8 @@ export interface Creditor {
   cnpj: string | null;
   contacts: Contact[];
   address: Address | null;
+  webhookUrl?: string | null;
+  hasWebhookAuthKey?: boolean;
   createdAt: string;
   updatedAt: string;
 }
