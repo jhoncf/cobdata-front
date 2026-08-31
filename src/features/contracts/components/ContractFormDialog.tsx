@@ -47,9 +47,6 @@ const contractFormSchema = z.object({
   offerTotalValue: z.coerce.number().min(0).optional().or(z.literal('')),
   offerExpiresAt: z.string().optional(),
   offerNotes: z.string().optional(),
-}).refine((values) => values.updatedValue >= values.originalValue, {
-  message: 'Valor atualizado deve ser maior ou igual ao valor original',
-  path: ['updatedValue'],
 });
 
 type ContractFormValues = z.infer<typeof contractFormSchema>;
