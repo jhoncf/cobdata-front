@@ -135,9 +135,9 @@ export default function WalletDetailPage() {
     );
   };
 
-  const handleEditWallet = (formData: { name: string; creditorId: string; serasaWalletId?: string }) => {
+  const handleEditWallet = (formData: { name: string; creditorId: string; serasaWalletId?: string; cobcomDiscountPercent: number }) => {
     updateWalletMutation.mutate(
-      { id: id!, data: { name: formData.name, serasaWalletId: formData.serasaWalletId || null } },
+      { id: id!, data: { name: formData.name, serasaWalletId: formData.serasaWalletId || null, cobcomDiscountPercent: formData.cobcomDiscountPercent } },
       { onSuccess: () => setShowEditForm(false) },
     );
   };

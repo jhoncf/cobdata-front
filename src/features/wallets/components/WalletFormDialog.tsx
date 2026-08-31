@@ -20,6 +20,7 @@ const walletSchema = z.object({
   name: z.string().min(1, 'Nome obrigatório').max(120, 'Máximo 120 caracteres'),
   creditorId: z.string().min(1, 'Selecione um credor'),
   serasaWalletId: z.string().optional(),
+  cobcomDiscountPercent: z.coerce.number().min(0).max(100),
 });
 
 type WalletFormValues = z.infer<typeof walletSchema>;
@@ -28,7 +29,7 @@ interface WalletFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   wallet?: Wallet | null;
-  onSubmit: (data: { name: string; creditorId: string; serasaWalletId?: string }) => void;
+  onSubmit: (data: { name: string; creditorId: string; serasaWalletId?: string; cobcomDiscountPercent: number }) => void;
   loading?: boolean;
 }
 
@@ -51,7 +52,7 @@ export function WalletFormDialog({
     formState: { errors },
   } = useForm<WalletFormValues>({
     resolver: zodResolver(walletSchema),
-    defaultValues: { name: '', creditorId: '', serasaWalletId: '' },
+    defaultValues: { name: '', creditorId: '', serasaWalletId: '', cobcomDiscountPercent: 0 },
   });
 
   useEffect(() => {
@@ -61,9 +62,10 @@ export function WalletFormDialog({
           name: wallet.name,
           creditorId: wallet.creditorId,
           serasaWalletId: wallet.serasaWalletId ?? '',
+          cobcomDiscountPercent: wallet.cobcomDiscountPercent ?? 0,
         });
       } else {
-        reset({ name: '', creditorId: '', serasaWalletId: '' });
+        reset({ name: '', creditorId: '', serasaWalletId: '', cobcomDiscountPercent: 0 });
       }
     }
   }, [open, wallet, reset]);
@@ -138,6 +140,12 @@ export function WalletFormDialog({
                       </NativeSelect.Field>
                     <NativeSelect.Indicator />
                     </NativeSelect.Root>
+                  </Field.Root>
+                  <Field.Root invalid={!!errors.cobcomDiscountPercent}>
+                    <Field.Label>Desconto CobCom (%)</Field.Label>
+                    <Input type="number" min="0" max="100" step="0.01" {...register('cobcomDiscountPercent')} />
+                    <Field.HelperText>Aplicado ao valor atualizado na geração de Pix e nas ofertas CobCom.</Field.HelperText>
+                    <Field.ErrorText>{errors.cobcomDiscountPercent?.message}</Field.ErrorText>
                   </Field.Root>
                 </Stack>
               </form>

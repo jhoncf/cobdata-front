@@ -66,6 +66,7 @@ export interface Wallet {
   serasaWallet?: SerasaWallet | null;
   creditor?: Creditor;
   status: WalletStatus;
+  cobcomDiscountPercent?: number;
   createdAt: string;
   updatedAt: string;
   _count?: {

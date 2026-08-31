@@ -108,12 +108,14 @@ export interface UpdateCreditorDto {
 export interface CreateWalletDto {
   name: string;
   serasaWalletId?: string;
+  cobcomDiscountPercent?: number;
 }
 
 export interface UpdateWalletDto {
   name?: string;
   status?: WalletStatus;
   serasaWalletId?: string | null;
+  cobcomDiscountPercent?: number;
 }
 
 // ─── Contract DTOs ───────────────────────────────────────────────────────────
