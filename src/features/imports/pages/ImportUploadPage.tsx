@@ -83,6 +83,7 @@ export default function ImportUploadPage() {
   const [walletId, setWalletId] = useState(preselectedWalletId);
   const [file, setFile] = useState<File | null>(null);
   const [headers, setHeaders] = useState<string[]>([]);
+  const [columnExamples, setColumnExamples] = useState<Record<string, string>>({});
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
 
   const { data: walletsData } = useAllWalletsQuery();
@@ -93,21 +94,31 @@ export default function ImportUploadPage() {
     if (!accepted) return;
     setFile(accepted);
     setHeaders([]);
+    setColumnExamples({});
     setColumnMapping({});
 
-    const setDetectedHeaders = (sourceHeaders: unknown[]) => {
+    const setDetectedHeaders = (sourceHeaders: unknown[], sampleRow: unknown[] = []) => {
       const uniqueHeaders = sourceHeaders
         .map((header) => String(header ?? '').trim())
         .filter((header, index, values) => header && values.indexOf(header) === index);
       setHeaders(uniqueHeaders);
+      setColumnExamples(Object.fromEntries(
+        sourceHeaders.map((header, index) => [
+          String(header ?? '').trim(),
+          String(sampleRow[index] ?? '').trim(),
+        ]).filter(([header]) => Boolean(header)),
+      ));
       setColumnMapping(suggestedMapping(uniqueHeaders));
     };
 
     if (accepted.name.endsWith('.csv')) {
       Papa.parse(accepted, {
-        preview: 1,
+        preview: 2,
         complete: (results) => {
-          setDetectedHeaders((results.data[0] as string[]) || []);
+          setDetectedHeaders(
+            (results.data[0] as unknown[]) || [],
+            (results.data[1] as unknown[]) || [],
+          );
         },
         error: () => {
           toaster.create({ type: 'error', title: 'Erro ao ler headers do arquivo' });
@@ -117,13 +128,13 @@ export default function ImportUploadPage() {
       const reader = new FileReader();
       reader.onload = () => {
         try {
-          // O mapeamento precisa apenas do cabeçalho. Limitar a leitura à
-          // primeira linha evita converter toda a planilha no navegador.
-          const workbook = XLSX.read(reader.result, { type: 'array', sheetRows: 1 });
+          // Lemos somente cabeçalho e uma linha de amostra, sem converter a
+          // planilha inteira no navegador mesmo quando ela for muito grande.
+          const workbook = XLSX.read(reader.result, { type: 'array', sheetRows: 2 });
           const firstSheet = workbook.SheetNames[0];
           const worksheet = firstSheet ? workbook.Sheets[firstSheet] : undefined;
           const rows = worksheet ? XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, blankrows: false, range: 0 }) : [];
-          setDetectedHeaders(rows[0] ?? []);
+          setDetectedHeaders(rows[0] ?? [], rows[1] ?? []);
         } catch {
           toaster.create({ type: 'error', title: 'Não foi possível ler os cabeçalhos do XLSX' });
         }
@@ -226,7 +237,7 @@ export default function ImportUploadPage() {
         <Fieldset.Root>
           <Fieldset.Legend>Mapeamento de Colunas</Fieldset.Legend>
           <Text fontSize="sm" color="fg.muted" mb="3">
-            Confirme o destino de cada coluna. As sugestões podem ser alteradas livremente.
+            Confira uma amostra antes de confirmar o destino de cada coluna. As sugestões podem ser alteradas livremente.
           </Text>
           <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
             {headers.map((header) => (
@@ -235,6 +246,9 @@ export default function ImportUploadPage() {
                   <Text fontSize="sm" fontWeight="medium">{header}</Text>
                   {REQUIRED_TARGETS.includes(columnMapping[header] ?? '') && <Badge colorPalette="orange">Obrigatório</Badge>}
                 </Stack>
+                <Text fontSize="xs" color="fg.muted" mb="2" lineClamp="1">
+                  Exemplo: {columnExamples[header] || '—'}
+                </Text>
                 <NativeSelect.Root size="sm">
                   <NativeSelect.Field
                     value={columnMapping[header] ?? ''}
