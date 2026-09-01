@@ -61,6 +61,7 @@ export default function WalletDetailPage() {
   const [maxOriginalValue, setMaxOriginalValue] = useState('');
   const [minUpdatedValue, setMinUpdatedValue] = useState('');
   const [maxUpdatedValue, setMaxUpdatedValue] = useState('');
+  const [contractSearch, setContractSearch] = useState('');
   const [transferOpen, setTransferOpen] = useState(false);
   const [destinationWalletId, setDestinationWalletId] = useState('');
 
@@ -79,6 +80,7 @@ export default function WalletDetailPage() {
     walletId: id,
     page: contractsPage,
     limit: 20,
+    ...(contractSearch.trim() ? { search: contractSearch.trim() } : {}),
     ...operationFilters,
   });
   const createContractMutation = useCreateContractMutation();
@@ -310,6 +312,13 @@ export default function WalletDetailPage() {
           </Card.Header>
           <Card.Body>
             <HStack gap="3" wrap="wrap" mb="4">
+              <Input
+                size="sm"
+                width={{ base: '100%', md: '260px' }}
+                placeholder="Buscar CPF/CNPJ ou nº do contrato"
+                value={contractSearch}
+                onChange={(event) => { setContractSearch(event.target.value); setContractsPage(1); }}
+              />
               <NativeSelect.Root size="sm" width="180px">
                 <NativeSelect.Field value={paymentStatusFilter} onChange={(event) => { setPaymentStatusFilter(event.target.value as PaymentStatus | ''); setContractsPage(1); }}>
                   <option value="">Status financeiro</option>

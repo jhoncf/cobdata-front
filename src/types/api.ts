@@ -269,6 +269,7 @@ export interface ListContractsParams extends PaginationParams {
   dateFrom?: string;
   dateTo?: string;
   debtorDocument?: string;
+  search?: string;
   tags?: string[];
 }
 
