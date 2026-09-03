@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useParams, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
   Button,
   Card,
   Dialog,
+  Flex,
   HStack,
   SimpleGrid,
   Stack,
@@ -16,11 +17,12 @@ import {
   Portal,
   Input,
   NativeSelect,
+  Tooltip,
 } from '@chakra-ui/react';
-import { LuArrowLeft, LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw, LuUnlink, LuEllipsis } from 'react-icons/lu';
+import { LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw, LuUnlink, LuEllipsis, LuCalculator, LuInfo } from 'react-icons/lu';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState, ConfirmDialog } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
-import { useUpdateWalletMutation } from '../api/useWalletMutations';
+import { useRecalculateWalletOffersMutation, useUpdateWalletMutation } from '../api/useWalletMutations';
 import { useContractsQuery } from '@/features/contracts/api/useContractsQuery';
 import { useBulkTransferContractsMutation, useCreateContractMutation, useUpdateContractMutation, useSyncContractWithSerasaMutation, useRemoveContractFromSerasaMutation } from '@/features/contracts/api/useContractMutations';
 import { ContractFormDialog } from '@/features/contracts/components/ContractFormDialog';
@@ -35,15 +37,59 @@ import { PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
 import { useAllWalletsQuery } from '../api/useWalletsQuery';
 import { OperationAction, type PaymentStatus, type SerasaStatus } from '@/types/enums';
-import type { CreateContractDto, OperationContractFilters, UpdateContractDto } from '@/types/api';
+import type { CreateContractDto, OperationContractFilters, UpdateContractDto, UpdateWalletDto } from '@/types/api';
 import type { Contract } from '@/types/models';
 
 type SortField = 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'paymentStatus' | 'serasaStatus' | 'occurrenceDate';
 type SortDirection = 'asc' | 'desc';
+type ComparisonOperator = 'gt' | 'lt' | 'eq';
+
+function ComparisonFilter({
+  label, operator, value, unit, onOperatorChange, onValueChange,
+}: {
+  label: string;
+  operator: ComparisonOperator;
+  value: string;
+  unit: string;
+  onOperatorChange: (value: ComparisonOperator) => void;
+  onValueChange: (value: string) => void;
+}) {
+  return (
+    <HStack gap="2" width="100%" minWidth="0">
+      <Text fontSize="xs" color="fg.muted" whiteSpace="nowrap">{label}</Text>
+      <NativeSelect.Root size="sm" width="112px" flexShrink="0">
+        <NativeSelect.Field value={operator} onChange={(event) => onOperatorChange(event.target.value as ComparisonOperator)} aria-label={`Operador de ${label}`}>
+          <option value="gt">Maior que</option>
+          <option value="lt">Menor que</option>
+          <option value="eq">Igual a</option>
+        </NativeSelect.Field>
+        <NativeSelect.Indicator />
+      </NativeSelect.Root>
+      <Input size="sm" minWidth="0" flex="1" type="number" min="0" placeholder={unit} value={value} onChange={(event) => onValueChange(event.target.value)} aria-label={`${label} ${unit}`} />
+    </HStack>
+  );
+}
+
+function SummaryTooltipLabel({ label, description }: { label: string; description: string }) {
+  return (
+    <Tooltip.Root positioning={{ placement: 'top' }} openDelay={150}>
+      <Tooltip.Trigger asChild>
+        <HStack gap="1" width="fit-content" cursor="help" tabIndex={0} aria-label={`${label}: ${description}`}>
+          <Stat.Label>{label}</Stat.Label>
+          <LuInfo size={14} aria-hidden="true" />
+        </HStack>
+      </Tooltip.Trigger>
+      <Portal>
+        <Tooltip.Positioner>
+          <Tooltip.Content maxW="300px" fontSize="xs" lineHeight="tall">{description}</Tooltip.Content>
+        </Tooltip.Positioner>
+      </Portal>
+    </Tooltip.Root>
+  );
+}
 
 export default function WalletDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { canEdit } = usePermission();
   const [contractsPage, setContractsPage] = useState(1);
   const [showContractForm, setShowContractForm] = useState(false);
@@ -57,10 +103,12 @@ export default function WalletDetailPage() {
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | ''>('');
   const [serasaStatusFilter, setSerasaStatusFilter] = useState<SerasaStatus | ''>('');
   const [installmentOnly, setInstallmentOnly] = useState(false);
-  const [minOriginalValue, setMinOriginalValue] = useState('');
-  const [maxOriginalValue, setMaxOriginalValue] = useState('');
-  const [minUpdatedValue, setMinUpdatedValue] = useState('');
-  const [maxUpdatedValue, setMaxUpdatedValue] = useState('');
+  const [updatedValueOperator, setUpdatedValueOperator] = useState<ComparisonOperator>('gt');
+  const [updatedValue, setUpdatedValue] = useState('');
+  const [offerValueOperator, setOfferValueOperator] = useState<ComparisonOperator>('gt');
+  const [offerValue, setOfferValue] = useState('');
+  const [agingOperator, setAgingOperator] = useState<ComparisonOperator>('gt');
+  const [aging, setAging] = useState('');
   const [contractSearch, setContractSearch] = useState('');
   const [transferOpen, setTransferOpen] = useState(false);
   const [destinationWalletId, setDestinationWalletId] = useState('');
@@ -69,11 +117,10 @@ export default function WalletDetailPage() {
     ...(paymentStatusFilter ? { paymentStatus: paymentStatusFilter } : {}),
     ...(serasaStatusFilter ? { serasaStatus: serasaStatusFilter } : {}),
     ...(installmentOnly ? { installmentOnly: true } : {}),
-    ...(minOriginalValue ? { minOriginalValue: Number(minOriginalValue) } : {}),
-    ...(maxOriginalValue ? { maxOriginalValue: Number(maxOriginalValue) } : {}),
-    ...(minUpdatedValue ? { minUpdatedValue: Number(minUpdatedValue) } : {}),
-    ...(maxUpdatedValue ? { maxUpdatedValue: Number(maxUpdatedValue) } : {}),
-  }), [paymentStatusFilter, serasaStatusFilter, installmentOnly, minOriginalValue, maxOriginalValue, minUpdatedValue, maxUpdatedValue]);
+    ...(updatedValue ? { updatedValueOperator, updatedValue: Number(updatedValue) } : {}),
+    ...(offerValue ? { offerValueOperator, offerValue: Number(offerValue) } : {}),
+    ...(aging ? { agingOperator, aging: Number(aging) } : {}),
+  }), [paymentStatusFilter, serasaStatusFilter, installmentOnly, updatedValueOperator, updatedValue, offerValueOperator, offerValue, agingOperator, aging]);
 
   const { data: wallet, isLoading } = useWalletDetailQuery(id ?? '');
   const { data: contractsData, isLoading: contractsLoading } = useContractsQuery({
@@ -86,11 +133,12 @@ export default function WalletDetailPage() {
   const createContractMutation = useCreateContractMutation();
   const updateContractMutation = useUpdateContractMutation();
   const updateWalletMutation = useUpdateWalletMutation();
+  const recalculateOffersMutation = useRecalculateWalletOffersMutation();
   const bulkTransferMutation = useBulkTransferContractsMutation();
   const { data: allWallets } = useAllWalletsQuery();
   const createOperationMutation = useCreateOperationMutation();
   const { data: bulkPreview, isLoading: bulkPreviewLoading } = useOperationPreviewQuery(
-    wallet?.serasaWalletId ? id : undefined,
+    id,
     bulkAction ?? undefined,
     operationFilters,
   );
@@ -107,18 +155,8 @@ export default function WalletDetailPage() {
     && contract.paymentStatus !== 'PAID'
   );
   const canRemoveFromSerasa = (contract: Contract) => ['SENT', 'REGISTERED', 'UPDATED'].includes(contract.serasaStatus);
-  const handleSyncWithSerasa = (contract: Contract) => {
-    if (!wallet?.serasaWalletId) {
-      toaster.create({ type: 'warning', title: 'Selecione uma Carteira Serasa', description: 'Clique em Editar, selecione a Carteira Serasa e salve antes de sincronizar.' });
-      return;
-    }
-    syncWithSerasaMutation.mutate(contract.id);
-  };
+  const handleSyncWithSerasa = (contract: Contract) => syncWithSerasaMutation.mutate(contract.id);
   const handleBulkAction = (action: OperationAction) => {
-    if (!wallet?.serasaWalletId) {
-      toaster.create({ type: 'warning', title: 'Selecione uma Carteira Serasa', description: 'Clique em Editar, selecione a Carteira Serasa e salve antes de sincronizar.' });
-      return;
-    }
     setBulkAction(action);
   };
 
@@ -137,9 +175,9 @@ export default function WalletDetailPage() {
     );
   };
 
-  const handleEditWallet = (formData: { name: string; creditorId: string; serasaWalletId?: string; cobcomDiscountPercent: number }) => {
+  const handleEditWallet = (formData: { name: string; creditorId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number; discountBands?: UpdateWalletDto['discountBands'] }) => {
     updateWalletMutation.mutate(
-      { id: id!, data: { name: formData.name, serasaWalletId: formData.serasaWalletId || null, cobcomDiscountPercent: formData.cobcomDiscountPercent } },
+      { id: id!, data: { name: formData.name, cobcomDiscountPercent: formData.cobcomDiscountPercent, offerFirstInstallmentDays: formData.offerFirstInstallmentDays, offerMinInstallmentValue: formData.offerMinInstallmentValue, offerMaxInstallments: formData.offerMaxInstallments, discountBands: formData.discountBands } },
       { onSuccess: () => setShowEditForm(false) },
     );
   };
@@ -213,6 +251,7 @@ export default function WalletDetailPage() {
     <>
       <PageHeader title={wallet.name}>
         <HStack gap="2">
+          {canEdit && <Button size="sm" variant="outline" onClick={() => setShowEditForm(true)}><LuPencil /> Editar</Button>}
           <Menu.Root>
             <Menu.Trigger asChild>
               <Button size="sm" colorPalette="blue">
@@ -222,20 +261,17 @@ export default function WalletDetailPage() {
             <Portal>
               <Menu.Positioner>
                 <Menu.Content>
-                  {canEdit && <Menu.Item value="edit" onClick={() => setShowEditForm(true)}><LuPencil /> Editar carteira</Menu.Item>}
                   <Menu.Item value="new-contract" onClick={() => setShowContractForm(true)}><LuPlus /> Novo contrato</Menu.Item>
                   <Menu.Item value="import" asChild><RouterLink to={`/imports/new?walletId=${id}`}><LuUpload /> Importar contratos</RouterLink></Menu.Item>
                   {canEdit && <Menu.Item value="communications" onClick={() => { setLigueLeadContractId(undefined); setShowLigueLead(true); }}><LuRadio /> Comunicações</Menu.Item>}
                   {canEdit && <Menu.Separator />}
+                  {canEdit && <Menu.Item value="recalculate-offers" onClick={() => recalculateOffersMutation.mutate(id!)}><LuCalculator /> Recalcular ofertas</Menu.Item>}
                   {canEdit && <Menu.Item value="sync-serasa" onClick={() => handleBulkAction(OperationAction.CREATE_OR_UPDATE)}><LuRefreshCw /> Enviar em massa ao Serasa</Menu.Item>}
                   {canEdit && <Menu.Item value="remove-serasa" color="fg.error" onClick={() => handleBulkAction(OperationAction.REMOVE)}><LuUnlink /> Remover em massa do Serasa</Menu.Item>}
                 </Menu.Content>
               </Menu.Positioner>
             </Portal>
           </Menu.Root>
-          <Button size="sm" variant="outline" onClick={() => navigate('/wallets')}>
-            <LuArrowLeft /> Voltar
-          </Button>
         </HStack>
       </PageHeader>
 
@@ -269,6 +305,65 @@ export default function WalletDetailPage() {
           </Card.Body>
         </Card.Root>
 
+        <Card.Root>
+          <Card.Header>
+            <Card.Title>Configuração de ofertas</Card.Title>
+          </Card.Header>
+          <Card.Body>
+            <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} gap="4">
+              <Box><Text fontSize="sm" color="fg.muted">Desconto CobCom</Text><Text fontWeight="semibold">{wallet.cobcomDiscountPercent ?? 0}%</Text></Box>
+              <Box><Text fontSize="sm" color="fg.muted">Primeiro pagamento</Text><Text fontWeight="semibold">{wallet.offerFirstInstallmentDays ?? 5} dias</Text></Box>
+              <Box><Text fontSize="sm" color="fg.muted">Parcela mínima</Text><Text fontWeight="semibold">{formatCurrency(wallet.offerMinInstallmentValue ?? 0.01)}</Text></Box>
+              <Box><Text fontSize="sm" color="fg.muted">Máximo de parcelas</Text><Text fontWeight="semibold">{wallet.offerMaxInstallments ?? 1}</Text></Box>
+            </SimpleGrid>
+          </Card.Body>
+        </Card.Root>
+
+        <Card.Root>
+          <Card.Header>
+            <Card.Title>Faixas de desconto da carteira</Card.Title>
+            <Text fontSize="sm" color="fg.muted">
+              A carteira define a estratégia; os limites comerciais do credor são o teto de cada faixa.
+            </Text>
+          </Card.Header>
+          <Card.Body>
+            {(wallet.creditor?.discountBands?.length ?? 0) > 0 ? (
+              <Table.Root size="sm" variant="line">
+                <Table.Header>
+                  <Table.Row>
+                    <Table.ColumnHeader>Faixa de atraso</Table.ColumnHeader>
+                    <Table.ColumnHeader>Limite do credor — à vista</Table.ColumnHeader>
+                    <Table.ColumnHeader>Estratégia da carteira — à vista</Table.ColumnHeader>
+                    <Table.ColumnHeader>Limite do credor — parcelado</Table.ColumnHeader>
+                    <Table.ColumnHeader>Estratégia da carteira — parcelado</Table.ColumnHeader>
+                  </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                  {wallet.creditor?.discountBands?.map((ceiling) => {
+                    const strategy = wallet.discountBands?.find((band) =>
+                      band.minAgingDays === ceiling.minAgingDays && band.maxAgingDays === ceiling.maxAgingDays,
+                    );
+                    const range = ceiling.maxAgingDays == null
+                      ? `${ceiling.minAgingDays}+ dias`
+                      : `${ceiling.minAgingDays} a ${ceiling.maxAgingDays} dias`;
+                    return (
+                      <Table.Row key={`${ceiling.minAgingDays}-${ceiling.maxAgingDays ?? 'plus'}`}>
+                        <Table.Cell fontWeight="medium">{range}</Table.Cell>
+                        <Table.Cell>{ceiling.cashDiscountPercent}%</Table.Cell>
+                        <Table.Cell>{strategy?.cashStrategyDiscountPercent ?? wallet.cobcomDiscountPercent ?? 0}%</Table.Cell>
+                        <Table.Cell>{ceiling.installmentDiscountPercent}%</Table.Cell>
+                        <Table.Cell>{strategy?.installmentStrategyDiscountPercent ?? wallet.cobcomDiscountPercent ?? 0}%</Table.Cell>
+                      </Table.Row>
+                    );
+                  })}
+                </Table.Body>
+              </Table.Root>
+            ) : (
+              <Text color="fg.muted">Este credor ainda não possui faixas comerciais cadastradas. Configure-as no cadastro do credor para definir os limites da carteira.</Text>
+            )}
+          </Card.Body>
+        </Card.Root>
+
         {/* Dashboard da Carteira */}
         {wallet.summary && (
           <Card.Root>
@@ -276,29 +371,58 @@ export default function WalletDetailPage() {
               <Card.Title>Resumo da Carteira</Card.Title>
             </Card.Header>
             <Card.Body>
-            <SimpleGrid columns={{ base: 2, md: 3, lg: 6 }} gap="6">
-                <Stat.Root>
-                  <Stat.Label>Total de Contratos</Stat.Label>
-                  <Stat.ValueText>{wallet.summary.totalContracts}</Stat.ValueText>
+            <SimpleGrid columns={{ base: 2, sm: 3, xl: 6 }} gap={{ base: '4', xl: '3' }}>
+                <Stat.Root minW="0">
+                  <SummaryTooltipLabel label="Total de Contratos" description="Quantidade de contratos ativos e históricos da carteira. Fórmula: contagem de contratos não excluídos." />
+                  <Stat.ValueText fontSize={{ base: 'xl', xl: '2xl' }} lineHeight="short">{wallet.summary.totalContracts}</Stat.ValueText>
                 </Stat.Root>
-                <Stat.Root>
-                  <Stat.Label>Valor Total</Stat.Label>
-                  <Stat.ValueText>
+                <Stat.Root minW="0">
+                  <SummaryTooltipLabel label="Valor Total" description="Soma do valor atualizado de todos os contratos da carteira. Fórmula: Σ valor atualizado." />
+                  <Stat.ValueText fontSize={{ base: 'lg', xl: 'xl' }} lineHeight="short" whiteSpace="nowrap">
                     {formatCurrency(wallet.summary.totalValue)}
                   </Stat.ValueText>
                 </Stat.Root>
                 {(['OPEN', 'PAID', 'AGREEMENT_BREACHED'] as PaymentStatus[]).map((status) => {
                   const stat = wallet.summary.paymentStatusTotals?.[status] ?? { count: 0, amount: 0 };
-                  return <Stat.Root key={status}>
-                    <Stat.Label>{PAYMENT_STATUS_LABELS[status]}</Stat.Label>
-                    <Stat.ValueText>{stat.count}</Stat.ValueText>
+                  return <Stat.Root key={status} minW="0">
+                    <SummaryTooltipLabel
+                      label={PAYMENT_STATUS_LABELS[status]}
+                      description={status === 'OPEN'
+                        ? 'Contratos sem quitação ou acordo finalizado. O valor exibido é a soma dos valores atualizados desses contratos.'
+                        : status === 'PAID'
+                          ? 'Contratos quitados. O valor abaixo é a soma dos valores atualizados; o valor efetivamente recebido aparece em “Valor recuperado”.'
+                          : 'Contratos cujo acordo não foi cumprido no prazo. O valor exibido é a soma dos valores atualizados desses contratos.'}
+                    />
+                    <Stat.ValueText fontSize={{ base: 'xl', xl: '2xl' }} lineHeight="short">{stat.count}</Stat.ValueText>
                     <Text fontSize="sm" color="fg.muted">{formatCurrency(stat.amount)}</Text>
                   </Stat.Root>;
                 })}
-                <Stat.Root>
-                  <Stat.Label>No Serasa</Stat.Label>
-                  <Stat.ValueText>{wallet.summary.serasaTotal?.count ?? 0}</Stat.ValueText>
+                <Stat.Root minW="0">
+                  <SummaryTooltipLabel label="No Serasa" description="Contratos em estados enviados, registrados, atualizados ou em remoção junto à Serasa. O valor é a soma dos valores atualizados desses contratos." />
+                  <Stat.ValueText fontSize={{ base: 'xl', xl: '2xl' }} lineHeight="short">{wallet.summary.serasaTotal?.count ?? 0}</Stat.ValueText>
                   <Text fontSize="sm" color="fg.muted">{formatCurrency(wallet.summary.serasaTotal?.amount ?? 0)}</Text>
+                </Stat.Root>
+              </SimpleGrid>
+              <SimpleGrid mt="6" columns={{ base: 1, sm: 2, xl: 4 }} gap="4">
+                <Stat.Root minW="0">
+                  <SummaryTooltipLabel label="Valor recuperado" description="Total já recebido. Fórmula: Σ valor pago registrado; para quitações históricas sem valor pago, usa o valor acordado, da oferta ou atualizado. Eficiência = valor recuperado ÷ valor atualizado elegível." />
+                  <Stat.ValueText fontSize="xl">{formatCurrency(wallet.summary.recoveredValue ?? 0)}</Stat.ValueText>
+                  <Text fontSize="sm" color="fg.muted">Eficiência: {(wallet.summary.efficiencyRate ?? 0).toLocaleString('pt-BR')}%</Text>
+                </Stat.Root>
+                <Stat.Root minW="0">
+                  <SummaryTooltipLabel label="Repasse previsto" description="Valor esperado para repassar ao credor nos contratos ativos ainda não pagos. Por contrato: valor atualizado × (1 − desconto máximo permitido). O realizado considera contratos pagos." />
+                  <Stat.ValueText fontSize="xl">{formatCurrency(wallet.summary.repasseForecastValue ?? 0)}</Stat.ValueText>
+                  <Text fontSize="sm" color="fg.muted">Realizado: {formatCurrency(wallet.summary.repasseRealizedValue ?? 0)}</Text>
+                </Stat.Root>
+                <Stat.Root minW="0">
+                  <SummaryTooltipLabel label="Comissão CobCom" description="Comissão prevista para faturamento ao credor, sem acréscimo ao valor cobrado do devedor. Por contrato: valor de repasse × percentual de comissão fixo. O realizado considera contratos pagos." />
+                  <Stat.ValueText fontSize="xl">{formatCurrency(wallet.summary.commissionForecastValue ?? 0)}</Stat.ValueText>
+                  <Text fontSize="sm" color="fg.muted">Realizada: {formatCurrency(wallet.summary.commissionRealizedValue ?? 0)}</Text>
+                </Stat.Root>
+                <Stat.Root minW="0">
+                  <SummaryTooltipLabel label="Descontos nas ofertas" description="Redução total presente nas ofertas calculadas. Fórmula por contrato: máximo de (valor atualizado − valor da oferta, 0). É uma visão das ofertas, não apenas dos pagamentos concluídos." />
+                  <Stat.ValueText fontSize="xl">{formatCurrency(wallet.summary.discountsConcededValue ?? 0)}</Stat.ValueText>
+                  <Text fontSize="sm" color="fg.muted">Baseado nas ofertas calculadas</Text>
                 </Stat.Root>
               </SimpleGrid>
             </Card.Body>
@@ -311,64 +435,81 @@ export default function WalletDetailPage() {
             <Card.Title>Contratos</Card.Title>
           </Card.Header>
           <Card.Body>
-            <HStack gap="3" wrap="wrap" mb="4">
-              <Input
-                size="sm"
-                width={{ base: '100%', md: '260px' }}
-                placeholder="Buscar CPF/CNPJ ou nº do contrato"
-                value={contractSearch}
-                onChange={(event) => { setContractSearch(event.target.value); setContractsPage(1); }}
-              />
-              <NativeSelect.Root size="sm" width="180px">
-                <NativeSelect.Field value={paymentStatusFilter} onChange={(event) => { setPaymentStatusFilter(event.target.value as PaymentStatus | ''); setContractsPage(1); }}>
-                  <option value="">Status financeiro</option>
-                  <option value="OPEN">Em aberto</option>
-                  <option value="IN_AGREEMENT">Em acordo</option>
-                  <option value="INSTALLMENT">Parcelado</option>
-                  <option value="AGREEMENT_BREACHED">Acordo quebrado</option>
-                  <option value="PAID">Pago</option>
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
-              <NativeSelect.Root size="sm" width="170px">
-                <NativeSelect.Field value={serasaStatusFilter} onChange={(event) => { setSerasaStatusFilter(event.target.value as SerasaStatus | ''); setContractsPage(1); }}>
-                  <option value="">Status Serasa</option>
-                  <option value="NOT_ENABLED">Não enviado</option>
-                  <option value="SENT">Enviado</option>
-                  <option value="REGISTERED">Registrado</option>
-                  <option value="FAILED">Falhou</option>
-                  <option value="REMOVED">Removido</option>
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
-              <NativeSelect.Root size="sm" width="150px">
-                <NativeSelect.Field value={installmentOnly ? 'yes' : ''} onChange={(event) => { setInstallmentOnly(event.target.value === 'yes'); setContractsPage(1); }}>
-                  <option value="">Todos os acordos</option>
-                  <option value="yes">Parcelados</option>
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
-              <Input size="sm" width="145px" type="number" min="0" placeholder="Valor original mín." value={minOriginalValue} onChange={(event) => { setMinOriginalValue(event.target.value); setContractsPage(1); }} />
-              <Input size="sm" width="145px" type="number" min="0" placeholder="Valor original máx." value={maxOriginalValue} onChange={(event) => { setMaxOriginalValue(event.target.value); setContractsPage(1); }} />
-              <Input size="sm" width="155px" type="number" min="0" placeholder="Valor atualizado mín." value={minUpdatedValue} onChange={(event) => { setMinUpdatedValue(event.target.value); setContractsPage(1); }} />
-              <Input size="sm" width="155px" type="number" min="0" placeholder="Valor atualizado máx." value={maxUpdatedValue} onChange={(event) => { setMaxUpdatedValue(event.target.value); setContractsPage(1); }} />
-              {canEdit && <Menu.Root>
-                <Menu.Trigger asChild>
-                  <Button size="sm" variant="outline" colorPalette="blue" disabled={!contractsData?.meta.total}>
-                    <LuEllipsis /> Ações
-                  </Button>
-                </Menu.Trigger>
-                <Portal>
-                  <Menu.Positioner>
-                    <Menu.Content>
-                      <Menu.Item value="transfer-filtered" onClick={() => { setDestinationWalletId(''); setTransferOpen(true); }}>
-                        Transferir contratos filtrados
-                      </Menu.Item>
-                    </Menu.Content>
-                  </Menu.Positioner>
-                </Portal>
-              </Menu.Root>}
-            </HStack>
+            <Stack gap="4" mb="5">
+              <Flex
+                gap="3"
+                direction={{ base: 'column', md: 'row' }}
+                align={{ base: 'stretch', md: 'center' }}
+                justify="space-between"
+              >
+                <Input
+                  size="sm"
+                  width={{ base: '100%', md: '360px' }}
+                  placeholder="Buscar CPF/CNPJ ou nº do contrato"
+                  value={contractSearch}
+                  onChange={(event) => { setContractSearch(event.target.value); setContractsPage(1); }}
+                  aria-label="Buscar contratos da carteira"
+                />
+                {canEdit && <Menu.Root>
+                  <Menu.Trigger asChild>
+                    <Button size="sm" variant="outline" colorPalette="blue" alignSelf={{ base: 'flex-start', md: 'auto' }} disabled={!contractsData?.meta.total}>
+                      <LuEllipsis /> Ações
+                    </Button>
+                  </Menu.Trigger>
+                  <Portal>
+                    <Menu.Positioner>
+                      <Menu.Content>
+                        <Menu.Item value="transfer-filtered" onClick={() => { setDestinationWalletId(''); setTransferOpen(true); }}>
+                          Transferir contratos filtrados
+                        </Menu.Item>
+                      </Menu.Content>
+                    </Menu.Positioner>
+                  </Portal>
+                </Menu.Root>}
+              </Flex>
+
+              <Box borderTopWidth="1px" pt="4">
+                <Text fontSize="sm" fontWeight="semibold" mb="3">Filtros</Text>
+                <Stack gap="3">
+                  <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap="3">
+                    <NativeSelect.Root size="sm" width="100%">
+                      <NativeSelect.Field value={paymentStatusFilter} onChange={(event) => { setPaymentStatusFilter(event.target.value as PaymentStatus | ''); setContractsPage(1); }}>
+                        <option value="">Status financeiro</option>
+                        <option value="OPEN">Em aberto</option>
+                        <option value="IN_AGREEMENT">Em acordo</option>
+                        <option value="INSTALLMENT">Parcelado</option>
+                        <option value="AGREEMENT_BREACHED">Acordo quebrado</option>
+                        <option value="PAID">Pago</option>
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                    <NativeSelect.Root size="sm" width="100%">
+                      <NativeSelect.Field value={serasaStatusFilter} onChange={(event) => { setSerasaStatusFilter(event.target.value as SerasaStatus | ''); setContractsPage(1); }}>
+                        <option value="">Status Serasa</option>
+                        <option value="NOT_ENABLED">Não enviado</option>
+                        <option value="SENT">Enviado</option>
+                        <option value="REGISTERED">Registrado</option>
+                        <option value="FAILED">Falhou</option>
+                        <option value="REMOVED">Removido</option>
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                    <NativeSelect.Root size="sm" width="100%">
+                      <NativeSelect.Field value={installmentOnly ? 'yes' : ''} onChange={(event) => { setInstallmentOnly(event.target.value === 'yes'); setContractsPage(1); }}>
+                        <option value="">Todos os acordos</option>
+                        <option value="yes">Parcelados</option>
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                  </SimpleGrid>
+                  <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} gap="3">
+                    <ComparisonFilter label="Valor atualizado" operator={updatedValueOperator} value={updatedValue} unit="R$" onOperatorChange={(value) => { setUpdatedValueOperator(value); setContractsPage(1); }} onValueChange={(value) => { setUpdatedValue(value); setContractsPage(1); }} />
+                    <ComparisonFilter label="Oferta" operator={offerValueOperator} value={offerValue} unit="R$" onOperatorChange={(value) => { setOfferValueOperator(value); setContractsPage(1); }} onValueChange={(value) => { setOfferValue(value); setContractsPage(1); }} />
+                    <ComparisonFilter label="Aging" operator={agingOperator} value={aging} unit="dias" onOperatorChange={(value) => { setAgingOperator(value); setContractsPage(1); }} onValueChange={(value) => { setAging(value); setContractsPage(1); }} />
+                  </SimpleGrid>
+                </Stack>
+              </Box>
+            </Stack>
             {contractsLoading ? (
               <Spinner />
             ) : !contractsData?.data.length ? (
@@ -383,9 +524,11 @@ export default function WalletDetailPage() {
                         <SortableHeader field="debtorDocument">Documento</SortableHeader>
                         <SortableHeader field="originalValue">Valor Original</SortableHeader>
                         <SortableHeader field="updatedValue">Valor Atualizado</SortableHeader>
+                        <Table.ColumnHeader>Oferta</Table.ColumnHeader>
                         <SortableHeader field="paymentStatus">Status</SortableHeader>
                         <SortableHeader field="serasaStatus">Serasa</SortableHeader>
                         <SortableHeader field="occurrenceDate">Data Ocorrência</SortableHeader>
+                        <Table.ColumnHeader>Aging</Table.ColumnHeader>
                         {canEdit && <Table.ColumnHeader width="190px">Ações</Table.ColumnHeader>}
                       </Table.Row>
                     </Table.Header>
@@ -405,6 +548,16 @@ export default function WalletDetailPage() {
                               : '—'}
                           </Table.Cell>
                           <Table.Cell>
+                            {contract.offerValue != null ? (
+                              <>
+                                {formatCurrency(contract.offerValue)}
+                                {contract.offerDiscountPercent != null && (
+                                  <Text as="span" fontSize="xs" color="fg.muted"> ({contract.offerDiscountPercent}% desc.)</Text>
+                                )}
+                              </>
+                            ) : '—'}
+                          </Table.Cell>
+                          <Table.Cell>
                             <StatusBadge
                               status={contract.paymentStatus}
                               label={PAYMENT_STATUS_LABELS[contract.paymentStatus] ?? contract.paymentStatus}
@@ -419,6 +572,7 @@ export default function WalletDetailPage() {
                           <Table.Cell>
                             {formatDate(contract.occurrenceDate)}
                           </Table.Cell>
+                          <Table.Cell whiteSpace="nowrap">{contract.agingDays} dias</Table.Cell>
                           {canEdit && (
                             <Table.Cell>
                               <HStack gap="1">
@@ -449,11 +603,9 @@ export default function WalletDetailPage() {
                                     variant="ghost"
                                     colorPalette="blue"
                                     aria-label="Sincronizar com Serasa"
-                                    title={!wallet?.serasaWalletId
-                                      ? 'Vincule uma carteira Serasa a esta carteira CRM antes de sincronizar'
-                                      : canSyncWithSerasa(contract)
-                                        ? 'Sincronizar com Serasa'
-                                        : 'Contrato já enviado à Serasa; aguarde o retorno antes de uma nova sincronização'}
+                                    title={canSyncWithSerasa(contract)
+                                      ? 'Sincronizar com Serasa'
+                                      : 'Contrato já enviado à Serasa; aguarde o retorno antes de uma nova sincronização'}
                                     disabled={!canSyncWithSerasa(contract)}
                                     loading={syncWithSerasaMutation.isPending && syncWithSerasaMutation.variables === contract.id}
                                     onClick={() => handleSyncWithSerasa(contract)}

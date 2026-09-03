@@ -10,11 +10,9 @@ export function useCreateWalletMutation() {
     mutationFn: async ({
       creditorId,
       data,
-      serasaWalletId,
     }: {
       creditorId: string;
       data: CreateWalletDto;
-      serasaWalletId?: string;
     }) => {
       const res = await api.post(`/creditors/${creditorId}/wallets`, data);
       return res;
@@ -39,6 +37,19 @@ export function useUpdateWalletMutation() {
         type: 'success',
         title: 'Carteira atualizada com sucesso',
       });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
+export function useRecalculateWalletOffersMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/wallets/${id}/recalculate-offers`),
+    onSuccess: (_response, id) => {
+      queryClient.invalidateQueries({ queryKey: ['wallets', 'detail', id] });
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      toaster.create({ type: 'success', title: 'Ofertas recalculadas com sucesso' });
     },
     onError: (error) => handleApiError(error),
   });

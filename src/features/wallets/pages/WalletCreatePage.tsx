@@ -21,6 +21,10 @@ import { useCreditorsQuery } from '@/features/creditors/api/useCreditorsQuery';
 const walletSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   creditorId: z.string().min(1, 'Selecione um credor'),
+  cobcomDiscountPercent: z.coerce.number().min(0).max(100),
+  offerFirstInstallmentDays: z.coerce.number().int().min(1).max(365),
+  offerMinInstallmentValue: z.coerce.number().min(0.01),
+  offerMaxInstallments: z.coerce.number().int().min(1).max(999),
 });
 
 type WalletFormValues = z.infer<typeof walletSchema>;
@@ -36,14 +40,14 @@ export default function WalletCreatePage() {
     formState: { errors, isSubmitting },
   } = useForm<WalletFormValues>({
     resolver: zodResolver(walletSchema),
-    defaultValues: { name: '', creditorId: '' },
+    defaultValues: { name: '', creditorId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1 },
   });
 
   async function onSubmit(data: WalletFormValues) {
     try {
       await createMutation.mutateAsync({
         creditorId: data.creditorId,
-        data: { name: data.name },
+        data: { name: data.name, cobcomDiscountPercent: data.cobcomDiscountPercent, offerFirstInstallmentDays: data.offerFirstInstallmentDays, offerMinInstallmentValue: data.offerMinInstallmentValue, offerMaxInstallments: data.offerMaxInstallments },
       });
       toaster.create({
         type: 'success',
@@ -89,6 +93,22 @@ export default function WalletCreatePage() {
                   <NativeSelect.Indicator />
                 </NativeSelect.Root>
                 <Field.ErrorText>{errors.creditorId?.message}</Field.ErrorText>
+              </Field.Root>
+              <Field.Root invalid={!!errors.cobcomDiscountPercent} maxW="400px">
+                <Field.Label>Desconto CobCom (%)</Field.Label>
+                <Input type="number" min="0" max="100" step="0.01" {...register('cobcomDiscountPercent')} />
+              </Field.Root>
+              <Field.Root invalid={!!errors.offerFirstInstallmentDays} maxW="400px">
+                <Field.Label>Prazo para o primeiro pagamento (dias)</Field.Label>
+                <Input type="number" min="1" max="365" {...register('offerFirstInstallmentDays')} />
+              </Field.Root>
+              <Field.Root invalid={!!errors.offerMinInstallmentValue} maxW="400px">
+                <Field.Label>Valor mínimo por parcela (R$)</Field.Label>
+                <Input type="number" min="0.01" step="0.01" {...register('offerMinInstallmentValue')} />
+              </Field.Root>
+              <Field.Root invalid={!!errors.offerMaxInstallments} maxW="400px">
+                <Field.Label>Máximo de parcelas</Field.Label>
+                <Input type="number" min="1" max="999" {...register('offerMaxInstallments')} />
               </Field.Root>
             </Card.Body>
           </Card.Root>

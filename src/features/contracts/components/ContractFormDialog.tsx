@@ -30,6 +30,7 @@ const contractFormSchema = z.object({
   dueDate: z.string().min(1, 'Data de vencimento obrigatória'),
   originalValue: z.coerce.number().positive('Valor deve ser positivo'),
   updatedValue: z.coerce.number().positive('Valor atualizado é obrigatório e deve ser positivo'),
+  contractDiscountPercent: z.coerce.number().min(0).max(100).optional(),
   debtOrigin: z.string().optional(),
   productName: z.string().optional(),
   debtorStreet: z.string().optional(),
@@ -90,6 +91,7 @@ export function ContractFormDialog({
       dueDate: '',
       originalValue: 0,
       updatedValue: 0,
+      contractDiscountPercent: 0,
       debtOrigin: '',
       productName: '',
       debtorStreet: '',
@@ -125,6 +127,7 @@ export function ContractFormDialog({
           dueDate: contract.dueDate?.split('T')[0] ?? '',
           originalValue: contract.originalValue,
           updatedValue: contract.updatedValue,
+          contractDiscountPercent: contract.offerDiscountPercent ?? 0,
           debtOrigin: contract.debtOrigin ?? '',
           productName: contract.productName ?? '',
           debtorStreet: contract.debtorStreet ?? '',
@@ -154,6 +157,7 @@ export function ContractFormDialog({
           dueDate: '',
           originalValue: 0,
           updatedValue: 0,
+          contractDiscountPercent: 0,
           debtOrigin: '',
           productName: '',
           debtorStreet: '',
@@ -198,6 +202,7 @@ export function ContractFormDialog({
         dueDate: values.dueDate,
         originalValue: values.originalValue,
         updatedValue: Number(values.updatedValue),
+        ...(contract?.paymentStatus !== 'PAID' ? { offerDiscountPercent: Number(values.contractDiscountPercent ?? 0) } : {}),
         debtOrigin: values.debtOrigin || undefined,
         productName: values.productName || undefined,
         debtorStreet: values.debtorStreet || undefined,
@@ -326,6 +331,15 @@ export function ContractFormDialog({
                       <Field.Label>Valor Atualizado (R$)</Field.Label>
                       <Input type="number" step="0.01" {...register('updatedValue')} />
                     </Field.Root>
+
+                    {isEdit && (
+                      <Field.Root invalid={!!errors.contractDiscountPercent}>
+                        <Field.Label>Desconto CobCom (%)</Field.Label>
+                        <Input type="number" min="0" max="100" step="0.01" disabled={contract?.paymentStatus === 'PAID'} {...register('contractDiscountPercent')} />
+                        <Field.HelperText>Limitado pela faixa comercial da carteira.</Field.HelperText>
+                        <Field.ErrorText>{errors.contractDiscountPercent?.message}</Field.ErrorText>
+                      </Field.Root>
+                    )}
 
                     <Field.Root>
                       <Field.Label>Origem da Dívida</Field.Label>

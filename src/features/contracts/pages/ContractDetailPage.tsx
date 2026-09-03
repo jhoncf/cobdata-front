@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   Stack,
   HStack,
@@ -15,13 +15,14 @@ import {
   Menu,
   Portal,
 } from '@chakra-ui/react';
-import { LuArrowLeft, LuEllipsis, LuMessageSquare, LuPencil, LuRefreshCw, LuUnlink, LuVolume2 } from 'react-icons/lu';
+import { LuEllipsis, LuMessageSquare, LuPencil, LuRefreshCw, LuUnlink, LuVolume2 } from 'react-icons/lu';
 import { useContractInteractionsQuery, useContractQuery } from '../api/useContractsQuery';
 import { useRemoveContractFromSerasaMutation, useSyncContractWithSerasaMutation, useUpdateContractMutation } from '../api/useContractMutations';
 import { ContractFormDialog } from '../components/ContractFormDialog';
-import { ConfirmDialog, DataTable, PageHeader } from '@/components/common';
+import { ConfirmDialog, DataTable, PageHeader, StatusBadge } from '@/components/common';
 import type { ContractInteraction } from '@/types/models';
 import type { UpdateContractDto } from '@/types/api';
+import { CONTRACT_STATUS_LABELS, PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import api from '@/lib/api';
 import { toaster } from '@/components/ui/toaster';
 
@@ -72,7 +73,6 @@ function transcriptMessages(conversation: unknown): TranscriptMessage[] {
 
 export default function ContractDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { data: contract, isLoading } = useContractQuery(id!);
   const { data: interactions = [], isLoading: isLoadingInteractions } = useContractInteractionsQuery(id!);
   const [selectedInteraction, setSelectedInteraction] = useState<ContractInteraction | null>(null);
@@ -108,14 +108,6 @@ export default function ContractDetailPage() {
   const canRemoveFromSerasa = ['SENT', 'REGISTERED', 'UPDATED'].includes(contract.serasaStatus);
 
   const requestSerasaAction = (action: 'sync' | 'remove') => {
-    if (!contract.wallet?.serasaWalletId) {
-      toaster.create({
-        type: 'warning',
-        title: 'Selecione uma Carteira Serasa',
-        description: 'Edite a carteira do CRM e vincule a Carteira Serasa antes de realizar esta ação.',
-      });
-      return;
-    }
     setSerasaAction(action);
   };
 
@@ -135,9 +127,6 @@ export default function ContractDetailPage() {
   return (
     <Stack gap="4">
       <HStack>
-        <Button variant="ghost" size="sm" onClick={() => navigate(`/wallets/${contract.walletId}`)}>
-          <LuArrowLeft /> Voltar
-        </Button>
       </HStack>
 
       <PageHeader title={`Contrato ${contract.contractNumber}`}>
@@ -226,6 +215,10 @@ export default function ContractDetailPage() {
               <Text>{contract.dueDate ? formatDate(contract.dueDate) : '—'}</Text>
             </Stack>
             <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Aging</Text>
+              <Text>{contract.agingDays} dias</Text>
+            </Stack>
+            <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Origem da Dívida</Text>
               <Text>{contract.debtOrigin ?? '—'}</Text>
             </Stack>
@@ -250,6 +243,26 @@ export default function ContractDetailPage() {
               <Text fontSize="xs" color="fg.muted">Valor Atualizado</Text>
               <Text>{contract.updatedValue != null ? formatCurrency(contract.updatedValue) : '—'}</Text>
             </Stack>
+            <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Valor da oferta</Text>
+              <Text>{contract.offerValue != null ? formatCurrency(contract.offerValue) : '—'}</Text>
+            </Stack>
+            <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Desconto aplicado</Text>
+              <Text>{contract.offerDiscountPercent != null ? `${contract.offerDiscountPercent}%` : '—'}</Text>
+            </Stack>
+            <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Desconto máximo permitido</Text>
+              <Text>{contract.maximumDiscountPercent != null ? `${contract.maximumDiscountPercent}%` : '—'}</Text>
+            </Stack>
+            <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Repasse previsto ao credor</Text>
+              <Text>{contract.repasseValue != null ? formatCurrency(contract.repasseValue) : '—'}</Text>
+            </Stack>
+            <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Comissão CobCom prevista</Text>
+              <Text>{contract.commissionValue != null ? formatCurrency(contract.commissionValue) : '—'}</Text>
+            </Stack>
           </HStack>
         </Card.Body>
       </Card.Root>
@@ -261,15 +274,15 @@ export default function ContractDetailPage() {
           <HStack gap="8" wrap="wrap">
             <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Situação administrativa</Text>
-              <Badge>{contract.status}</Badge>
+              <StatusBadge status={contract.status} label={CONTRACT_STATUS_LABELS[contract.status]} />
             </Stack>
             <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Situação financeira</Text>
-              <Badge>{contract.paymentStatus}</Badge>
+              <StatusBadge status={contract.paymentStatus} label={PAYMENT_STATUS_LABELS[contract.paymentStatus]} />
             </Stack>
             <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Serasa</Text>
-              <Badge>{contract.serasaStatus}</Badge>
+              <StatusBadge status={contract.serasaStatus} label={PROVIDER_STATUS_LABELS[contract.serasaStatus]} />
             </Stack>
             <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Debt ID Serasa</Text>
@@ -299,6 +312,10 @@ export default function ContractDetailPage() {
             <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Valor do acordo</Text>
               <Text>{contract.agreementTotalAmount != null ? formatCurrency(contract.agreementTotalAmount) : '—'}</Text>
+            </Stack>
+            <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Prazo para pagamento</Text>
+              <Text>{contract.agreementDueAt ? formatDate(contract.agreementDueAt) : '—'}</Text>
             </Stack>
             <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Parcelas</Text>

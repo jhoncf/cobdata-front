@@ -14,11 +14,21 @@ import {
   Stack,
   Text,
 } from '@chakra-ui/react';
-import { LuCircleCheck, LuCopy, LuSearch, LuShieldCheck } from 'react-icons/lu';
+import { LuCircleCheck, LuCopy, LuMessageCircle, LuSearch, LuShieldCheck } from 'react-icons/lu';
+
+declare global {
+  interface Window {
+    chatwootSettings?: Record<string, unknown>;
+    chatwootSDK?: { run: (config: { websiteToken: string; baseUrl: string }) => void };
+    $chatwoot?: { toggle: (state: 'open' | 'close') => void };
+  }
+}
 
 type Contract = {
   id: string;
   contractNumber: string;
+  debtorName: string;
+  productName: string | null;
   dueDate: string | null;
   amount: string;
   updatedAmount?: string;
@@ -68,8 +78,29 @@ export default function RegularizeDebtPage() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [hasLoadedUrlCpf, setHasLoadedUrlCpf] = useState(false);
-
   const hasValidCpf = useMemo(() => onlyDigits(cpf).length === 11, [cpf]);
+
+  useEffect(() => {
+    const baseUrl = 'https://chat.maisqpago.com.br';
+    const websiteToken = 'qB4eYwd9pFYWJu9xLf1BjhGp';
+    const scriptId = 'chatwoot-sdk';
+
+    window.chatwootSettings = { hideMessageBubble: true, position: 'right', locale: 'pt_BR' };
+    const start = () => window.chatwootSDK?.run({ websiteToken, baseUrl });
+    const existing = document.getElementById(scriptId) as HTMLScriptElement | null;
+    if (existing) {
+      if (window.chatwootSDK) start();
+      else existing.addEventListener('load', start, { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = `${baseUrl}/packs/js/sdk.js`;
+    script.async = true;
+    script.onload = start;
+    document.body.appendChild(script);
+  }, []);
 
   useEffect(() => {
     if (!pix || pix.status === 'PAID') return;
@@ -169,7 +200,7 @@ export default function RegularizeDebtPage() {
         </Box>
       </Box>
 
-      <Flex px="4" py={{ base: 10, md: 20 }} justify="center">
+      <Flex px={{ base: 3, sm: 4 }} py={{ base: 8, md: 20 }} justify="center">
         <Stack w="full" maxW="2xl" gap="6">
           <Stack textAlign="center" align="center" gap="3">
             <Box bg="#e7f3ff" color="#0088ff" p="3" rounded="full"><LuShieldCheck size={28} /></Box>
@@ -196,18 +227,18 @@ export default function RegularizeDebtPage() {
           </Card.Root>
 
           {contracts.length > 0 && !pix && (
-            <Card.Root variant="outline">
+            <Card.Root variant="outline" overflow="hidden">
               <Card.Header><Heading size="md">Selecione uma cobrança para pagar</Heading></Card.Header>
-              <Card.Body pt="0"><Stack gap="3">
+              <Card.Body pt="0" px={{ base: 3, sm: 5 }}><Stack gap="3">
                 {contracts.map((contract) => (
-                  <Box key={contract.id} borderWidth="2px" borderColor={selected?.id === contract.id ? '#0088ff' : 'gray.100'} rounded="md" p="4" cursor="pointer" bg={selected?.id === contract.id ? '#f0f8ff' : 'white'} onClick={() => setSelected(contract)}>
-                    <HStack justify="space-between" align="start" gap="4">
-                      <Stack gap="1"><Text fontWeight="bold">{contract.creditor.name}</Text><Text fontSize="sm" color="gray.600">CNPJ: {formatCnpj(contract.creditor.cnpj)}</Text><Text fontSize="sm" color="gray.600">Contrato: {contract.contractNumber}{contract.dueDate ? ` · Vencimento: ${new Date(contract.dueDate).toLocaleDateString('pt-BR')}` : ''}</Text></Stack>
-                      <Stack gap="0" align="end">
+                  <Box key={contract.id} borderWidth="2px" borderColor={selected?.id === contract.id ? '#0088ff' : 'gray.100'} rounded="md" p={{ base: 3, sm: 4 }} cursor="pointer" bg={selected?.id === contract.id ? '#f0f8ff' : 'white'} onClick={() => setSelected(contract)}>
+                    <Flex direction={{ base: 'column', sm: 'row' }} justify="space-between" align={{ base: 'stretch', sm: 'start' }} gap={{ base: 4, sm: 6 }} minW="0">
+                      <Stack gap="1" minW="0" flex="1"><Text fontWeight="bold" wordBreak="break-word">{contract.creditor.name}</Text><Text fontSize="sm" color="gray.600" wordBreak="break-word">CNPJ: {formatCnpj(contract.creditor.cnpj)}</Text>{contract.debtorName && <Text fontSize="sm" color="gray.700" fontWeight="medium" wordBreak="break-word">Em nome de: {contract.debtorName}</Text>}{contract.productName && <Text fontSize="sm" color="gray.700" wordBreak="break-word">{contract.productName}</Text>}<Text fontSize="sm" color="gray.600" wordBreak="break-word">Contrato: {contract.contractNumber}{contract.dueDate ? ` · Vencimento: ${new Date(contract.dueDate).toLocaleDateString('pt-BR')}` : ''}</Text></Stack>
+                      <Stack gap="0" align={{ base: 'start', sm: 'end' }} flexShrink="0">
                         {Number(contract.cobcomDiscountPercent ?? 0) > 0 && <Text fontSize="sm" color="gray.600">Valor atualizado: {formatMoney(contract.updatedAmount ?? contract.amount)}</Text>}
-                        <Text fontWeight="bold" color="#006dc9" whiteSpace="nowrap">{Number(contract.cobcomDiscountPercent ?? 0) > 0 ? `Com Desconto CobCom: ${formatMoney(contract.amount)}` : formatMoney(contract.amount)}</Text>
+                        <Text fontWeight="bold" color="#006dc9" fontSize={{ base: 'md', sm: 'sm' }} wordBreak="break-word">{Number(contract.cobcomDiscountPercent ?? 0) > 0 ? `Com Desconto CobCom: ${formatMoney(contract.amount)}` : formatMoney(contract.amount)}</Text>
                       </Stack>
-                    </HStack>
+                    </Flex>
                   </Box>
                 ))}
                 <Button mt="2" size="lg" bg="#0088ff" color="white" _hover={{ bg: '#0074dc' }} disabled={!selected} loading={issuing} onClick={generatePix}>Gerar Pix</Button>
@@ -227,6 +258,20 @@ export default function RegularizeDebtPage() {
         </Stack>
       </Flex>
       <Box textAlign="center" pb="8"><Text fontSize="sm" color="gray.600">© {new Date().getFullYear()} CobCom. Todos os direitos reservados.</Text></Box>
+
+      <Box position="fixed" right={{ base: 3, sm: 5 }} bottom={{ base: 3, sm: 5 }} zIndex="overlay">
+        <Button
+          rounded="full"
+          size="lg"
+          bg="#2563EB"
+          color="white"
+          shadow="lg"
+          _hover={{ bg: '#1D4ED8' }}
+          onClick={() => window.$chatwoot?.toggle('open')}
+        >
+          <LuMessageCircle /> Regularize agora sua dívida
+        </Button>
+      </Box>
     </Box>
   );
 }

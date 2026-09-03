@@ -107,15 +107,25 @@ export interface UpdateCreditorDto {
 // ─── Wallet DTOs ─────────────────────────────────────────────────────────────
 export interface CreateWalletDto {
   name: string;
-  serasaWalletId?: string;
   cobcomDiscountPercent?: number;
+  offerFirstInstallmentDays?: number;
+  offerMinInstallmentValue?: number;
+  offerMaxInstallments?: number;
 }
 
 export interface UpdateWalletDto {
   name?: string;
   status?: WalletStatus;
-  serasaWalletId?: string | null;
   cobcomDiscountPercent?: number;
+  offerFirstInstallmentDays?: number;
+  offerMinInstallmentValue?: number;
+  offerMaxInstallments?: number;
+  discountBands?: Array<{
+    minAgingDays: number;
+    maxAgingDays?: number | null;
+    cashDiscountPercent: number;
+    installmentDiscountPercent: number;
+  }>;
 }
 
 // ─── Contract DTOs ───────────────────────────────────────────────────────────
@@ -145,6 +155,7 @@ export interface UpdateContractDto {
   debtorName?: string;
   originalValue?: number;
   updatedValue?: number;
+  offerDiscountPercent?: number;
   occurrenceDate?: string;
   dueDate?: string;
   debtType?: DebtType;
@@ -197,6 +208,12 @@ export interface OperationContractFilters {
   maxOriginalValue?: number;
   minUpdatedValue?: number;
   maxUpdatedValue?: number;
+  updatedValueOperator?: 'gt' | 'lt' | 'eq';
+  updatedValue?: number;
+  offerValueOperator?: 'gt' | 'lt' | 'eq';
+  offerValue?: number;
+  agingOperator?: 'gt' | 'lt' | 'eq';
+  aging?: number;
   dateFrom?: string;
   dateTo?: string;
 }
@@ -266,6 +283,12 @@ export interface ListContractsParams extends PaginationParams {
   maxOriginalValue?: number;
   minUpdatedValue?: number;
   maxUpdatedValue?: number;
+  updatedValueOperator?: 'gt' | 'lt' | 'eq';
+  updatedValue?: number;
+  offerValueOperator?: 'gt' | 'lt' | 'eq';
+  offerValue?: number;
+  agingOperator?: 'gt' | 'lt' | 'eq';
+  aging?: number;
   dateFrom?: string;
   dateTo?: string;
   debtorDocument?: string;

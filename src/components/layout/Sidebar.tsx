@@ -5,7 +5,6 @@ import {
   LuBuilding2,
   LuWallet,
   LuUpload,
-  LuSend,
   LuUsers,
   LuSettings,
   LuShield,
@@ -30,7 +29,6 @@ const navItems: NavItem[] = [
   { label: 'Carteiras', path: '/wallets', icon: LuWallet, section: 'Gestão' },
 
   { label: 'Importações', path: '/imports', icon: LuUpload, section: 'Operacional' },
-  { label: 'Operações', path: '/operations', icon: LuSend, section: 'Operacional' },
   { label: 'Usuários', path: '/users', icon: LuUsers, roles: ['ADMIN'], section: 'Administração' },
   { label: 'Canais', path: '/providers', icon: LuSettings, roles: ['ADMIN', 'OPERATIONAL'], section: 'Administração' },
   { label: 'Integração Serasa', path: '/serasa-wallets', icon: LuLandmark, roles: ['ADMIN', 'OPERATIONAL'], section: 'Administração' },

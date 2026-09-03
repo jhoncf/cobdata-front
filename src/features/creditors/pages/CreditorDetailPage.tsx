@@ -1,4 +1,5 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   Stack,
   HStack,
@@ -8,10 +9,17 @@ import {
   Card,
   Heading,
   Badge,
+  Input,
+  SimpleGrid,
+  Flex,
 } from '@chakra-ui/react';
-import { LuArrowLeft } from 'react-icons/lu';
-import { useCreditorQuery } from '../api/useCreditorsQuery';
+import { LuPencil, LuPlus, LuSave, LuTrash2 } from 'react-icons/lu';
+import { useCreditorCommercialRulesQuery, useCreditorQuery } from '../api/useCreditorsQuery';
+import { useUpdateCreditorCommercialRulesMutation, useUpdateCreditorMutation } from '../api/useCreditorMutations';
 import { PageHeader } from '@/components/common';
+import type { CreditorDiscountBand } from '@/types/models';
+import { CreditorFormDialog } from '../components/CreditorFormDialog';
+import { usePermission } from '@/hooks/usePermission';
 
 const CONTACT_TYPE_LABELS: Record<string, string> = {
   EMAIL: 'E-mail',
@@ -21,8 +29,21 @@ const CONTACT_TYPE_LABELS: Record<string, string> = {
 
 export default function CreditorDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { data: creditor, isLoading } = useCreditorQuery(id!);
+  const { data: commercialRules } = useCreditorCommercialRulesQuery(id!);
+  const commercialRulesMutation = useUpdateCreditorCommercialRulesMutation();
+  const creditorMutation = useUpdateCreditorMutation();
+  const { canEdit } = usePermission();
+  const [editOpen, setEditOpen] = useState(false);
+  const [discountBands, setDiscountBands] = useState<CreditorDiscountBand[]>([]);
+  const [commissionPercent, setCommissionPercent] = useState(0);
+
+  useEffect(() => {
+    if (commercialRules) {
+      setDiscountBands(commercialRules.discountBands);
+      setCommissionPercent(Number(commercialRules.commissionPercent ?? 0));
+    }
+  }, [commercialRules]);
 
   if (isLoading) {
     return <Spinner />;
@@ -35,12 +56,11 @@ export default function CreditorDetailPage() {
   return (
     <Stack gap="4">
       <HStack>
-        <Button variant="ghost" size="sm" onClick={() => navigate('/creditors')}>
-          <LuArrowLeft /> Voltar
-        </Button>
       </HStack>
 
-      <PageHeader title={creditor.name} />
+      <PageHeader title={creditor.name}>
+        {canEdit && <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}><LuPencil /> Editar</Button>}
+      </PageHeader>
 
       <Card.Root>
         <Card.Body gap="3">
@@ -55,6 +75,48 @@ export default function CreditorDetailPage() {
               <Text>{new Date(creditor.createdAt).toLocaleDateString('pt-BR')}</Text>
             </Stack>
           </HStack>
+        </Card.Body>
+      </Card.Root>
+
+      <Card.Root>
+        <Card.Body gap="4">
+          <Flex justify="space-between" align={{ base: 'start', md: 'center' }} direction={{ base: 'column', md: 'row' }} gap="2">
+            <Stack gap="0">
+              <Heading size="sm">Regras comerciais</Heading>
+              <Text fontSize="xs" color="fg.muted">A estratégia da carteira não pode ultrapassar o desconto máximo definido aqui.</Text>
+            </Stack>
+            <Button size="sm" colorPalette="blue" loading={commercialRulesMutation.isPending} onClick={() => commercialRulesMutation.mutate({
+              id: id!,
+              data: {
+                discountBands: discountBands.map(({ minAgingDays, maxAgingDays, cashDiscountPercent, installmentDiscountPercent }) => ({ minAgingDays, maxAgingDays, cashDiscountPercent, installmentDiscountPercent })),
+                commissionPercent,
+              },
+            })}>
+              <LuSave /> Salvar regras
+            </Button>
+          </Flex>
+
+          <Stack gap="2">
+            <Flex justify="space-between" align="center">
+              <Text fontSize="sm" fontWeight="medium">Faixas de desconto</Text>
+              <Button size="xs" variant="outline" onClick={() => setDiscountBands((bands) => [...bands, { minAgingDays: 0, maxAgingDays: null, cashDiscountPercent: 0, installmentDiscountPercent: 0 }])}><LuPlus /> Adicionar faixa</Button>
+            </Flex>
+            {!discountBands.length ? <Text fontSize="sm" color="fg.muted">Sem faixas: a carteira usa o desconto configurado nela.</Text> : discountBands.map((band, index) => (
+              <SimpleGrid key={band.id ?? index} columns={{ base: 1, sm: 5 }} gap="2" alignItems="end">
+                <Stack gap="1"><Text fontSize="xs">De (dias)</Text><Input size="sm" type="number" min="0" value={band.minAgingDays} onChange={(e) => setDiscountBands((bands) => bands.map((item, i) => i === index ? { ...item, minAgingDays: Number(e.target.value) } : item))} /></Stack>
+                <Stack gap="1"><Text fontSize="xs">Até (dias)</Text><Input size="sm" type="number" min="0" placeholder="Sem limite" value={band.maxAgingDays ?? ''} onChange={(e) => setDiscountBands((bands) => bands.map((item, i) => i === index ? { ...item, maxAgingDays: e.target.value === '' ? null : Number(e.target.value) } : item))} /></Stack>
+                <Stack gap="1"><Text fontSize="xs">Desconto à vista (%)</Text><Input size="sm" type="number" min="0" max="100" value={band.cashDiscountPercent} onChange={(e) => setDiscountBands((bands) => bands.map((item, i) => i === index ? { ...item, cashDiscountPercent: Number(e.target.value) } : item))} /></Stack>
+                <Stack gap="1"><Text fontSize="xs">Desconto parcelado (%)</Text><Input size="sm" type="number" min="0" max="100" value={band.installmentDiscountPercent} onChange={(e) => setDiscountBands((bands) => bands.map((item, i) => i === index ? { ...item, installmentDiscountPercent: Number(e.target.value) } : item))} /></Stack>
+                <Button size="sm" variant="ghost" colorPalette="red" onClick={() => setDiscountBands((bands) => bands.filter((_, i) => i !== index))}><LuTrash2 /> Remover</Button>
+              </SimpleGrid>
+            ))}
+          </Stack>
+
+          <Stack gap="1" maxW="280px">
+            <Text fontSize="sm" fontWeight="medium">Comissão CobCom sobre o repasse (%)</Text>
+            <Input size="sm" type="number" min="0" max="100" value={commissionPercent} onChange={(event) => setCommissionPercent(Number(event.target.value))} />
+            <Text fontSize="xs" color="fg.muted">Percentual fixo do credor, aplicado ao valor de repasse de cada contrato.</Text>
+          </Stack>
         </Card.Body>
       </Card.Root>
 
@@ -89,6 +151,14 @@ export default function CreditorDetailPage() {
           </Card.Body>
         </Card.Root>
       )}
+
+      <CreditorFormDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        creditor={creditor}
+        loading={creditorMutation.isPending}
+        onSubmit={(data) => creditorMutation.mutate({ id: creditor.id, data }, { onSuccess: () => setEditOpen(false) })}
+      />
     </Stack>
   );
 }

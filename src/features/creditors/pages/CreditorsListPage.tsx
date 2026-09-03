@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, HStack, Input } from '@chakra-ui/react';
-import { LuPlus, LuSearch, LuPencil, LuTrash2 } from 'react-icons/lu';
+import { LuPlus, LuSearch, LuPencil, LuTrash2, LuEye } from 'react-icons/lu';
 import {
   PageHeader,
   DataTable,
@@ -117,14 +117,24 @@ export default function CreditorsListPage() {
       header: 'Criado em',
       cell: (row) => formatDate(row.createdAt),
     },
-    ...(canEdit || canDelete
-      ? [
+    ...[
           {
             key: 'actions',
             header: 'Ações',
             textAlign: 'end' as const,
             cell: (row: Creditor) => (
               <HStack gap="1" justify="end">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/creditors/${row.id}`);
+                  }}
+                  aria-label="Ver detalhes"
+                >
+                  <LuEye />
+                </Button>
                 {canEdit && (
                   <Button
                     size="xs"
@@ -155,8 +165,7 @@ export default function CreditorsListPage() {
               </HStack>
             ),
           },
-        ]
-      : []),
+        ],
   ];
 
   return (

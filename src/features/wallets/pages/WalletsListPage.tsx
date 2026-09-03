@@ -105,15 +105,15 @@ export default function WalletsListPage() {
     updateParams({ page: newPage > 1 ? String(newPage) : undefined });
   };
 
-  const handleFormSubmit = (formData: { name: string; creditorId: string; serasaWalletId?: string }) => {
+  const handleFormSubmit = (formData: { name: string; creditorId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number }) => {
     if (editingWallet) {
       updateMutation.mutate(
-        { id: editingWallet.id, data: { name: formData.name, serasaWalletId: formData.serasaWalletId || null } },
+        { id: editingWallet.id, data: { name: formData.name, cobcomDiscountPercent: formData.cobcomDiscountPercent, offerFirstInstallmentDays: formData.offerFirstInstallmentDays, offerMinInstallmentValue: formData.offerMinInstallmentValue, offerMaxInstallments: formData.offerMaxInstallments } },
         { onSuccess: () => updateParams({ action: undefined, id: undefined }) },
       );
     } else {
       createMutation.mutate(
-        { creditorId: formData.creditorId, data: { name: formData.name, serasaWalletId: formData.serasaWalletId || undefined } },
+        { creditorId: formData.creditorId, data: { name: formData.name, cobcomDiscountPercent: formData.cobcomDiscountPercent, offerFirstInstallmentDays: formData.offerFirstInstallmentDays, offerMinInstallmentValue: formData.offerMinInstallmentValue, offerMaxInstallments: formData.offerMaxInstallments } },
         { onSuccess: () => updateParams({ action: undefined, id: undefined }) },
       );
     }

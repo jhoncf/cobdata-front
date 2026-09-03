@@ -57,21 +57,56 @@ export interface Creditor {
   updatedAt: string;
 }
 
+export interface CreditorDiscountBand {
+  id?: string;
+  minAgingDays: number;
+  maxAgingDays: number | null;
+  cashDiscountPercent: number;
+  installmentDiscountPercent: number;
+}
+
+export interface CreditorCommissionBand {
+  id?: string;
+  minAgingDays: number;
+  maxAgingDays: number | null;
+  commissionPercent: number;
+}
+
+export interface CreditorCommercialRules {
+  discountBands: CreditorDiscountBand[];
+  commissionPercent: number;
+}
+
 // ─── Wallet ──────────────────────────────────────────────────────────────────
 export interface Wallet {
   id: string;
   name: string;
   creditorId: string;
-  serasaWalletId?: string | null;
-  serasaWallet?: SerasaWallet | null;
-  creditor?: Creditor;
+  creditor?: Creditor & { commissionPercent?: number; discountBands?: DiscountBand[] };
   status: WalletStatus;
   cobcomDiscountPercent?: number;
+  offerFirstInstallmentDays?: number;
+  offerMinInstallmentValue?: number;
+  offerMaxInstallments?: number;
+  discountBands?: WalletDiscountBand[];
   createdAt: string;
   updatedAt: string;
   _count?: {
     contracts: number;
   };
+}
+
+export interface DiscountBand {
+  id?: string;
+  minAgingDays: number;
+  maxAgingDays: number | null;
+  cashDiscountPercent: number;
+  installmentDiscountPercent: number;
+}
+
+export interface WalletDiscountBand extends DiscountBand {
+  cashStrategyDiscountPercent?: number | null;
+  installmentStrategyDiscountPercent?: number | null;
 }
 
 export interface SerasaWallet {
@@ -103,6 +138,13 @@ export interface WalletSummary {
   paymentStatusTotals: Record<string, { count: number; amount: number }>;
   serasaTotal: { count: number; amount: number };
   totalValue: number;
+  recoveredValue: number;
+  repasseForecastValue: number;
+  repasseRealizedValue: number;
+  commissionForecastValue: number;
+  commissionRealizedValue: number;
+  discountsConcededValue: number;
+  efficiencyRate: number;
 }
 
 // ─── Contract ────────────────────────────────────────────────────────────────
@@ -131,6 +173,7 @@ export interface Contract {
   contractNumber: string;
   debtType: DebtType;
   occurrenceDate: string;
+  agingDays: number;
   dueDate: string | null;
   originalValue: number;
   updatedValue: number;
@@ -148,11 +191,20 @@ export interface Contract {
   paymentStatus: PaymentStatus;
   agreementReference: string | null;
   agreementTotalAmount: number | null;
+  agreementDueAt: string | null;
   totalInstallments: number | null;
   paidInstallments: number;
   totalPaidAmount: number;
   lastPaymentAt: string | null;
   offer: OfferDto | null;
+  offerValue: number | null;
+  offerDiscountPercent: number | null;
+  offerFirstInstallmentDays: number | null;
+  offerMaxInstallments: number | null;
+  maximumDiscountPercent?: number | null;
+  repasseValue?: number | null;
+  commissionPercent?: number | null;
+  commissionValue?: number | null;
   tags: string[];
   createdAt: string;
   updatedAt: string;

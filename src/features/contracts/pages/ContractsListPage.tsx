@@ -126,13 +126,7 @@ export default function ContractsListPage() {
     && contract.paymentStatus !== 'PAID'
   );
   const canRemoveFromSerasa = (contract: Contract) => ['SENT', 'REGISTERED', 'UPDATED'].includes(contract.serasaStatus);
-  const handleSyncWithSerasa = (contract: Contract) => {
-    if (!walletDetail?.serasaWalletId) {
-      toaster.create({ type: 'warning', title: 'Selecione uma Carteira Serasa', description: 'Edite a carteira CRM, selecione a Carteira Serasa e salve antes de sincronizar.' });
-      return;
-    }
-    syncWithSerasaMutation.mutate(contract.id);
-  };
+  const handleSyncWithSerasa = (contract: Contract) => syncWithSerasaMutation.mutate(contract.id);
 
   const handleFormSubmit = (formData: CreateContractDto | UpdateContractDto) => {
     if (editingContract) {

@@ -3,6 +3,7 @@ import api from '@/lib/api';
 import { toaster } from '@/components/ui/toaster';
 import { handleApiError } from '@/lib/error-handler';
 import type { CreateCreditorDto, UpdateCreditorDto } from '@/types/api';
+import type { CreditorCommercialRules } from '@/types/models';
 
 export function useCreateCreditorMutation() {
   const queryClient = useQueryClient();
@@ -36,6 +37,19 @@ export function useDeleteCreditorMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['creditors'] });
       toaster.create({ type: 'success', title: 'Credor excluído com sucesso' });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
+export function useUpdateCreditorCommercialRulesMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: CreditorCommercialRules }) =>
+      api.put(`/creditors/${id}/commercial-rules`, data),
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['creditors', 'commercial-rules', variables.id] });
+      toaster.create({ type: 'success', title: 'Regras comerciais salvas' });
     },
     onError: (error) => handleApiError(error),
   });

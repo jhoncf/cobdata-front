@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Box, Flex, CloseButton, Drawer, Portal } from '@chakra-ui/react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import { AppBreadcrumb } from './AppBreadcrumb';
 
 export function AppShell() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -60,6 +61,7 @@ export function AppShell() {
           p={{ base: '4', md: '6' }}
         >
           <Box maxW="7xl" mx="auto">
+            <AppBreadcrumb />
             <Outlet />
           </Box>
         </Box>
