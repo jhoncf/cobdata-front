@@ -63,7 +63,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       zIndex="sticky"
     >
       {/* Left: Hamburger (mobile) + Logo */}
-      <HStack gap="3">
+      <HStack gap="3" minW="0">
         <IconButton
           aria-label="Abrir menu"
           variant="ghost"
@@ -87,7 +87,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               CC
             </Text>
           </Box>
-          <Text fontWeight="bold" fontSize="md" color="fg">
+          <Text fontWeight="bold" fontSize="md" color="fg" display={{ base: 'none', sm: 'block' }} whiteSpace="nowrap">
             CobCom - CRM
           </Text>
         </Flex>
@@ -101,7 +101,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       )}
 
       {/* Right: User Menu */}
-      <HStack gap="1">
+      <HStack gap="1" ms="auto" flexShrink="0">
         <IconButton
           aria-label={colorMode === 'light' ? 'Modo escuro' : 'Modo claro'}
           variant="ghost"
@@ -138,8 +138,8 @@ export function Header({ onMenuClick }: HeaderProps) {
               >
                 {initials}
               </Box>
-              <Box display={{ base: 'none', md: 'block' }} textAlign="start">
-                <Text fontSize="sm" fontWeight="medium" lineHeight="tight">
+              <Box display={{ base: 'none', md: 'block' }} textAlign="start" maxW="180px">
+                <Text fontSize="sm" fontWeight="medium" lineHeight="tight" truncate>
                   {userName}
                 </Text>
                 {role && (
