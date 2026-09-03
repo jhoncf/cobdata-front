@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { toaster } from '@/components/ui/toaster';
+import { handleApiError } from '@/lib/error-handler';
 import type { CreateOperationDto } from '@/types/api';
 
 export function useCreateOperationMutation() {
@@ -11,6 +12,7 @@ export function useCreateOperationMutation() {
       queryClient.invalidateQueries({ queryKey: ['operations'] });
       toaster.create({ type: 'success', title: 'Operação criada com sucesso' });
     },
+    onError: handleApiError,
   });
 }
 

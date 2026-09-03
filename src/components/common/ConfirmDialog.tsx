@@ -10,6 +10,7 @@ interface ConfirmDialogProps {
   colorPalette?: string;
   onConfirm: () => void;
   loading?: boolean;
+  disabled?: boolean;
 }
 
 export function ConfirmDialog({
@@ -22,6 +23,7 @@ export function ConfirmDialog({
   colorPalette = 'red',
   onConfirm,
   loading = false,
+  disabled = false,
 }: ConfirmDialogProps) {
   return (
     <Dialog.Root
@@ -46,6 +48,7 @@ export function ConfirmDialog({
                 colorPalette={colorPalette}
                 onClick={onConfirm}
                 loading={loading}
+                disabled={disabled}
               >
                 {confirmLabel}
               </Button>

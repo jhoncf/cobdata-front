@@ -155,7 +155,7 @@ export default function WalletDetailPage() {
   const bulkTransferMutation = useBulkTransferContractsMutation();
   const { data: allWallets } = useAllWalletsQuery();
   const createOperationMutation = useCreateOperationMutation();
-  const { data: bulkPreview, isLoading: bulkPreviewLoading } = useOperationPreviewQuery(
+  const { data: bulkPreview, isLoading: bulkPreviewLoading, isError: bulkPreviewError } = useOperationPreviewQuery(
     id,
     bulkAction ?? undefined,
     operationFilters,
@@ -730,11 +730,14 @@ export default function WalletDetailPage() {
         title={bulkAction === OperationAction.REMOVE ? 'Remover carteira do Serasa' : 'Enviar carteira ao Serasa'}
         message={bulkPreviewLoading
           ? 'Calculando os contratos elegíveis...'
+          : bulkPreviewError
+            ? 'Não foi possível calcular os contratos elegíveis. Tente novamente; se o erro persistir, verifique a integração Serasa.'
           : bulkAction === OperationAction.REMOVE
             ? `Serão removidos ${bulkPreview?.eligibleCount ?? 0} contrato(s) elegível(is) da Serasa. Deseja continuar?`
             : `Serão enviados ${bulkPreview?.eligibleCount ?? 0} contrato(s) elegível(is) para a carteira Serasa vinculada. Deseja continuar?`}
         confirmLabel={bulkAction === OperationAction.REMOVE ? 'Remover' : 'Enviar'}
         loading={createOperationMutation.isPending || bulkPreviewLoading}
+        disabled={bulkPreviewLoading || bulkPreviewError || (bulkPreview?.eligibleCount ?? 0) === 0}
         onConfirm={() => {
           if (!id || !bulkAction) return;
           createOperationMutation.mutate(
