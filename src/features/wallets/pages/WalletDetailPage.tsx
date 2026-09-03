@@ -133,14 +133,13 @@ export default function WalletDetailPage() {
   const [destinationWalletId, setDestinationWalletId] = useState('');
 
   const operationFilters = useMemo<OperationContractFilters>(() => ({
-    contractStatus: contractStatusFilter,
     ...(paymentStatusFilter ? { paymentStatus: paymentStatusFilter } : {}),
     ...(serasaStatusFilter ? { serasaStatus: serasaStatusFilter } : {}),
     ...(installmentOnly ? { installmentOnly: true } : {}),
     ...(updatedValue ? { updatedValueOperator, updatedValue: Number(updatedValue) } : {}),
     ...(offerValue ? { offerValueOperator, offerValue: Number(offerValue) } : {}),
     ...(aging ? { agingOperator, aging: Number(aging) } : {}),
-  }), [contractStatusFilter, paymentStatusFilter, serasaStatusFilter, installmentOnly, updatedValueOperator, updatedValue, offerValueOperator, offerValue, agingOperator, aging]);
+  }), [paymentStatusFilter, serasaStatusFilter, installmentOnly, updatedValueOperator, updatedValue, offerValueOperator, offerValue, agingOperator, aging]);
 
   const { data: wallet, isLoading } = useWalletDetailQuery(id ?? '');
   const { data: contractsData, isLoading: contractsLoading } = useContractsQuery({
