@@ -56,10 +56,14 @@ export function useUpdateCreditorCommercialRulesMutation() {
 }
 
 export function useInviteCreditorUserMutation() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ creditorId, data }: { creditorId: string; data: InviteCreditorUserDto }) =>
       api.post(`/creditors/${creditorId}/users/invite`, data),
-    onSuccess: () => toaster.create({ type: 'success', title: 'Convite enviado por e-mail' }),
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['creditors', variables.creditorId, 'portal-users'] });
+      toaster.create({ type: 'success', title: 'Convite enviado por e-mail' });
+    },
     onError: (error) => handleApiError(error),
   });
 }
