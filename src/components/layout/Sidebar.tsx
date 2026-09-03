@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { Box, Flex, Text, VStack } from '@chakra-ui/react';
 import {
   LuLayoutDashboard,
@@ -21,10 +21,12 @@ interface NavItem {
   icon: React.ElementType;
   roles?: ('ADMIN' | 'OPERATIONAL' | 'VIEWER')[];
   section?: string;
+  portalOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LuLayoutDashboard, section: 'Principal' },
+  { label: 'Contratos', path: '/contracts', icon: LuScrollText, section: 'Principal', portalOnly: true },
   { label: 'Credores', path: '/creditors', icon: LuBuilding2, section: 'Gestão' },
   { label: 'Carteiras', path: '/wallets', icon: LuWallet, section: 'Gestão' },
 
@@ -45,18 +47,13 @@ interface SidebarProps {
 export function Sidebar({ onClose }: SidebarProps) {
   const { role, user } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
 
   const visibleItems = navItems.filter((item) => {
-    if (user?.creditorId) return item.path === '/contracts' || item.path === '/sessions';
+    if (user?.creditorId) return item.portalOnly || item.path === '/sessions';
+    if (item.portalOnly) return false;
     if (!item.roles) return true;
     return role ? item.roles.includes(role) : false;
   });
-
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    onClose?.();
-  };
 
   // Group items by section
   const sections = visibleItems.reduce<Record<string, NavItem[]>>((acc, item) => {
@@ -91,9 +88,13 @@ export function Sidebar({ onClose }: SidebarProps) {
               const IconComp = item.icon;
 
               return (
-                <Flex
+                <RouterLink
                   key={item.path}
-                  as="button"
+                  to={item.path}
+                  onClick={() => onClose?.()}
+                  style={{ display: 'block', textDecoration: 'none' }}
+                >
+                  <Flex
                   align="center"
                   gap="3"
                   px="3"
@@ -111,7 +112,6 @@ export function Sidebar({ onClose }: SidebarProps) {
                     color: isActive ? 'brand.fg' : 'fg',
                   }}
                   transition="all 0.15s ease"
-                  onClick={() => handleNavigation(item.path)}
                   aria-current={isActive ? 'page' : undefined}
                   w="full"
                   textAlign="start"
@@ -123,6 +123,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                   />
                   <Text>{item.label}</Text>
                 </Flex>
+                </RouterLink>
               );
             })}
           </VStack>
