@@ -8,6 +8,7 @@ export interface User {
   name: string | null;
   role: 'ADMIN' | 'OPERATIONAL' | 'VIEWER';
   scopes: string[];
+  creditorId?: string | null;
 }
 
 interface AuthState {

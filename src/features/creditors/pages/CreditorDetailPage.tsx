@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react';
 import { LuPencil, LuPlus, LuSave, LuTrash2 } from 'react-icons/lu';
 import { useCreditorCommercialRulesQuery, useCreditorQuery } from '../api/useCreditorsQuery';
-import { useUpdateCreditorCommercialRulesMutation, useUpdateCreditorMutation } from '../api/useCreditorMutations';
+import { useInviteCreditorUserMutation, useUpdateCreditorCommercialRulesMutation, useUpdateCreditorMutation } from '../api/useCreditorMutations';
 import { PageHeader } from '@/components/common';
 import type { CreditorDiscountBand } from '@/types/models';
 import { CreditorFormDialog } from '../components/CreditorFormDialog';
@@ -33,10 +33,13 @@ export default function CreditorDetailPage() {
   const { data: commercialRules } = useCreditorCommercialRulesQuery(id!);
   const commercialRulesMutation = useUpdateCreditorCommercialRulesMutation();
   const creditorMutation = useUpdateCreditorMutation();
-  const { canEdit } = usePermission();
+  const invitePortalUserMutation = useInviteCreditorUserMutation();
+  const { canEdit, canManageUsers } = usePermission();
   const [editOpen, setEditOpen] = useState(false);
   const [discountBands, setDiscountBands] = useState<CreditorDiscountBand[]>([]);
   const [commissionPercent, setCommissionPercent] = useState(0);
+  const [portalEmail, setPortalEmail] = useState('');
+  const [portalName, setPortalName] = useState('');
 
   useEffect(() => {
     if (commercialRules) {
@@ -77,6 +80,22 @@ export default function CreditorDetailPage() {
           </HStack>
         </Card.Body>
       </Card.Root>
+
+      {canManageUsers && (
+        <Card.Root>
+          <Card.Body gap="3">
+            <Stack gap="0">
+              <Heading size="sm">Usuários do credor</Heading>
+              <Text fontSize="sm" color="fg.muted">Este acesso permite somente consultar os contratos deste credor. O convite para criação de senha expira em 72 horas.</Text>
+            </Stack>
+            <SimpleGrid columns={{ base: 1, md: 3 }} gap="3" alignItems="end">
+              <Stack gap="1"><Text fontSize="xs">Nome</Text><Input value={portalName} onChange={(event) => setPortalName(event.target.value)} placeholder="Nome do usuário" /></Stack>
+              <Stack gap="1"><Text fontSize="xs">E-mail</Text><Input type="email" value={portalEmail} onChange={(event) => setPortalEmail(event.target.value)} placeholder="usuario@empresa.com" /></Stack>
+              <Button colorPalette="blue" loading={invitePortalUserMutation.isPending} disabled={!portalEmail} onClick={() => invitePortalUserMutation.mutate({ creditorId: id!, data: { email: portalEmail, ...(portalName ? { name: portalName } : {}) } }, { onSuccess: () => { setPortalEmail(''); setPortalName(''); } })}>Enviar convite</Button>
+            </SimpleGrid>
+          </Card.Body>
+        </Card.Root>
+      )}
 
       <Card.Root>
         <Card.Body gap="4">

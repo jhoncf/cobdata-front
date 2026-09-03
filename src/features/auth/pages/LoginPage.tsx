@@ -75,8 +75,7 @@ export default function LoginPage() {
         const meRes = await api.get<MeResponse>('/auth/me');
         setUser(meRes.data);
 
-        // Navigate to dashboard
-        navigate('/dashboard', { replace: true });
+        navigate(meRes.data.creditorId ? '/contracts' : '/dashboard', { replace: true });
       } catch (error: unknown) {
         const err = error as { response?: { status?: number; data?: { retryAfterSeconds?: number } } };
 

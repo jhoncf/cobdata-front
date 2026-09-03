@@ -45,6 +45,7 @@ export interface MeResponse {
   name: string | null;
   role: Role;
   scopes: string[];
+  creditorId?: string | null;
 }
 
 // ─── Auth Request DTOs ───────────────────────────────────────────────────────
@@ -77,6 +78,11 @@ export interface InviteUserDto {
   email: string;
   role: Role;
   scopes?: string[];
+}
+
+export interface InviteCreditorUserDto {
+  email: string;
+  name?: string;
 }
 
 export interface UpdateUserDto {

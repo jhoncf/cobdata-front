@@ -7,6 +7,7 @@ export function useAuth() {
     ...store,
     role: store.user?.role ?? null,
     scopes: store.user?.scopes ?? [],
+    creditorId: store.user?.creditorId ?? null,
     isAdmin: store.user?.role === 'ADMIN',
     isOperational: store.user?.role === 'OPERATIONAL',
     isViewer: store.user?.role === 'VIEWER',

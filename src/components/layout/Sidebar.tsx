@@ -43,11 +43,12 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onClose }: SidebarProps) {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   const visibleItems = navItems.filter((item) => {
+    if (user?.creditorId) return item.path === '/contracts' || item.path === '/sessions';
     if (!item.roles) return true;
     return role ? item.roles.includes(role) : false;
   });
