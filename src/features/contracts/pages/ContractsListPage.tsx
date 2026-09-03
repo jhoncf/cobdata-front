@@ -9,7 +9,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { NativeSelect } from '@chakra-ui/react';
-import { LuPlus, LuPencil, LuTrash2, LuBanknote, LuRefreshCw, LuUnlink } from 'react-icons/lu';
+import { LuPlus, LuPencil, LuTrash2, LuBanknote, LuRefreshCw, LuUnlink, LuBan } from 'react-icons/lu';
 import {
   PageHeader,
   DataTable,
@@ -29,6 +29,7 @@ import {
   useDeleteContractMutation,
   useSyncContractWithSerasaMutation,
   useRemoveContractFromSerasaMutation,
+  useCancelContractByCreditorMutation,
 } from '../api/useContractMutations';
 import { ContractFormDialog } from '../components/ContractFormDialog';
 import { TagsManager } from '../components/TagsManager';
@@ -58,7 +59,7 @@ export default function ContractsListPage() {
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | ''>('');
   const [serasaStatusFilter, setSerasaStatusFilter] = useState<SerasaStatus | ''>('');
   const [installmentOnly, setInstallmentOnly] = useState('');
-  const [contractSearch, setContractSearch] = useState('');
+  const [cpfSearch, setCpfSearch] = useState('');
 
   // Contracts pagination
   const [page, setPage] = useState(1);
@@ -85,7 +86,7 @@ export default function ContractsListPage() {
     paymentStatus: paymentStatusFilter || undefined,
     serasaStatus: serasaStatusFilter || undefined,
     installmentOnly: installmentOnly === 'yes' ? true : undefined,
-    search: isCreditorPortal && contractSearch.trim() ? contractSearch.trim() : undefined,
+    debtorDocument: isCreditorPortal && cpfSearch.length === 11 ? cpfSearch : undefined,
   });
 
   const createMutation = useCreateContractMutation();
@@ -93,6 +94,7 @@ export default function ContractsListPage() {
   const deleteMutation = useDeleteContractMutation();
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
   const removeFromSerasaMutation = useRemoveContractFromSerasaMutation();
+  const cancelByCreditorMutation = useCancelContractByCreditorMutation();
 
   // Dialog states
   const [formOpen, setFormOpen] = useState(false);
@@ -100,6 +102,7 @@ export default function ContractsListPage() {
   const [deleteTarget, setDeleteTarget] = useState<Contract | null>(null);
   const [tagsTarget, setTagsTarget] = useState<Contract | null>(null);
   const [chargeTarget, setChargeTarget] = useState<Contract | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<Contract | null>(null);
 
   const handleCreditorChange = (creditorId: string) => {
     setSelectedCreditorId(creditorId);
@@ -186,7 +189,25 @@ export default function ContractsListPage() {
         : 'À vista',
     },
     { key: 'occurrenceDate', header: 'Ocorrência', cell: (row) => formatDate(row.occurrenceDate) },
-    ...(canEdit || canDelete
+    ...(isCreditorPortal
+      ? [{
+          key: 'actions',
+          header: 'Ações',
+          textAlign: 'end' as const,
+          cell: (row: Contract) => (
+            <Button
+              size="xs"
+              colorPalette="red"
+              variant="outline"
+              disabled={row.status === 'CANCELLED' || row.paymentStatus === 'PAID'}
+              onClick={(event) => { event.stopPropagation(); setCancelTarget(row); }}
+              title={row.status === 'CANCELLED' ? 'Contrato já cancelado' : row.paymentStatus === 'PAID' ? 'Contrato já está pago' : 'Dar baixa e retirar dos canais'}
+            >
+              <LuBan /> Dar baixa
+            </Button>
+          ),
+        }]
+      : canEdit || canDelete
       ? [{
           key: 'actions',
           header: 'Ações',
@@ -258,11 +279,13 @@ export default function ContractsListPage() {
         <Box mb="5" maxW="lg">
           <Input
             size="sm"
-            value={contractSearch}
-            onChange={(event) => { setContractSearch(event.target.value); setPage(1); }}
-            placeholder="Buscar por número do contrato ou CPF/CNPJ"
-            aria-label="Buscar contratos"
+            value={cpfSearch}
+            onChange={(event) => { setCpfSearch(event.target.value.replace(/\D/g, '').slice(0, 11)); setPage(1); }}
+            placeholder="Digite o CPF para consultar"
+            inputMode="numeric"
+            aria-label="Consultar contratos por CPF"
           />
+          <Text mt="2" fontSize="sm" color="fg.muted">Informe os 11 dígitos do CPF para consultar os contratos.</Text>
         </Box>
       ) : (
       /* Credor / Carteira Selection */
@@ -361,6 +384,11 @@ export default function ContractsListPage() {
           title="Selecione uma carteira"
           description="Escolha um credor e uma carteira acima para visualizar os contratos"
         />
+      ) : isCreditorPortal && cpfSearch.length !== 11 ? (
+        <EmptyState
+          title="Consulte um CPF"
+          description="Digite o CPF completo para localizar os contratos vinculados ao seu credor."
+        />
       ) : (
         <>
           <DataTable
@@ -398,6 +426,16 @@ export default function ContractsListPage() {
         confirmLabel="Excluir"
         onConfirm={handleDelete}
         loading={deleteMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={!!cancelTarget}
+        onOpenChange={(open) => !open && setCancelTarget(null)}
+        title="Dar baixa no contrato"
+        message={`Deseja cancelar o contrato ${cancelTarget?.contractNumber}? Ele será desativado na carteira e removido dos canais de cobrança ativos.`}
+        confirmLabel="Dar baixa"
+        onConfirm={() => cancelTarget && cancelByCreditorMutation.mutate(cancelTarget.id, { onSuccess: () => setCancelTarget(null) })}
+        loading={cancelByCreditorMutation.isPending}
       />
 
       {tagsTarget && (

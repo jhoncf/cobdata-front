@@ -86,6 +86,20 @@ export function useRemoveContractFromSerasaMutation() {
   });
 }
 
+/** Cancels a creditor-owned contract and queues its removal from Serasa. */
+export function useCancelContractByCreditorMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/operations/contracts/${id}/cancel`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['operations'] });
+      toaster.create({ type: 'success', title: 'Contrato cancelado e retirado dos canais de cobrança' });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
 export function useAddTagsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
