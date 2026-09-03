@@ -88,6 +88,24 @@ function SummaryTooltipLabel({ label, description }: { label: string; descriptio
   );
 }
 
+function TableTooltipLabel({ label, description }: { label: string; description: string }) {
+  return (
+    <Tooltip.Root positioning={{ placement: 'top' }} openDelay={150}>
+      <Tooltip.Trigger asChild>
+        <HStack gap="1" width="fit-content" cursor="help" tabIndex={0} aria-label={`${label}: ${description}`}>
+          <Text as="span">{label}</Text>
+          <LuInfo size={14} aria-hidden="true" />
+        </HStack>
+      </Tooltip.Trigger>
+      <Portal>
+        <Tooltip.Positioner>
+          <Tooltip.Content maxW="280px" fontSize="xs" lineHeight="tall">{description}</Tooltip.Content>
+        </Tooltip.Positioner>
+      </Portal>
+    </Tooltip.Root>
+  );
+}
+
 export default function WalletDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { canEdit } = usePermission();
@@ -331,11 +349,15 @@ export default function WalletDetailPage() {
               <Table.Root size="sm" variant="line">
                 <Table.Header>
                   <Table.Row>
-                    <Table.ColumnHeader>Faixa de atraso</Table.ColumnHeader>
-                    <Table.ColumnHeader>Limite do credor — à vista</Table.ColumnHeader>
-                    <Table.ColumnHeader>Estratégia da carteira — à vista</Table.ColumnHeader>
-                    <Table.ColumnHeader>Limite do credor — parcelado</Table.ColumnHeader>
-                    <Table.ColumnHeader>Estratégia da carteira — parcelado</Table.ColumnHeader>
+                    <Table.ColumnHeader>
+                      <TableTooltipLabel label="Faixa de atraso" description="Idade da dívida em dias, calculada a partir da data de ocorrência. Define qual regra comercial será usada." />
+                    </Table.ColumnHeader>
+                    <Table.ColumnHeader>
+                      <TableTooltipLabel label="Estratégia à vista" description="Desconto que esta carteira oferece para pagamento à vista. O valor entre parênteses é o teto máximo autorizado pelo credor." />
+                    </Table.ColumnHeader>
+                    <Table.ColumnHeader>
+                      <TableTooltipLabel label="Estratégia parcelada" description="Desconto que esta carteira oferece em acordo parcelado. O valor entre parênteses é o teto máximo autorizado pelo credor." />
+                    </Table.ColumnHeader>
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
@@ -347,12 +369,16 @@ export default function WalletDetailPage() {
                       ? `${ceiling.minAgingDays}+ dias`
                       : `${ceiling.minAgingDays} a ${ceiling.maxAgingDays} dias`;
                     return (
-                      <Table.Row key={`${ceiling.minAgingDays}-${ceiling.maxAgingDays ?? 'plus'}`}>
-                        <Table.Cell fontWeight="medium">{range}</Table.Cell>
-                        <Table.Cell>{ceiling.cashDiscountPercent}%</Table.Cell>
-                        <Table.Cell>{strategy?.cashStrategyDiscountPercent ?? wallet.cobcomDiscountPercent ?? 0}%</Table.Cell>
-                        <Table.Cell>{ceiling.installmentDiscountPercent}%</Table.Cell>
-                        <Table.Cell>{strategy?.installmentStrategyDiscountPercent ?? wallet.cobcomDiscountPercent ?? 0}%</Table.Cell>
+                        <Table.Row key={`${ceiling.minAgingDays}-${ceiling.maxAgingDays ?? 'plus'}`}>
+                          <Table.Cell fontWeight="medium">{range}</Table.Cell>
+                        <Table.Cell>
+                          {strategy?.cashStrategyDiscountPercent ?? wallet.cobcomDiscountPercent ?? 0}%
+                          <Text as="span" color="fg.muted"> (teto: {ceiling.cashDiscountPercent}%)</Text>
+                        </Table.Cell>
+                        <Table.Cell>
+                          {strategy?.installmentStrategyDiscountPercent ?? wallet.cobcomDiscountPercent ?? 0}%
+                          <Text as="span" color="fg.muted"> (teto: {ceiling.installmentDiscountPercent}%)</Text>
+                        </Table.Cell>
                       </Table.Row>
                     );
                   })}
