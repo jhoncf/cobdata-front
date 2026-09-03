@@ -12,7 +12,7 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
-  const { userName, role } = useAuth();
+  const { userName, role, creditorId } = useAuth();
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const [colorMode, setColorMode] = useState<'light' | 'dark'>(() => {
@@ -94,9 +94,11 @@ export function Header({ onMenuClick }: HeaderProps) {
       </HStack>
 
       {/* Center: Global Search */}
-      <Flex flex="1" justify="center" mx="4" display={{ base: 'none', lg: 'flex' }}>
-        <GlobalSearchBar />
-      </Flex>
+      {!creditorId && (
+        <Flex flex="1" justify="center" mx="4" display={{ base: 'none', lg: 'flex' }}>
+          <GlobalSearchBar />
+        </Flex>
+      )}
 
       {/* Right: User Menu */}
       <HStack gap="1">

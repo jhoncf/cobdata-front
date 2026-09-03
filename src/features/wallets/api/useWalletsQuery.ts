@@ -3,10 +3,11 @@ import api from '@/lib/api';
 import type { PaginatedResponse, ListWalletsParams } from '@/types/api';
 import type { Wallet } from '@/types/models';
 
-export function useWalletsQuery(params: ListWalletsParams = {}) {
+export function useWalletsQuery(params: ListWalletsParams = {}, enabled = true) {
   return useQuery<PaginatedResponse<Wallet>>({
     queryKey: ['wallets', 'list', params],
     queryFn: () => api.get('/wallets', { params }).then((r) => r.data),
+    enabled,
     placeholderData: keepPreviousData,
   });
 }

@@ -3,10 +3,11 @@ import api from '@/lib/api';
 import type { PaginatedResponse, ListCreditorsParams } from '@/types/api';
 import type { Creditor, CreditorCommercialRules } from '@/types/models';
 
-export function useCreditorsQuery(params: ListCreditorsParams = {}) {
+export function useCreditorsQuery(params: ListCreditorsParams = {}, enabled = true) {
   return useQuery<PaginatedResponse<Creditor>>({
     queryKey: ['creditors', 'list', params],
     queryFn: () => api.get('/creditors', { params }).then((r) => r.data),
+    enabled,
     placeholderData: keepPreviousData,
   });
 }

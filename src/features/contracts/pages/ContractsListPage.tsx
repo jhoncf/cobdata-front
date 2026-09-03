@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   HStack,
+  Input,
   SimpleGrid,
   Text,
 } from '@chakra-ui/react';
@@ -34,6 +35,7 @@ import { TagsManager } from '../components/TagsManager';
 import { CreateChargeDialog } from '@/features/payments/components/CreateChargeDialog';
 import { GeneratePixAction } from '@/features/payments/components/GeneratePixAction';
 import { usePermission } from '@/hooks/usePermission';
+import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { toaster } from '@/components/ui/toaster';
 import {
@@ -47,6 +49,8 @@ import type { PaymentStatus, SerasaStatus } from '@/types/enums';
 
 export default function ContractsListPage() {
   const { canCreate, canEdit, canDelete } = usePermission();
+  const { creditorId } = useAuth();
+  const isCreditorPortal = Boolean(creditorId);
 
   // Credor/Carteira selection
   const [selectedCreditorId, setSelectedCreditorId] = useState<string>('');
@@ -54,20 +58,21 @@ export default function ContractsListPage() {
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | ''>('');
   const [serasaStatusFilter, setSerasaStatusFilter] = useState<SerasaStatus | ''>('');
   const [installmentOnly, setInstallmentOnly] = useState('');
+  const [contractSearch, setContractSearch] = useState('');
 
   // Contracts pagination
   const [page, setPage] = useState(1);
   const limit = 20;
 
   // Load creditors for dropdown
-  const { data: creditorsData } = useCreditorsQuery({ page: 1, limit: 100 });
+  const { data: creditorsData } = useCreditorsQuery({ page: 1, limit: 100 }, !isCreditorPortal);
 
   // Load wallets filtered by selected creditor
   const { data: walletsData } = useWalletsQuery({
     page: 1,
     limit: 100,
     ...(selectedCreditorId && { creditorId: selectedCreditorId }),
-  });
+  }, !isCreditorPortal);
 
   // Load wallet detail (with summary) when selected
   const { data: walletDetail } = useWalletDetailQuery(selectedWalletId || undefined);
@@ -80,6 +85,7 @@ export default function ContractsListPage() {
     paymentStatus: paymentStatusFilter || undefined,
     serasaStatus: serasaStatusFilter || undefined,
     installmentOnly: installmentOnly === 'yes' ? true : undefined,
+    search: isCreditorPortal && contractSearch.trim() ? contractSearch.trim() : undefined,
   });
 
   const createMutation = useCreateContractMutation();
@@ -248,7 +254,18 @@ export default function ContractsListPage() {
         )}
       </PageHeader>
 
-      {/* Credor / Carteira Selection */}
+      {isCreditorPortal ? (
+        <Box mb="5" maxW="lg">
+          <Input
+            size="sm"
+            value={contractSearch}
+            onChange={(event) => { setContractSearch(event.target.value); setPage(1); }}
+            placeholder="Buscar por número do contrato ou CPF/CNPJ"
+            aria-label="Buscar contratos"
+          />
+        </Box>
+      ) : (
+      /* Credor / Carteira Selection */
       <HStack gap="3" mb="5" wrap="wrap">
         <NativeSelect.Root size="sm" width="220px">
           <NativeSelect.Field
@@ -307,6 +324,7 @@ export default function ContractsListPage() {
           <NativeSelect.Indicator />
         </NativeSelect.Root>
       </HStack>
+      )}
 
       {/* Wallet Summary Dashboard */}
       {selectedWalletId && summary && (
@@ -338,7 +356,7 @@ export default function ContractsListPage() {
       )}
 
       {/* Content */}
-      {!selectedWalletId ? (
+      {!isCreditorPortal && !selectedWalletId ? (
         <EmptyState
           title="Selecione uma carteira"
           description="Escolha um credor e uma carteira acima para visualizar os contratos"
