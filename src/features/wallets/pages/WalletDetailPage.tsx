@@ -33,10 +33,10 @@ import { formatDate, formatCurrency } from '@/lib/formatters';
 import { toaster } from '@/components/ui/toaster';
 import { useCreateOperationMutation } from '@/features/operations/api/useOperationMutations';
 import { useOperationPreviewQuery } from '@/features/operations/api/useOperationsQuery';
-import { PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
+import { CONTRACT_STATUS_LABELS, PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
 import { useAllWalletsQuery } from '../api/useWalletsQuery';
-import { OperationAction, type PaymentStatus, type SerasaStatus } from '@/types/enums';
+import { ContractStatus, OperationAction, type PaymentStatus, type SerasaStatus } from '@/types/enums';
 import type { CreateContractDto, OperationContractFilters, UpdateContractDto, UpdateWalletDto } from '@/types/api';
 import type { Contract } from '@/types/models';
 
@@ -119,6 +119,7 @@ export default function WalletDetailPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [bulkAction, setBulkAction] = useState<OperationAction | null>(null);
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | ''>('');
+  const [contractStatusFilter, setContractStatusFilter] = useState<ContractStatus>(ContractStatus.ACTIVE);
   const [serasaStatusFilter, setSerasaStatusFilter] = useState<SerasaStatus | ''>('');
   const [installmentOnly, setInstallmentOnly] = useState(false);
   const [updatedValueOperator, setUpdatedValueOperator] = useState<ComparisonOperator>('gt');
@@ -132,19 +133,21 @@ export default function WalletDetailPage() {
   const [destinationWalletId, setDestinationWalletId] = useState('');
 
   const operationFilters = useMemo<OperationContractFilters>(() => ({
+    contractStatus: contractStatusFilter,
     ...(paymentStatusFilter ? { paymentStatus: paymentStatusFilter } : {}),
     ...(serasaStatusFilter ? { serasaStatus: serasaStatusFilter } : {}),
     ...(installmentOnly ? { installmentOnly: true } : {}),
     ...(updatedValue ? { updatedValueOperator, updatedValue: Number(updatedValue) } : {}),
     ...(offerValue ? { offerValueOperator, offerValue: Number(offerValue) } : {}),
     ...(aging ? { agingOperator, aging: Number(aging) } : {}),
-  }), [paymentStatusFilter, serasaStatusFilter, installmentOnly, updatedValueOperator, updatedValue, offerValueOperator, offerValue, agingOperator, aging]);
+  }), [contractStatusFilter, paymentStatusFilter, serasaStatusFilter, installmentOnly, updatedValueOperator, updatedValue, offerValueOperator, offerValue, agingOperator, aging]);
 
   const { data: wallet, isLoading } = useWalletDetailQuery(id ?? '');
   const { data: contractsData, isLoading: contractsLoading } = useContractsQuery({
     walletId: id,
     page: contractsPage,
     limit: 20,
+    status: contractStatusFilter,
     ...(contractSearch.trim() ? { search: contractSearch.trim() } : {}),
     ...operationFilters,
   });
@@ -499,6 +502,14 @@ export default function WalletDetailPage() {
                 <Stack gap="3">
                   <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap="3">
                     <NativeSelect.Root size="sm" width="100%">
+                      <NativeSelect.Field value={contractStatusFilter} onChange={(event) => { setContractStatusFilter(event.target.value as ContractStatus); setContractsPage(1); }}>
+                        <option value="ACTIVE">Situação: ativos</option>
+                        <option value="SUSPENDED">Situação: suspensos</option>
+                        <option value="CANCELLED">Situação: cancelados</option>
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                    <NativeSelect.Root size="sm" width="100%">
                       <NativeSelect.Field value={paymentStatusFilter} onChange={(event) => { setPaymentStatusFilter(event.target.value as PaymentStatus | ''); setContractsPage(1); }}>
                         <option value="">Status financeiro</option>
                         <option value="OPEN">Em aberto</option>
@@ -551,7 +562,8 @@ export default function WalletDetailPage() {
                         <SortableHeader field="originalValue">Valor Original</SortableHeader>
                         <SortableHeader field="updatedValue">Valor Atualizado</SortableHeader>
                         <Table.ColumnHeader>Oferta</Table.ColumnHeader>
-                        <SortableHeader field="paymentStatus">Status</SortableHeader>
+                        <Table.ColumnHeader>Situação</Table.ColumnHeader>
+                        <SortableHeader field="paymentStatus">Financeiro</SortableHeader>
                         <SortableHeader field="serasaStatus">Serasa</SortableHeader>
                         <SortableHeader field="occurrenceDate">Data Ocorrência</SortableHeader>
                         <Table.ColumnHeader>Aging</Table.ColumnHeader>
@@ -582,6 +594,12 @@ export default function WalletDetailPage() {
                                 )}
                               </>
                             ) : '—'}
+                          </Table.Cell>
+                          <Table.Cell>
+                            <StatusBadge
+                              status={contract.status}
+                              label={CONTRACT_STATUS_LABELS[contract.status] ?? contract.status}
+                            />
                           </Table.Cell>
                           <Table.Cell>
                             <StatusBadge

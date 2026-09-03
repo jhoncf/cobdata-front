@@ -41,6 +41,7 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { toaster } from '@/components/ui/toaster';
 import {
   DEBT_TYPE_LABELS,
+  CONTRACT_STATUS_LABELS,
   PAYMENT_STATUS_LABELS,
   PROVIDER_STATUS_LABELS,
 } from '@/lib/constants';
@@ -177,7 +178,12 @@ export default function ContractsListPage() {
     { key: 'originalValue', header: 'Valor', cell: (row) => formatCurrency(row.originalValue), textAlign: 'end' },
     {
       key: 'status',
-      header: 'Status',
+      header: 'Situação',
+      cell: (row) => <StatusBadge status={row.status} label={CONTRACT_STATUS_LABELS[row.status]} />,
+    },
+    {
+      key: 'paymentStatus',
+      header: 'Financeiro',
       cell: (row) => <StatusBadge status={row.paymentStatus} label={PAYMENT_STATUS_LABELS[row.paymentStatus]} />,
     },
     { key: 'serasaStatus', header: 'Serasa', cell: (row) => <StatusBadge status={row.serasaStatus} label={PROVIDER_STATUS_LABELS[row.serasaStatus]} /> },
