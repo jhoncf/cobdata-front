@@ -758,7 +758,9 @@ export default function WalletDetailPage() {
         onConfirm={() => {
           if (!id || !bulkAction) return;
           createOperationMutation.mutate(
-            { walletId: id, action: bulkAction, filters: operationFilters },
+            // The API receives operation filters at the top level. A nested
+            // `filters` object is rejected by the backend DTO validation.
+            { walletId: id, action: bulkAction, ...operationFilters },
             { onSuccess: () => setBulkAction(null) },
           );
         }}
