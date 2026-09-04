@@ -43,6 +43,7 @@ import type { Contract } from '@/types/models';
 type SortField = 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'paymentStatus' | 'serasaStatus' | 'occurrenceDate';
 type SortDirection = 'asc' | 'desc';
 type ComparisonOperator = 'gt' | 'lt' | 'eq';
+type SerasaStatusFilter = SerasaStatus | 'SYNCED';
 
 function ComparisonFilter({
   label, operator, value, unit, onOperatorChange, onValueChange,
@@ -120,7 +121,7 @@ export default function WalletDetailPage() {
   const [bulkAction, setBulkAction] = useState<OperationAction | null>(null);
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | ''>('');
   const [contractStatusFilter, setContractStatusFilter] = useState<ContractStatus>(ContractStatus.ACTIVE);
-  const [serasaStatusFilter, setSerasaStatusFilter] = useState<SerasaStatus | ''>('');
+  const [serasaStatusFilter, setSerasaStatusFilter] = useState<SerasaStatusFilter | ''>('');
   const [installmentOnly, setInstallmentOnly] = useState(false);
   const [updatedValueOperator, setUpdatedValueOperator] = useState<ComparisonOperator>('gt');
   const [updatedValue, setUpdatedValue] = useState('');
@@ -134,7 +135,7 @@ export default function WalletDetailPage() {
 
   const operationFilters = useMemo<OperationContractFilters>(() => ({
     ...(paymentStatusFilter ? { paymentStatus: paymentStatusFilter } : {}),
-    ...(serasaStatusFilter ? { serasaStatus: serasaStatusFilter } : {}),
+    ...(serasaStatusFilter && serasaStatusFilter !== 'SYNCED' ? { serasaStatus: serasaStatusFilter } : {}),
     ...(installmentOnly ? { installmentOnly: true } : {}),
     ...(updatedValue ? { updatedValueOperator, updatedValue: Number(updatedValue) } : {}),
     ...(offerValue ? { offerValueOperator, offerValue: Number(offerValue) } : {}),
@@ -148,6 +149,7 @@ export default function WalletDetailPage() {
     limit: 20,
     status: contractStatusFilter,
     ...(contractSearch.trim() ? { search: contractSearch.trim() } : {}),
+    ...(serasaStatusFilter === 'SYNCED' ? { serasaStatus: 'SYNCED' } : {}),
     ...operationFilters,
   });
   const createContractMutation = useCreateContractMutation();
@@ -550,11 +552,11 @@ export default function WalletDetailPage() {
                       <NativeSelect.Indicator />
                     </NativeSelect.Root>
                     <NativeSelect.Root size="sm" width="100%">
-                      <NativeSelect.Field value={serasaStatusFilter} onChange={(event) => { setSerasaStatusFilter(event.target.value as SerasaStatus | ''); setContractsPage(1); }}>
+                      <NativeSelect.Field value={serasaStatusFilter} onChange={(event) => { setSerasaStatusFilter(event.target.value as SerasaStatusFilter | ''); setContractsPage(1); }}>
                         <option value="">Status Serasa</option>
                         <option value="NOT_ENABLED">Não enviado</option>
                         <option value="SENT">Enviado</option>
-                        <option value="REGISTERED">Registrado</option>
+                        <option value="SYNCED">Sincronizado</option>
                         <option value="FAILED">Falhou</option>
                         <option value="REMOVED">Removido</option>
                       </NativeSelect.Field>
