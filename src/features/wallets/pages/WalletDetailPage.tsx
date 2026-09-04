@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
@@ -141,8 +141,8 @@ export default function WalletDetailPage() {
     ...(aging ? { agingOperator, aging: Number(aging) } : {}),
   }), [paymentStatusFilter, serasaStatusFilter, installmentOnly, updatedValueOperator, updatedValue, offerValueOperator, offerValue, agingOperator, aging]);
 
-  const { data: wallet, isLoading } = useWalletDetailQuery(id ?? '');
-  const { data: contractsData, isLoading: contractsLoading } = useContractsQuery({
+  const { data: wallet, isLoading, refetch: refetchWallet } = useWalletDetailQuery(id ?? '');
+  const { data: contractsData, isLoading: contractsLoading, isFetching: contractsRefreshing, refetch: refetchContracts } = useContractsQuery({
     walletId: id,
     page: contractsPage,
     limit: 20,
@@ -164,6 +164,24 @@ export default function WalletDetailPage() {
   );
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
   const removeFromSerasaMutation = useRemoveContractFromSerasaMutation();
+
+  const refreshContracts = useCallback(async () => {
+    await Promise.all([refetchContracts(), refetchWallet()]);
+  }, [refetchContracts, refetchWallet]);
+
+  const hasPendingSerasaStatus = contractsData?.data.some((contract) => (
+    contract.serasaStatus === 'SENT' || contract.serasaStatus === 'REMOVING'
+  )) ?? false;
+
+  useEffect(() => {
+    if (!hasPendingSerasaStatus) return;
+
+    const refreshTimer = window.setInterval(() => {
+      void refreshContracts();
+    }, 8_000);
+
+    return () => window.clearInterval(refreshTimer);
+  }, [hasPendingSerasaStatus, refreshContracts]);
   const destinationWallets = useMemo(
     () => allWallets?.data.filter((candidate) => candidate.id !== id && candidate.creditorId === wallet?.creditorId && candidate.status === 'ACTIVE') ?? [],
     [allWallets?.data, id, wallet?.creditorId],
@@ -478,22 +496,34 @@ export default function WalletDetailPage() {
                   onChange={(event) => { setContractSearch(event.target.value); setContractsPage(1); }}
                   aria-label="Buscar contratos da carteira"
                 />
-                {canEdit && <Menu.Root>
-                  <Menu.Trigger asChild>
-                    <Button size="sm" variant="outline" colorPalette="blue" alignSelf={{ base: 'flex-start', md: 'auto' }} disabled={!contractsData?.meta.total}>
-                      <LuEllipsis /> Ações
-                    </Button>
-                  </Menu.Trigger>
-                  <Portal>
-                    <Menu.Positioner>
-                      <Menu.Content>
-                        <Menu.Item value="transfer-filtered" onClick={() => { setDestinationWalletId(''); setTransferOpen(true); }}>
-                          Transferir contratos filtrados
-                        </Menu.Item>
-                      </Menu.Content>
-                    </Menu.Positioner>
-                  </Portal>
-                </Menu.Root>}
+                <HStack gap="2" alignSelf={{ base: 'flex-start', md: 'auto' }}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void refreshContracts()}
+                    loading={contractsRefreshing}
+                    aria-label="Atualizar tabela de contratos"
+                    title="Atualizar tabela e resumo da carteira"
+                  >
+                    <LuRefreshCw /> Atualizar
+                  </Button>
+                  {canEdit && <Menu.Root>
+                    <Menu.Trigger asChild>
+                      <Button size="sm" variant="outline" colorPalette="blue" disabled={!contractsData?.meta.total}>
+                        <LuEllipsis /> Ações
+                      </Button>
+                    </Menu.Trigger>
+                    <Portal>
+                      <Menu.Positioner>
+                        <Menu.Content>
+                          <Menu.Item value="transfer-filtered" onClick={() => { setDestinationWalletId(''); setTransferOpen(true); }}>
+                            Transferir contratos filtrados
+                          </Menu.Item>
+                        </Menu.Content>
+                      </Menu.Positioner>
+                    </Portal>
+                  </Menu.Root>}
+                </HStack>
               </Flex>
 
               <Box borderTopWidth="1px" pt="4">
