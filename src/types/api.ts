@@ -300,6 +300,8 @@ export interface ListContractsParams extends PaginationParams {
   debtorDocument?: string;
   search?: string;
   tags?: string[];
+  sortBy?: 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'offerValue' | 'status' | 'paymentStatus' | 'serasaStatus' | 'occurrenceDate' | 'agingDays';
+  sortDirection?: 'asc' | 'desc';
 }
 
 export interface ListImportsParams extends PaginationParams {

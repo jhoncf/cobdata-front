@@ -40,7 +40,7 @@ import { ContractStatus, OperationAction, type PaymentStatus, type SerasaStatus 
 import type { CreateContractDto, OperationContractFilters, UpdateContractDto, UpdateWalletDto } from '@/types/api';
 import type { Contract } from '@/types/models';
 
-type SortField = 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'paymentStatus' | 'serasaStatus' | 'occurrenceDate';
+type SortField = 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'offerValue' | 'status' | 'paymentStatus' | 'serasaStatus' | 'occurrenceDate' | 'agingDays';
 type SortDirection = 'asc' | 'desc';
 type ComparisonOperator = 'gt' | 'lt' | 'eq';
 type SerasaStatusFilter = SerasaStatus | 'SYNCED';
@@ -150,6 +150,7 @@ export default function WalletDetailPage() {
     status: contractStatusFilter,
     ...(contractSearch.trim() ? { search: contractSearch.trim() } : {}),
     ...(serasaStatusFilter === 'SYNCED' ? { serasaStatus: 'SYNCED' } : {}),
+    ...(sortField ? { sortBy: sortField, sortDirection } : {}),
     ...operationFilters,
   });
   const createContractMutation = useCreateContractMutation();
@@ -184,6 +185,27 @@ export default function WalletDetailPage() {
 
     return () => window.clearInterval(refreshTimer);
   }, [hasPendingSerasaStatus, refreshContracts]);
+
+  useEffect(() => {
+    if (!id) return;
+    try {
+      const saved = window.sessionStorage.getItem(`wallet-contracts-sort:${id}`);
+      if (!saved) return;
+      const parsed = JSON.parse(saved) as { field?: SortField; direction?: SortDirection };
+      if (parsed.field) setSortField(parsed.field);
+      if (parsed.direction === 'asc' || parsed.direction === 'desc') setSortDirection(parsed.direction);
+    } catch {
+      // A malformed session value should never prevent the table from loading.
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    window.sessionStorage.setItem(
+      `wallet-contracts-sort:${id}`,
+      JSON.stringify({ field: sortField, direction: sortDirection }),
+    );
+  }, [id, sortDirection, sortField]);
   const destinationWallets = useMemo(
     () => allWallets?.data.filter((candidate) => candidate.id !== id && candidate.creditorId === wallet?.creditorId && candidate.status === 'ACTIVE') ?? [],
     [allWallets?.data, id, wallet?.creditorId],
@@ -229,41 +251,8 @@ export default function WalletDetailPage() {
       setSortField(field);
       setSortDirection('asc');
     }
+    setContractsPage(1);
   };
-
-  const sortedContracts = useMemo(() => {
-    if (!contractsData?.data || !sortField) return contractsData?.data ?? [];
-
-    return [...contractsData.data].sort((a, b) => {
-      let comparison = 0;
-
-      switch (sortField) {
-        case 'contractNumber':
-          comparison = (a.contractNumber ?? '').localeCompare(b.contractNumber ?? '');
-          break;
-        case 'debtorDocument':
-          comparison = (a.debtorDocument ?? '').localeCompare(b.debtorDocument ?? '');
-          break;
-        case 'originalValue':
-          comparison = a.originalValue - b.originalValue;
-          break;
-        case 'updatedValue':
-          comparison = (a.updatedValue ?? 0) - (b.updatedValue ?? 0);
-          break;
-        case 'paymentStatus':
-          comparison = a.paymentStatus.localeCompare(b.paymentStatus);
-          break;
-        case 'serasaStatus':
-          comparison = a.serasaStatus.localeCompare(b.serasaStatus);
-          break;
-        case 'occurrenceDate':
-          comparison = new Date(a.occurrenceDate).getTime() - new Date(b.occurrenceDate).getTime();
-          break;
-      }
-
-      return sortDirection === 'asc' ? comparison : -comparison;
-    });
-  }, [contractsData?.data, sortField, sortDirection]);
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null;
@@ -592,17 +581,17 @@ export default function WalletDetailPage() {
                         <SortableHeader field="debtorDocument">Documento</SortableHeader>
                         <SortableHeader field="originalValue">Valor Original</SortableHeader>
                         <SortableHeader field="updatedValue">Valor Atualizado</SortableHeader>
-                        <Table.ColumnHeader>Oferta</Table.ColumnHeader>
-                        <Table.ColumnHeader>Situação</Table.ColumnHeader>
+                        <SortableHeader field="offerValue">Oferta</SortableHeader>
+                        <SortableHeader field="status">Situação</SortableHeader>
                         <SortableHeader field="paymentStatus">Financeiro</SortableHeader>
                         <SortableHeader field="serasaStatus">Serasa</SortableHeader>
                         <SortableHeader field="occurrenceDate">Data Ocorrência</SortableHeader>
-                        <Table.ColumnHeader>Aging</Table.ColumnHeader>
+                        <SortableHeader field="agingDays">Aging</SortableHeader>
                         {canEdit && <Table.ColumnHeader width="190px">Ações</Table.ColumnHeader>}
                       </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                      {sortedContracts.map((contract) => (
+                      {contractsData.data.map((contract) => (
                         <Table.Row key={contract.id}>
                           <Table.Cell fontWeight="medium">
                             {contract.contractNumber}
