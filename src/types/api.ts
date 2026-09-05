@@ -94,6 +94,7 @@ export interface UpdateUserDto {
 // ─── Creditor DTOs ───────────────────────────────────────────────────────────
 export interface CreateCreditorDto {
   name: string;
+  tradeName?: string;
   cnpj?: string;
   contacts?: Contact[];
   address?: Address;
@@ -103,6 +104,7 @@ export interface CreateCreditorDto {
 
 export interface UpdateCreditorDto {
   name?: string;
+  tradeName?: string;
   cnpj?: string;
   contacts?: Contact[];
   address?: Address;

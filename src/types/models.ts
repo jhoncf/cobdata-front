@@ -48,6 +48,7 @@ export interface Address {
 export interface Creditor {
   id: string;
   name: string;
+  tradeName?: string | null;
   cnpj: string | null;
   contacts: Contact[];
   address: Address | null;

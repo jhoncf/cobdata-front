@@ -41,6 +41,7 @@ const addressSchema = z.object({
 
 const creditorSchema = z.object({
   name: z.string().min(1, 'Nome obrigatório').max(255),
+  tradeName: z.string().max(255).optional(),
   cnpj: z
     .string()
     .regex(/^\d{14}$/, 'CNPJ deve ter 14 dígitos')
@@ -78,6 +79,7 @@ interface CreditorFormDialogProps {
   creditor?: Creditor | null;
   onSubmit: (data: {
     name: string;
+    tradeName?: string;
     cnpj?: string;
     contacts?: { type: ContactType; value: string }[];
     address?: {
@@ -115,6 +117,7 @@ export function CreditorFormDialog({
     resolver: zodResolver(creditorSchema),
     defaultValues: {
       name: '',
+      tradeName: '',
       cnpj: '',
       contacts: [],
       hasAddress: false,
@@ -143,6 +146,7 @@ export function CreditorFormDialog({
       if (creditor) {
         reset({
           name: creditor.name,
+          tradeName: creditor.tradeName ?? '',
           cnpj: creditor.cnpj ?? '',
           contacts: creditor.contacts ?? [],
           hasAddress: !!creditor.address,
@@ -161,6 +165,7 @@ export function CreditorFormDialog({
       } else {
         reset({
           name: '',
+          tradeName: '',
           cnpj: '',
           contacts: [],
           hasAddress: false,
@@ -183,6 +188,7 @@ export function CreditorFormDialog({
   const handleFormSubmit = (values: CreditorFormValues) => {
     onSubmit({
       name: values.name,
+      tradeName: values.tradeName || undefined,
       cnpj: values.cnpj || undefined,
       contacts: values.contacts.length > 0 ? values.contacts : undefined,
       address: values.hasAddress ? values.address : undefined,
@@ -219,6 +225,11 @@ export function CreditorFormDialog({
                       <Field.Label>Razão Social</Field.Label>
                       <Input {...register('name')} />
                       <Field.ErrorText>{errors.name?.message}</Field.ErrorText>
+                    </Field.Root>
+                    <Field.Root invalid={!!errors.tradeName}>
+                      <Field.Label>Nome Fantasia</Field.Label>
+                      <Input {...register('tradeName')} placeholder="Como a empresa é conhecida" />
+                      <Field.ErrorText>{errors.tradeName?.message}</Field.ErrorText>
                     </Field.Root>
                     <Field.Root invalid={!!errors.cnpj}>
                       <Field.Label>CNPJ</Field.Label>
