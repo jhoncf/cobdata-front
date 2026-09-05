@@ -20,7 +20,7 @@ import {
   NativeSelect,
   Tooltip,
 } from '@chakra-ui/react';
-import { LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw, LuUnlink, LuEllipsis, LuCalculator, LuInfo } from 'react-icons/lu';
+import { LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw, LuUnlink, LuEllipsis, LuCalculator, LuInfo, LuDownload } from 'react-icons/lu';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState, ConfirmDialog } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
 import { useRecalculateWalletOffersMutation, useUpdateWalletMutation } from '../api/useWalletMutations';
@@ -32,6 +32,7 @@ import { WalletFormDialog } from '../components/WalletFormDialog';
 import { LigueLeadDialog } from '../components/LigueLeadDialog';
 import { formatDate, formatCurrency } from '@/lib/formatters';
 import { toaster } from '@/components/ui/toaster';
+import api from '@/lib/api';
 import { useCreateOperationMutation } from '@/features/operations/api/useOperationMutations';
 import { useOperationPreviewQuery } from '@/features/operations/api/useOperationsQuery';
 import { CONTRACT_STATUS_LABELS, PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
@@ -133,6 +134,7 @@ export default function WalletDetailPage() {
   const [contractSearch, setContractSearch] = useState('');
   const [transferOpen, setTransferOpen] = useState(false);
   const [destinationWalletId, setDestinationWalletId] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
 
   const operationFilters = useMemo<OperationContractFilters>(() => ({
     ...(paymentStatusFilter ? { paymentStatus: paymentStatusFilter } : {}),
@@ -268,6 +270,38 @@ export default function WalletDetailPage() {
       setSortDirection('asc');
     }
     setContractsPage(1);
+  };
+
+  const handleExportContracts = async () => {
+    if (!id) return;
+    setIsExporting(true);
+    try {
+      const response = await api.get('/contracts/export', {
+        params: {
+          walletId: id,
+          status: contractStatusFilter,
+          ...(contractSearch.trim() ? { search: contractSearch.trim() } : {}),
+          ...(serasaStatusFilter ? { serasaStatus: serasaStatusFilter } : {}),
+          ...operationFilters,
+          ...(sortField ? { sortBy: sortField, sortDirection } : {}),
+        },
+        responseType: 'blob',
+        timeout: 120_000,
+      });
+      const url = window.URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url;
+      const walletFileName = wallet?.name.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'carteira';
+      link.download = `contratos-${walletFileName}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      // The API interceptor already exposes a meaningful error to the user.
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -543,6 +577,16 @@ export default function WalletDetailPage() {
                     title="Atualizar tabela e resumo da carteira"
                   >
                     <LuRefreshCw /> Atualizar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void handleExportContracts()}
+                    loading={isExporting}
+                    disabled={!contractsData?.meta.total}
+                    title="Exporta todos os contratos que correspondem aos filtros ativos"
+                  >
+                    <LuDownload /> Exportar
                   </Button>
                   {canEdit && <Menu.Root>
                     <Menu.Trigger asChild>
