@@ -186,9 +186,11 @@ export default function WalletDetailPage() {
     await Promise.all([refetchContracts(), refetchWallet()]);
   }, [refetchContracts, refetchWallet]);
 
-  const hasPendingSerasaStatus = contractsData?.data.some((contract) => (
-    contract.serasaStatus === 'SENT' || contract.serasaStatus === 'REMOVING'
-  )) ?? false;
+  const hasPendingSerasaStatus = (
+    ['PENDING', 'SENT', 'REMOVING'] as SerasaStatus[]
+  ).some((status) => (
+    (wallet?.summary?.serasaStatusTotals?.[status] ?? 0) > 0
+  ));
 
   useEffect(() => {
     if (!hasPendingSerasaStatus) return;
