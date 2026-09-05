@@ -136,6 +136,7 @@ export interface WalletSummary {
   totalContracts: number;
   contractsByPaymentStatus: Record<string, number>;
   paymentStatusTotals: Record<string, { count: number; amount: number }>;
+  serasaStatusTotals: Record<string, number>;
   serasaTotal: { count: number; amount: number };
   totalValue: number;
   recoveredValue: number;

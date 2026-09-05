@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
+  Accordion,
   Button,
   Card,
   Dialog,
@@ -36,7 +37,7 @@ import { useOperationPreviewQuery } from '@/features/operations/api/useOperation
 import { CONTRACT_STATUS_LABELS, PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
 import { useAllWalletsQuery } from '../api/useWalletsQuery';
-import { ContractStatus, OperationAction, type PaymentStatus, type SerasaStatus } from '@/types/enums';
+import { ContractStatus, OperationAction, SerasaStatus, type PaymentStatus } from '@/types/enums';
 import type { CreateContractDto, OperationContractFilters, UpdateContractDto, UpdateWalletDto } from '@/types/api';
 import type { Contract } from '@/types/models';
 
@@ -167,6 +168,19 @@ export default function WalletDetailPage() {
   );
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
   const removeFromSerasaMutation = useRemoveContractFromSerasaMutation();
+
+  const serasaStatusSummary = [
+    { status: SerasaStatus.NOT_ENABLED, count: wallet?.summary?.serasaStatusTotals?.NOT_ENABLED ?? 0 },
+    { status: SerasaStatus.PENDING, count: wallet?.summary?.serasaStatusTotals?.PENDING ?? 0 },
+    { status: SerasaStatus.SENT, count: wallet?.summary?.serasaStatusTotals?.SENT ?? 0 },
+    {
+      status: SerasaStatus.REGISTERED,
+      count: (wallet?.summary?.serasaStatusTotals?.REGISTERED ?? 0) + (wallet?.summary?.serasaStatusTotals?.UPDATED ?? 0),
+    },
+    { status: SerasaStatus.REMOVING, count: wallet?.summary?.serasaStatusTotals?.REMOVING ?? 0 },
+    { status: SerasaStatus.REMOVED, count: wallet?.summary?.serasaStatusTotals?.REMOVED ?? 0 },
+    { status: SerasaStatus.FAILED, count: wallet?.summary?.serasaStatusTotals?.FAILED ?? 0 },
+  ];
 
   const refreshContracts = useCallback(async () => {
     await Promise.all([refetchContracts(), refetchWallet()]);
@@ -463,6 +477,36 @@ export default function WalletDetailPage() {
                 </Stat.Root>
               </SimpleGrid>
             </Card.Body>
+          </Card.Root>
+        )}
+
+        {wallet.summary && (
+          <Card.Root>
+            <Accordion.Root collapsible defaultValue={[]}>
+              <Accordion.Item value="serasa-statuses" borderBottomWidth="0">
+                <Accordion.ItemTrigger px="5" py="4">
+                  <Flex flex="1" align="center" justify="space-between" gap="4">
+                    <Box textAlign="start">
+                      <Text fontWeight="semibold">Totais por status da Serasa</Text>
+                      <Text fontSize="sm" color="fg.muted">Clique para visualizar a distribuição dos contratos.</Text>
+                    </Box>
+                    <Accordion.ItemIndicator />
+                  </Flex>
+                </Accordion.ItemTrigger>
+                <Accordion.ItemContent>
+                  <Accordion.ItemBody px="5" pb="5">
+                    <SimpleGrid columns={{ base: 2, sm: 3, lg: 4, xl: 7 }} gap="3">
+                      {serasaStatusSummary.map(({ status, count }) => (
+                        <Box key={status} borderWidth="1px" rounded="md" p="3">
+                          <StatusBadge status={status} label={PROVIDER_STATUS_LABELS[status]} />
+                          <Text mt="2" fontSize="2xl" fontWeight="semibold">{count}</Text>
+                        </Box>
+                      ))}
+                    </SimpleGrid>
+                  </Accordion.ItemBody>
+                </Accordion.ItemContent>
+              </Accordion.Item>
+            </Accordion.Root>
           </Card.Root>
         )}
 
