@@ -12,6 +12,7 @@ import {
   LuCreditCard,
   LuLandmark,
   LuKeyRound,
+  LuCircleX,
 } from 'react-icons/lu';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -27,6 +28,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LuLayoutDashboard, section: 'Principal' },
   { label: 'Contratos', path: '/contracts', icon: LuScrollText, section: 'Principal', portalOnly: true },
+  { label: 'Remover dívidas', path: '/remover-dividas', icon: LuCircleX, section: 'Principal', portalOnly: true },
   { label: 'Credores', path: '/creditors', icon: LuBuilding2, section: 'Gestão' },
   { label: 'Carteiras', path: '/wallets', icon: LuWallet, section: 'Gestão' },
 

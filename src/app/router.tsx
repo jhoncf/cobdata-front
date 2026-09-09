@@ -25,6 +25,7 @@ const CreditorDetailPage = lazy(() => import('@/features/creditors/pages/Credito
 const WalletsListPage = lazy(() => import('@/features/wallets/pages/WalletsListPage'));
 const WalletDetailPage = lazy(() => import('@/features/wallets/pages/WalletDetailPage'));
 const ContractsListPage = lazy(() => import('@/features/contracts/pages/ContractsListPage'));
+const CreditorRemovalPage = lazy(() => import('@/features/contracts/pages/CreditorRemovalPage'));
 const ContractDetailPage = lazy(() => import('@/features/contracts/pages/ContractDetailPage'));
 const ImportsListPage = lazy(() => import('@/features/imports/pages/ImportsListPage'));
 const ImportUploadPage = lazy(() => import('@/features/imports/pages/ImportUploadPage'));
@@ -117,6 +118,10 @@ export const router = createBrowserRouter([
           {
             path: '/contracts',
             element: <SuspenseLayout><ContractsListPage /></SuspenseLayout>,
+          },
+          {
+            path: '/remover-dividas',
+            element: <SuspenseLayout><CreditorRemovalPage /></SuspenseLayout>,
           },
           {
             path: '/contracts/:id',

@@ -15,7 +15,7 @@ export function ProtectedRoute() {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (user?.creditorId && !['/contracts', '/change-password', '/sessions'].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))) {
+  if (user?.creditorId && !['/contracts', '/remover-dividas', '/change-password', '/sessions'].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))) {
     return <Navigate to="/contracts" replace />;
   }
 
