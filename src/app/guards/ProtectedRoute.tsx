@@ -15,7 +15,14 @@ export function ProtectedRoute() {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (user?.creditorId && !['/contracts', '/remover-dividas', '/change-password', '/sessions'].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))) {
+  // `setToken` happens just before `/auth/me` returns. Do not mount protected
+  // pages in that brief interval: they may fire admin-only queries before the
+  // creditor scope is known and incorrectly show a permission error.
+  if (!user) {
+    return null;
+  }
+
+  if (user.creditorId && !['/contracts', '/remover-dividas', '/change-password', '/sessions'].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`))) {
     return <Navigate to="/contracts" replace />;
   }
 
