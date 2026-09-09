@@ -44,7 +44,10 @@ const creditorSchema = z.object({
   tradeName: z.string().max(255).optional(),
   cnpj: z
     .string()
-    .regex(/^\d{14}$/, 'CNPJ deve ter 14 dígitos')
+    .refine(
+      (value) => value === '' || value.replace(/\D/g, '').length === 14,
+      'CNPJ deve ter 14 dígitos',
+    )
     .optional()
     .or(z.literal('')),
   contacts: z.array(contactSchema).max(10, 'Máximo 10 contatos'),
@@ -189,7 +192,7 @@ export function CreditorFormDialog({
     onSubmit({
       name: values.name,
       tradeName: values.tradeName || undefined,
-      cnpj: values.cnpj || undefined,
+      cnpj: values.cnpj ? values.cnpj.replace(/\D/g, '') : undefined,
       contacts: values.contacts.length > 0 ? values.contacts : undefined,
       address: values.hasAddress ? values.address : undefined,
       webhookUrl: values.webhookUrl || undefined,
@@ -235,8 +238,9 @@ export function CreditorFormDialog({
                       <Field.Label>CNPJ</Field.Label>
                       <Input
                         {...register('cnpj')}
-                        placeholder="00000000000000"
-                        maxLength={14}
+                        placeholder="00.000.000/0000-00"
+                        maxLength={18}
+                        inputMode="numeric"
                       />
                       <Field.ErrorText>{errors.cnpj?.message}</Field.ErrorText>
                     </Field.Root>
@@ -365,7 +369,7 @@ export function CreditorFormDialog({
                   <Tabs.Content value="webhook">
                     <Stack gap="4">
                       <Text fontSize="sm" color="fg.muted">Receba atualizações de status dos contratos deste credor.</Text>
-                      <Field.Root invalid={!!errors.webhookUrl} required>
+                      <Field.Root invalid={!!errors.webhookUrl}>
                         <Field.Label>URL do webhook</Field.Label>
                         <Input {...register('webhookUrl')} placeholder="https://suaempresa.com/webhooks/cobcom" />
                         <Field.ErrorText>{errors.webhookUrl?.message}</Field.ErrorText>

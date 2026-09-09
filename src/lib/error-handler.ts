@@ -47,7 +47,7 @@ export function handleApiError(error: unknown): void {
       break;
 
     case 422:
-      // Validation errors — handled by forms (mapped to field errors)
+      toaster.create({ type: 'error', title: message || 'Verifique os campos informados' });
       break;
 
     case 429:

@@ -29,7 +29,10 @@ const contactTypeOptions = [
 
 const creditorSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  cnpj: z.string().optional(),
+  cnpj: z.string().refine(
+    (value) => !value || value.replace(/\D/g, '').length === 14,
+    'CNPJ deve ter 14 dígitos',
+  ).optional(),
   contacts: z.array(z.object({
     type: z.nativeEnum(ContactType),
     value: z.string().min(1, 'Valor do contato é obrigatório'),
@@ -89,6 +92,7 @@ export default function CreditorCreatePage() {
     try {
       const payload = {
         ...data,
+        cnpj: data.cnpj ? data.cnpj.replace(/\D/g, '') : undefined,
         contacts: contacts.length > 0 ? contacts : undefined,
         address: showAddress ? data.address : undefined,
       };
@@ -128,7 +132,7 @@ export default function CreditorCreatePage() {
 
                 <Field.Root invalid={!!errors.cnpj} flex="1" minW="200px">
                   <Field.Label>CNPJ</Field.Label>
-                  <Input placeholder="00.000.000/0000-00" {...register('cnpj')} />
+                  <Input placeholder="00.000.000/0000-00" maxLength={18} inputMode="numeric" {...register('cnpj')} />
                   <Field.ErrorText>{errors.cnpj?.message}</Field.ErrorText>
                 </Field.Root>
               </HStack>
