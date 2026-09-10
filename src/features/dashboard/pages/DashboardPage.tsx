@@ -1,19 +1,48 @@
-import { Box, Card, Heading, HStack, SimpleGrid, Text, VStack } from '@chakra-ui/react';
-import { LuUpload, LuPlay, LuWallet, LuClock } from 'react-icons/lu';
+import { Box, Card, Heading, HStack, SimpleGrid, Text, VStack, Spinner } from '@chakra-ui/react';
+import { LuUpload, LuPlay, LuWallet, LuClock, LuHandshake } from 'react-icons/lu';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermission } from '@/hooks/usePermission';
 import { PageHeader } from '@/components/common';
 import { Button } from '@chakra-ui/react';
+import { useDashboardTodayQuery } from '../api/useDashboardTodayQuery';
+import { formatCurrency } from '@/lib/formatters';
 
 export default function DashboardPage() {
   const { userName, role } = useAuth();
   const { canCreate } = usePermission();
   const navigate = useNavigate();
+  const { data: today, isLoading: isLoadingToday } = useDashboardTodayQuery();
 
   return (
     <VStack align="stretch" gap="6">
       <PageHeader title="Dashboard" />
+
+      <Card.Root>
+        <Card.Header>
+          <HStack justify="space-between" gap="3" wrap="wrap">
+            <Box>
+              <Card.Title>Resultado de hoje</Card.Title>
+              <Text fontSize="sm" color="fg.muted">Acordos gerados em {today?.date ? new Date(`${today.date}T12:00:00`).toLocaleDateString('pt-BR') : 'hoje'}.</Text>
+            </Box>
+            <Box color="brand.fg"><LuHandshake size={24} /></Box>
+          </HStack>
+        </Card.Header>
+        <Card.Body>
+          {isLoadingToday ? <Spinner size="sm" /> : (
+            <SimpleGrid columns={{ base: 1, sm: 2 }} gap="5">
+              <Box>
+                <Text fontSize="sm" color="fg.muted">Acordos feitos</Text>
+                <Text fontSize={{ base: '3xl', md: '4xl' }} fontWeight="bold">{today?.agreements.count ?? 0}</Text>
+              </Box>
+              <Box>
+                <Text fontSize="sm" color="fg.muted">Valor negociado</Text>
+                <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="bold">{formatCurrency(today?.agreements.amount ?? 0)}</Text>
+              </Box>
+            </SimpleGrid>
+          )}
+        </Card.Body>
+      </Card.Root>
 
       {/* Welcome Card */}
       <Card.Root>
