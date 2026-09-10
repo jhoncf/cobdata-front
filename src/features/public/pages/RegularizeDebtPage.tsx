@@ -78,6 +78,8 @@ export default function RegularizeDebtPage() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [hasLoadedUrlCpf, setHasLoadedUrlCpf] = useState(false);
+  const [hasLoadedAccessLink, setHasLoadedAccessLink] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const hasValidCpf = useMemo(() => onlyDigits(cpf).length === 11, [cpf]);
 
   useEffect(() => {
@@ -106,16 +108,18 @@ export default function RegularizeDebtPage() {
     if (!pix || pix.status === 'PAID') return;
     const timer = window.setInterval(async () => {
       try {
-        const { data } = await publicApi.get<{ status: Pix['status'] }>(`/public/debts/charges/${pix.chargeId}`, {
-          params: { debtorDocument: onlyDigits(cpf) },
-        });
+        const { data } = accessToken
+          ? await publicApi.get<{ status: Pix['status'] }>(`/public/debts/access/${accessToken}/charges/${pix.chargeId}`)
+          : await publicApi.get<{ status: Pix['status'] }>(`/public/debts/charges/${pix.chargeId}`, {
+            params: { debtorDocument: onlyDigits(cpf) },
+          });
         setPix((current) => current ? { ...current, status: data.status } : current);
       } catch {
         // Keep the existing Pix available even if a polling request is transiently unavailable.
       }
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [cpf, pix]);
+  }, [accessToken, cpf, pix]);
 
   async function lookup() {
     if (!hasValidCpf) {
@@ -137,6 +141,35 @@ export default function RegularizeDebtPage() {
   // The URL is intentionally consumed only once when the page opens.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasLoadedUrlCpf, searchParams]);
+
+  useEffect(() => {
+    if (hasLoadedAccessLink) return;
+    const token = searchParams.get('access');
+    setHasLoadedAccessLink(true);
+    if (!token) return;
+    setAccessToken(token);
+    void openAccessLink(token);
+  // A temporary link is consumed only once when this page opens.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasLoadedAccessLink, searchParams]);
+
+  async function openAccessLink(token: string) {
+    setLoading(true);
+    setError('');
+    setSelected(null);
+    setPix(null);
+    try {
+      const { data } = await publicApi.get<{ contract: Contract }>(`/public/debts/access/${token}`);
+      setContracts([data.contract]);
+      setSelected(data.contract);
+    } catch {
+      setContracts([]);
+      setError('Este link não é mais válido. Faça uma nova consulta pelo CPF.');
+      setAccessToken(null);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function lookupByDocument(document: string) {
     setLoading(true);
@@ -170,10 +203,12 @@ export default function RegularizeDebtPage() {
     setIssuing(true);
     setError('');
     try {
-      const { data } = await publicApi.post<Pix>('/public/debts/pix', {
-        debtorDocument: onlyDigits(cpf),
-        contractId: selected.id,
-      });
+      const { data } = accessToken
+        ? await publicApi.post<Pix>(`/public/debts/access/${accessToken}/pix`)
+        : await publicApi.post<Pix>('/public/debts/pix', {
+          debtorDocument: onlyDigits(cpf),
+          contractId: selected.id,
+        });
       setPix(data);
     } catch (requestError) {
       const status = axios.isAxiosError(requestError) ? requestError.response?.status : undefined;
@@ -205,10 +240,10 @@ export default function RegularizeDebtPage() {
           <Stack textAlign="center" align="center" gap="3">
             <Box bg="#e7f3ff" color="#0088ff" p="3" rounded="full"><LuShieldCheck size={28} /></Box>
             <Heading size={{ base: 'xl', md: '2xl' }} letterSpacing="tight">Consulte seus débitos e regularize sua vida financeira</Heading>
-            <Text color="gray.600" maxW="xl">Informe seu CPF para consultar cobranças pendentes e pagar com Pix de forma simples e segura.</Text>
+            <Text color="gray.600" maxW="xl">{accessToken ? 'Confira sua oferta e pague com Pix de forma simples e segura.' : 'Informe seu CPF para consultar cobranças pendentes e pagar com Pix de forma simples e segura.'}</Text>
           </Stack>
 
-          <Card.Root shadow="lg" borderTopWidth="4px" borderTopColor="#0088ff">
+          {!accessToken && <Card.Root shadow="lg" borderTopWidth="4px" borderTopColor="#0088ff">
             <Card.Body>
               <Stack gap="4">
                 <Field.Root invalid={!!error && contracts.length === 0} required>
@@ -224,7 +259,7 @@ export default function RegularizeDebtPage() {
                 </Field.Root>
               </Stack>
             </Card.Body>
-          </Card.Root>
+          </Card.Root>}
 
           {contracts.length > 0 && !pix && (
             <Card.Root variant="outline" overflow="hidden">
