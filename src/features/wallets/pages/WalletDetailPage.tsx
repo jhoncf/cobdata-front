@@ -118,6 +118,7 @@ export default function WalletDetailPage() {
   const [showEditForm, setShowEditForm] = useState(false);
   const [showLigueLead, setShowLigueLead] = useState(false);
   const [ligueLeadContractId, setLigueLeadContractId] = useState<string>();
+  const [filteredSmsDispatch, setFilteredSmsDispatch] = useState(false);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [bulkAction, setBulkAction] = useState<OperationAction | null>(null);
@@ -602,6 +603,9 @@ export default function WalletDetailPage() {
                           <Menu.Item value="transfer-filtered" onClick={() => { setDestinationWalletId(''); setTransferOpen(true); }}>
                             Transferir contratos filtrados
                           </Menu.Item>
+                          <Menu.Item value="sms-filtered" onClick={() => { setLigueLeadContractId(undefined); setFilteredSmsDispatch(true); setShowLigueLead(true); }}>
+                            Enviar SMS para contratos filtrados
+                          </Menu.Item>
                         </Menu.Content>
                       </Menu.Positioner>
                     </Portal>
@@ -831,12 +835,20 @@ export default function WalletDetailPage() {
         onOpenChange={(open) => {
           setShowLigueLead(open);
           if (!open) setLigueLeadContractId(undefined);
+          if (!open) setFilteredSmsDispatch(false);
         }}
         walletId={id!}
         contracts={contractsData?.data ?? []}
         initialContractId={ligueLeadContractId}
-        initialTab={ligueLeadContractId ? 'calls' : 'agent'}
+        initialTab={filteredSmsDispatch ? 'sms' : ligueLeadContractId ? 'calls' : 'agent'}
         smsTemplate={wallet.smsTemplate}
+        filteredSmsCount={contractsData?.meta.total ?? 0}
+        filteredSmsFilters={filteredSmsDispatch ? {
+          ...operationFilters,
+          status: contractStatusFilter,
+          ...(contractSearch.trim() ? { search: contractSearch.trim() } : {}),
+          ...(serasaStatusFilter === 'SYNCED' ? { serasaStatus: 'SYNCED' } : {}),
+        } : undefined}
       />
 
       <ContractFormDialog
