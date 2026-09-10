@@ -19,6 +19,7 @@ import { LuEllipsis, LuMessageSquare, LuPencil, LuRefreshCw, LuUnlink, LuVolume2
 import { useContractInteractionsQuery, useContractQuery } from '../api/useContractsQuery';
 import { useRemoveContractFromSerasaMutation, useSyncContractWithSerasaMutation, useUpdateContractMutation } from '../api/useContractMutations';
 import { ContractFormDialog } from '../components/ContractFormDialog';
+import { LigueLeadDialog } from '@/features/wallets/components/LigueLeadDialog';
 import { ConfirmDialog, DataTable, PageHeader, StatusBadge } from '@/components/common';
 import type { ContractInteraction } from '@/types/models';
 import type { UpdateContractDto } from '@/types/api';
@@ -77,6 +78,7 @@ export default function ContractDetailPage() {
   const { data: interactions = [], isLoading: isLoadingInteractions } = useContractInteractionsQuery(id!);
   const [selectedInteraction, setSelectedInteraction] = useState<ContractInteraction | null>(null);
   const [editingContract, setEditingContract] = useState(false);
+  const [showCommunications, setShowCommunications] = useState(false);
   const [serasaAction, setSerasaAction] = useState<'sync' | 'remove' | null>(null);
   const updateContractMutation = useUpdateContractMutation();
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
@@ -139,6 +141,9 @@ export default function ContractDetailPage() {
               <Menu.Content>
                 <Menu.Item value="edit" onClick={() => setEditingContract(true)}>
                   <LuPencil /> Editar contrato
+                </Menu.Item>
+                <Menu.Item value="communications" onClick={() => setShowCommunications(true)}>
+                  <LuMessageSquare /> Comunicações
                 </Menu.Item>
                 <Menu.Separator />
                 <Menu.Item
@@ -439,6 +444,15 @@ export default function ContractDetailPage() {
         contract={contract}
         onSubmit={handleUpdateContract}
         loading={updateContractMutation.isPending}
+      />
+
+      <LigueLeadDialog
+        open={showCommunications}
+        onOpenChange={setShowCommunications}
+        walletId={contract.walletId}
+        contracts={[contract]}
+        initialContractId={contract.id}
+        initialTab="sms"
       />
 
       <ConfirmDialog
