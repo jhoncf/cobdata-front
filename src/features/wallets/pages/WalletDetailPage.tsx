@@ -21,6 +21,7 @@ import {
   Tooltip,
 } from '@chakra-ui/react';
 import { LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw, LuUnlink, LuEllipsis, LuCalculator, LuInfo, LuDownload } from 'react-icons/lu';
+import { CartesianGrid, LabelList, Line, LineChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState, ConfirmDialog } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
 import { useRecalculateWalletOffersMutation, useUpdateWalletMutation } from '../api/useWalletMutations';
@@ -110,44 +111,28 @@ function TableTooltipLabel({ label, description }: { label: string; description:
 }
 
 function AgreementDailyChart({ data }: { data: Array<{ date: string; count: number; amount: number }> }) {
-  const width = 760;
-  const height = 260;
-  const padding = { top: 28, right: 20, bottom: 42, left: 38 };
-  const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
-  const maxCount = Math.max(...data.map((item) => item.count), 1);
-  const points = data.map((item, index) => ({
+  const chartData = data.map((item) => ({
     ...item,
-    x: padding.left + (data.length > 1 ? (index / (data.length - 1)) * chartWidth : chartWidth / 2),
-    y: padding.top + chartHeight - ((item.count / maxCount) * chartHeight),
     label: new Date(`${item.date}T12:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
   }));
-  const line = points.map((point) => `${point.x},${point.y}`).join(' ');
 
   return (
-    <Box overflowX="auto" pb="1">
-      <Box minW="680px">
-        <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label="Acordos gerados por dia nos últimos 30 dias">
-          {[0, 0.5, 1].map((ratio) => {
-            const y = padding.top + chartHeight - (ratio * chartHeight);
-            return <g key={ratio}>
-              <line x1={padding.left} x2={width - padding.right} y1={y} y2={y} stroke="var(--chakra-colors-border-muted)" strokeDasharray="4 4" />
-              <text x={padding.left - 8} y={y + 4} textAnchor="end" fontSize="11" fill="var(--chakra-colors-fg-muted)">{Math.round(maxCount * ratio)}</text>
-            </g>;
-          })}
-          <polyline points={line} fill="none" stroke="var(--chakra-colors-blue-600)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-          {points.map((point, index) => (
-            <g key={point.date}>
-              <title>{`${point.label}: ${point.count} acordo(s) — ${formatCurrency(point.amount)}`}</title>
-              <circle cx={point.x} cy={point.y} r="4" fill="var(--chakra-colors-blue-600)" />
-              {point.count > 0 && <text x={point.x} y={Math.max(16, point.y - 10)} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--chakra-colors-blue-700)">{point.count}</text>}
-              {(index === 0 || index === points.length - 1 || index % 5 === 0) && (
-                <text x={point.x} y={height - 16} textAnchor="middle" fontSize="10" fill="var(--chakra-colors-fg-muted)">{point.label}</text>
-              )}
-            </g>
-          ))}
-        </svg>
-      </Box>
+    <Box h={{ base: '260px', md: '320px' }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={chartData} margin={{ top: 28, right: 18, left: -16, bottom: 0 }} accessibilityLayer>
+          <CartesianGrid vertical={false} strokeDasharray="4 4" />
+          <XAxis dataKey="label" minTickGap={16} tick={{ fontSize: 11 }} />
+          <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+          <RechartsTooltip
+            formatter={(value, name, item) => [name === 'Valor negociado' ? formatCurrency(Number(value)) : value, name]}
+            labelFormatter={(_, items) => items[0]?.payload?.label ?? ''}
+          />
+          <Line type="monotone" dataKey="count" name="Acordos" stroke="#2563eb" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }}>
+            <LabelList dataKey="count" position="top" formatter={(value) => value || ''} fill="#1d4ed8" fontSize={11} fontWeight={700} />
+          </Line>
+          <Line dataKey="amount" name="Valor negociado" hide />
+        </LineChart>
+      </ResponsiveContainer>
     </Box>
   );
 }
