@@ -105,15 +105,15 @@ export default function WalletsListPage() {
     updateParams({ page: newPage > 1 ? String(newPage) : undefined });
   };
 
-  const handleFormSubmit = (formData: { name: string; creditorId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number }) => {
+  const handleFormSubmit = (formData: { name: string; creditorId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number; smsTemplate: string }) => {
     if (editingWallet) {
       updateMutation.mutate(
-        { id: editingWallet.id, data: { name: formData.name, cobcomDiscountPercent: formData.cobcomDiscountPercent, offerFirstInstallmentDays: formData.offerFirstInstallmentDays, offerMinInstallmentValue: formData.offerMinInstallmentValue, offerMaxInstallments: formData.offerMaxInstallments } },
+        { id: editingWallet.id, data: { name: formData.name, cobcomDiscountPercent: formData.cobcomDiscountPercent, offerFirstInstallmentDays: formData.offerFirstInstallmentDays, offerMinInstallmentValue: formData.offerMinInstallmentValue, offerMaxInstallments: formData.offerMaxInstallments, smsTemplate: formData.smsTemplate } },
         { onSuccess: () => updateParams({ action: undefined, id: undefined }) },
       );
     } else {
       createMutation.mutate(
-        { creditorId: formData.creditorId, data: { name: formData.name, cobcomDiscountPercent: formData.cobcomDiscountPercent, offerFirstInstallmentDays: formData.offerFirstInstallmentDays, offerMinInstallmentValue: formData.offerMinInstallmentValue, offerMaxInstallments: formData.offerMaxInstallments } },
+        { creditorId: formData.creditorId, data: { name: formData.name, cobcomDiscountPercent: formData.cobcomDiscountPercent, offerFirstInstallmentDays: formData.offerFirstInstallmentDays, offerMinInstallmentValue: formData.offerMinInstallmentValue, offerMaxInstallments: formData.offerMaxInstallments, smsTemplate: formData.smsTemplate } },
         { onSuccess: () => updateParams({ action: undefined, id: undefined }) },
       );
     }

@@ -8,6 +8,7 @@ import {
   Dialog,
   Portal,
   Input,
+  Textarea,
   Stack,
   Field,
   NativeSelect,
@@ -25,6 +26,7 @@ const walletSchema = z.object({
   offerFirstInstallmentDays: z.coerce.number().int().min(1).max(365),
   offerMinInstallmentValue: z.coerce.number().min(0.01),
   offerMaxInstallments: z.coerce.number().int().min(1).max(999),
+  smsTemplate: z.string().max(1400, 'Máximo 1.400 caracteres'),
   discountBands: z.array(z.object({
     minAgingDays: z.coerce.number().int().min(0),
     maxAgingDays: z.coerce.number().int().min(0).nullable(),
@@ -39,7 +41,7 @@ interface WalletFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   wallet?: Wallet | null;
-  onSubmit: (data: { name: string; creditorId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number; discountBands?: WalletFormValues['discountBands'] }) => void;
+  onSubmit: (data: { name: string; creditorId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number; smsTemplate: string; discountBands?: WalletFormValues['discountBands'] }) => void;
   loading?: boolean;
 }
 
@@ -62,7 +64,7 @@ export function WalletFormDialog({
     formState: { errors },
   } = useForm<WalletFormValues>({
     resolver: zodResolver(walletSchema),
-    defaultValues: { name: '', creditorId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, discountBands: [] },
+    defaultValues: { name: '', creditorId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, smsTemplate: 'Olá! Identificamos uma pendência. Consulte e regularize sua situação.', discountBands: [] },
   });
   const { fields } = useFieldArray({ control, name: 'discountBands' });
 
@@ -76,6 +78,7 @@ export function WalletFormDialog({
           offerFirstInstallmentDays: wallet.offerFirstInstallmentDays ?? 5,
           offerMinInstallmentValue: wallet.offerMinInstallmentValue ?? 0.01,
           offerMaxInstallments: wallet.offerMaxInstallments ?? 1,
+          smsTemplate: wallet.smsTemplate ?? 'Olá! Identificamos uma pendência. Consulte e regularize sua situação.',
           discountBands: (wallet.creditor?.discountBands ?? []).map((ceiling) => {
             const strategy = wallet.discountBands?.find((band) =>
               band.minAgingDays === ceiling.minAgingDays && band.maxAgingDays === ceiling.maxAgingDays,
@@ -89,7 +92,7 @@ export function WalletFormDialog({
           }),
         });
       } else {
-        reset({ name: '', creditorId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, discountBands: [] });
+        reset({ name: '', creditorId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, smsTemplate: 'Olá! Identificamos uma pendência. Consulte e regularize sua situação.', discountBands: [] });
       }
     }
   }, [open, wallet, reset]);
@@ -214,6 +217,12 @@ export function WalletFormDialog({
                     <Input type="number" min="1" max="999" {...register('offerMaxInstallments')} />
                     <Field.HelperText>Padrão: 1 parcela. O valor mínimo pode reduzir este limite para cada contrato.</Field.HelperText>
                     <Field.ErrorText>{errors.offerMaxInstallments?.message}</Field.ErrorText>
+                  </Field.Root>
+                  <Field.Root invalid={!!errors.smsTemplate}>
+                    <Field.Label>Modelo de mensagem SMS</Field.Label>
+                    <Textarea rows={4} maxLength={1400} {...register('smsTemplate')} />
+                    <Field.HelperText>O link seguro da landing page, filtrado pelo CPF e contrato, é acrescentado automaticamente ao final.</Field.HelperText>
+                    <Field.ErrorText>{errors.smsTemplate?.message}</Field.ErrorText>
                   </Field.Root>
                 </Stack>
               </form>

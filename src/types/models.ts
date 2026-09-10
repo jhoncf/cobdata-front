@@ -101,6 +101,7 @@ export interface Wallet {
   offerFirstInstallmentDays?: number;
   offerMinInstallmentValue?: number;
   offerMaxInstallments?: number;
+  smsTemplate?: string | null;
   discountBands?: WalletDiscountBand[];
   createdAt: string;
   updatedAt: string;

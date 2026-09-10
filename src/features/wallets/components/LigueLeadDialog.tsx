@@ -8,7 +8,7 @@ import { formatCurrency } from '@/lib/formatters';
 type Contract = { id: string; contractNumber: string; debtorName: string | null; debtorPhone: string | null; originalValue: number; updatedValue: number; paymentStatus: string; status: string };
 type Agent = { name: string; prompt: string; greetings?: string | null; modelVersion: string; voiceId?: string | null; active: boolean };
 
-export function LigueLeadDialog({ open, onOpenChange, walletId, contracts, initialContractId, initialTab = 'agent' }: { open: boolean; onOpenChange: (open: boolean) => void; walletId: string; contracts: Contract[]; initialContractId?: string; initialTab?: 'agent' | 'sms' | 'calls' }) {
+export function LigueLeadDialog({ open, onOpenChange, walletId, contracts, initialContractId, initialTab = 'agent', smsTemplate }: { open: boolean; onOpenChange: (open: boolean) => void; walletId: string; contracts: Contract[]; initialContractId?: string; initialTab?: 'agent' | 'sms' | 'calls'; smsTemplate?: string | null }) {
   const [agent, setAgent] = useState<Agent>({ name: '', prompt: '', greetings: '', modelVersion: 'lumen-1', voiceId: '', active: true });
   const [selected, setSelected] = useState<string[]>([]);
   const [title, setTitle] = useState('Cobrança CobCom');
@@ -36,7 +36,8 @@ export function LigueLeadDialog({ open, onOpenChange, walletId, contracts, initi
     api.get('/liguelead/voices').then(r => setVoices((r.data?.engines ?? []).find((engine: { version: string }) => engine.version === 'lumen-1')?.voices ?? [])).catch(() => undefined);
     setSelected(initialContractId ? [initialContractId] : []);
     setActiveTab(initialTab);
-  }, [open, walletId, initialContractId, initialTab]);
+    setMessage(smsTemplate ?? 'Olá! Identificamos uma pendência. Consulte e regularize sua situação.');
+  }, [open, walletId, initialContractId, initialTab, smsTemplate]);
 
   const saveAgent = async () => {
     setLoading(true);

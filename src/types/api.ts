@@ -129,6 +129,7 @@ export interface CreateWalletDto {
   offerFirstInstallmentDays?: number;
   offerMinInstallmentValue?: number;
   offerMaxInstallments?: number;
+  smsTemplate?: string;
 }
 
 export interface UpdateWalletDto {
@@ -138,6 +139,7 @@ export interface UpdateWalletDto {
   offerFirstInstallmentDays?: number;
   offerMinInstallmentValue?: number;
   offerMaxInstallments?: number;
+  smsTemplate?: string;
   discountBands?: Array<{
     minAgingDays: number;
     maxAgingDays?: number | null;

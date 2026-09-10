@@ -255,9 +255,9 @@ export default function WalletDetailPage() {
     );
   };
 
-  const handleEditWallet = (formData: { name: string; creditorId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number; discountBands?: UpdateWalletDto['discountBands'] }) => {
+  const handleEditWallet = (formData: { name: string; creditorId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number; smsTemplate: string; discountBands?: UpdateWalletDto['discountBands'] }) => {
     updateWalletMutation.mutate(
-      { id: id!, data: { name: formData.name, cobcomDiscountPercent: formData.cobcomDiscountPercent, offerFirstInstallmentDays: formData.offerFirstInstallmentDays, offerMinInstallmentValue: formData.offerMinInstallmentValue, offerMaxInstallments: formData.offerMaxInstallments, discountBands: formData.discountBands } },
+      { id: id!, data: { name: formData.name, cobcomDiscountPercent: formData.cobcomDiscountPercent, offerFirstInstallmentDays: formData.offerFirstInstallmentDays, offerMinInstallmentValue: formData.offerMinInstallmentValue, offerMaxInstallments: formData.offerMaxInstallments, smsTemplate: formData.smsTemplate, discountBands: formData.discountBands } },
       { onSuccess: () => setShowEditForm(false) },
     );
   };
@@ -836,6 +836,7 @@ export default function WalletDetailPage() {
         contracts={contractsData?.data ?? []}
         initialContractId={ligueLeadContractId}
         initialTab={ligueLeadContractId ? 'calls' : 'agent'}
+        smsTemplate={wallet.smsTemplate}
       />
 
       <ContractFormDialog
