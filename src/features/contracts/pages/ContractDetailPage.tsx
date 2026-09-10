@@ -453,6 +453,7 @@ export default function ContractDetailPage() {
         contracts={[contract]}
         initialContractId={contract.id}
         initialTab="sms"
+        smsTemplate={contract.wallet?.smsTemplate}
       />
 
       <ConfirmDialog
