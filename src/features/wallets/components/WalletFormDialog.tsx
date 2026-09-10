@@ -64,7 +64,7 @@ export function WalletFormDialog({
     formState: { errors },
   } = useForm<WalletFormValues>({
     resolver: zodResolver(walletSchema),
-    defaultValues: { name: '', creditorId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, smsTemplate: 'Olá! Identificamos uma pendência. Consulte e regularize sua situação.', discountBands: [] },
+    defaultValues: { name: '', creditorId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, smsTemplate: 'Confira os detalhes pelo link seguro.', discountBands: [] },
   });
   const { fields } = useFieldArray({ control, name: 'discountBands' });
 
@@ -78,7 +78,7 @@ export function WalletFormDialog({
           offerFirstInstallmentDays: wallet.offerFirstInstallmentDays ?? 5,
           offerMinInstallmentValue: wallet.offerMinInstallmentValue ?? 0.01,
           offerMaxInstallments: wallet.offerMaxInstallments ?? 1,
-          smsTemplate: wallet.smsTemplate ?? 'Olá! Identificamos uma pendência. Consulte e regularize sua situação.',
+          smsTemplate: wallet.smsTemplate ?? 'Confira os detalhes pelo link seguro.',
           discountBands: (wallet.creditor?.discountBands ?? []).map((ceiling) => {
             const strategy = wallet.discountBands?.find((band) =>
               band.minAgingDays === ceiling.minAgingDays && band.maxAgingDays === ceiling.maxAgingDays,
@@ -92,7 +92,7 @@ export function WalletFormDialog({
           }),
         });
       } else {
-        reset({ name: '', creditorId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, smsTemplate: 'Olá! Identificamos uma pendência. Consulte e regularize sua situação.', discountBands: [] });
+        reset({ name: '', creditorId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, smsTemplate: 'Confira os detalhes pelo link seguro.', discountBands: [] });
       }
     }
   }, [open, wallet, reset]);
