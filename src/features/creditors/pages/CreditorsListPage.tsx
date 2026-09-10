@@ -178,13 +178,13 @@ export default function CreditorsListPage() {
         )}
       </PageHeader>
 
-      <HStack mb="4" gap="2">
+      <HStack mb="4" gap="2" w={{ base: 'full', sm: 'auto' }}>
         <Input
           placeholder="Buscar por nome..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          maxW="320px"
+          w={{ base: 'full', sm: '320px' }}
           size="sm"
         />
         <Button size="sm" variant="outline" onClick={handleSearch}>

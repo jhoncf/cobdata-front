@@ -203,8 +203,8 @@ export default function WalletsListPage() {
       </PageHeader>
 
       {/* Filters */}
-      <HStack mb="4" gap="3" wrap="wrap">
-        <NativeSelect.Root size="sm" width="220px">
+      <HStack mb="4" gap="3" flexDir={{ base: 'column', sm: 'row' }} align={{ base: 'stretch', sm: 'center' }}>
+        <NativeSelect.Root size="sm" width={{ base: 'full', sm: '220px' }}>
           <NativeSelect.Field
             value={selectedCreditorId}
             onChange={(e) => handleCreditorChange(e.target.value)}
@@ -217,13 +217,13 @@ export default function WalletsListPage() {
           <NativeSelect.Indicator />
         </NativeSelect.Root>
 
-        <HStack gap="2">
+        <HStack gap="2" w={{ base: 'full', sm: 'auto' }}>
           <Input
             placeholder="Buscar por nome..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            maxW="240px"
+            w={{ base: 'full', sm: '240px' }}
             size="sm"
           />
           <Button size="sm" variant="outline" onClick={handleSearch}>

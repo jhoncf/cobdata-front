@@ -218,7 +218,7 @@ export function CreditorFormDialog({
             <Dialog.Body>
               <form id="creditor-form" onSubmit={handleSubmit(handleFormSubmit)}>
                 <Tabs.Root defaultValue="general">
-                  <Tabs.List mb="4">
+                  <Tabs.List mb="4" maxW="full" overflowX="auto" overflowY="hidden" whiteSpace="nowrap">
                     <Tabs.Trigger value="general">Dados do credor</Tabs.Trigger>
                     <Tabs.Trigger value="webhook">Webhook</Tabs.Trigger>
                   </Tabs.List>

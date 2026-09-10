@@ -52,9 +52,13 @@ export function Header({ onMenuClick }: HeaderProps) {
   return (
     <Flex
       as="header"
-      h="14"
+      minH="14"
+      h="auto"
       px="4"
+      py={{ base: '2', lg: '0' }}
       align="center"
+      wrap="wrap"
+      gap={{ base: '2', lg: '0' }}
       borderBottomWidth="1px"
       borderColor="sidebar.border"
       bg="sidebar.bg"
@@ -95,8 +99,14 @@ export function Header({ onMenuClick }: HeaderProps) {
 
       {/* Center: Global Search */}
       {!creditorId && (
-        <Flex flex="1" justify="center" mx="4" display={{ base: 'none', lg: 'flex' }}>
-          <GlobalSearchBar />
+        <Flex
+          order={{ base: 3, lg: 0 }}
+          flex={{ base: '0 0 100%', lg: '1' }}
+          minW="0"
+          justify="center"
+          mx={{ base: '0', lg: '4' }}
+        >
+          <GlobalSearchBar alwaysExpanded />
         </Flex>
       )}
 

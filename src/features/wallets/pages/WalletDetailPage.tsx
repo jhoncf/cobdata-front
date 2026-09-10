@@ -329,7 +329,7 @@ export default function WalletDetailPage() {
   return (
     <>
       <PageHeader title={wallet.name}>
-        <HStack gap="2">
+        <HStack gap="2" wrap="wrap">
           {canEdit && <Button size="sm" variant="outline" onClick={() => setShowEditForm(true)}><LuPencil /> Editar</Button>}
           <Menu.Root>
             <Menu.Trigger asChild>
@@ -407,7 +407,8 @@ export default function WalletDetailPage() {
           </Card.Header>
           <Card.Body>
             {(wallet.creditor?.discountBands?.length ?? 0) > 0 ? (
-              <Table.Root size="sm" variant="line">
+              <Table.ScrollArea maxW="full">
+              <Table.Root size="sm" variant="line" minW="560px">
                 <Table.Header>
                   <Table.Row>
                     <Table.ColumnHeader>
@@ -445,6 +446,7 @@ export default function WalletDetailPage() {
                   })}
                 </Table.Body>
               </Table.Root>
+              </Table.ScrollArea>
             ) : (
               <Text color="fg.muted">Este credor ainda não possui faixas comerciais cadastradas. Configure-as no cadastro do credor para definir os limites da carteira.</Text>
             )}
@@ -567,7 +569,7 @@ export default function WalletDetailPage() {
                   onChange={(event) => { setContractSearch(event.target.value); setContractsPage(1); }}
                   aria-label="Buscar contratos da carteira"
                 />
-                <HStack gap="2" alignSelf={{ base: 'flex-start', md: 'auto' }}>
+                <HStack gap="2" alignSelf={{ base: 'stretch', md: 'auto' }} wrap="wrap">
                   <Button
                     size="sm"
                     variant="outline"
@@ -663,8 +665,8 @@ export default function WalletDetailPage() {
               <EmptyState title="Nenhum contrato nesta carteira" />
             ) : (
               <Stack gap="4">
-                <Table.ScrollArea borderWidth="1px" rounded="md">
-                  <Table.Root size="sm" stickyHeader interactive>
+                <Table.ScrollArea borderWidth="1px" rounded="md" maxW="full">
+                  <Table.Root size="sm" stickyHeader interactive minW="1120px">
                     <Table.Header>
                       <Table.Row>
                         <SortableHeader field="contractNumber">Nº Contrato</SortableHeader>

@@ -295,8 +295,8 @@ export default function ContractsListPage() {
         </Box>
       ) : (
       /* Credor / Carteira Selection */
-      <HStack gap="3" mb="5" wrap="wrap">
-        <NativeSelect.Root size="sm" width="220px">
+      <HStack gap="3" mb="5" flexDir={{ base: 'column', md: 'row' }} align={{ base: 'stretch', md: 'center' }} wrap="wrap">
+        <NativeSelect.Root size="sm" width={{ base: 'full', md: '220px' }}>
           <NativeSelect.Field
             value={selectedCreditorId}
             onChange={(e) => handleCreditorChange(e.target.value)}
@@ -309,7 +309,7 @@ export default function ContractsListPage() {
           <NativeSelect.Indicator />
         </NativeSelect.Root>
 
-        <NativeSelect.Root size="sm" width="220px">
+        <NativeSelect.Root size="sm" width={{ base: 'full', md: '220px' }}>
           <NativeSelect.Field
             value={selectedWalletId}
             onChange={(e) => handleWalletChange(e.target.value)}
@@ -321,7 +321,7 @@ export default function ContractsListPage() {
           </NativeSelect.Field>
           <NativeSelect.Indicator />
         </NativeSelect.Root>
-        <NativeSelect.Root size="sm" width="190px">
+        <NativeSelect.Root size="sm" width={{ base: 'full', md: '190px' }}>
           <NativeSelect.Field value={paymentStatusFilter} onChange={(e) => { setPaymentStatusFilter(e.target.value as PaymentStatus | ''); setPage(1); }}>
             <option value="">Todos os pagamentos</option>
             <option value="OPEN">Em aberto</option>
@@ -332,7 +332,7 @@ export default function ContractsListPage() {
           </NativeSelect.Field>
           <NativeSelect.Indicator />
         </NativeSelect.Root>
-        <NativeSelect.Root size="sm" width="190px">
+        <NativeSelect.Root size="sm" width={{ base: 'full', md: '190px' }}>
           <NativeSelect.Field value={serasaStatusFilter} onChange={(e) => { setSerasaStatusFilter(e.target.value as SerasaStatus | ''); setPage(1); }}>
             <option value="">Todos no Serasa</option>
             <option value="NOT_ENABLED">Não enviado</option>
@@ -345,7 +345,7 @@ export default function ContractsListPage() {
           </NativeSelect.Field>
           <NativeSelect.Indicator />
         </NativeSelect.Root>
-        <NativeSelect.Root size="sm" width="180px">
+        <NativeSelect.Root size="sm" width={{ base: 'full', md: '180px' }}>
           <NativeSelect.Field value={installmentOnly} onChange={(e) => { setInstallmentOnly(e.target.value); setPage(1); }}>
             <option value="">Todos os acordos</option>
             <option value="yes">Parcelados</option>

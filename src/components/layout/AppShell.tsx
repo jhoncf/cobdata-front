@@ -56,11 +56,13 @@ export function AppShell() {
         <Box
           as="main"
           flex="1"
+          minW="0"
           overflowY="auto"
+          overflowX="hidden"
           bg="content.bg"
-          p={{ base: '4', md: '6' }}
+          p={{ base: '3', sm: '4', md: '6' }}
         >
-          <Box maxW="7xl" mx="auto">
+          <Box maxW="7xl" w="full" minW="0" mx="auto">
             <AppBreadcrumb />
             <Outlet />
           </Box>

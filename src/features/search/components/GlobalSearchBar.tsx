@@ -6,7 +6,12 @@ import { useGlobalSearch } from '../hooks/useGlobalSearch';
 import { useSearchKeyboard } from '../hooks/useSearchKeyboard';
 import type { SearchResultItem } from '../types';
 
-export function GlobalSearchBar() {
+interface GlobalSearchBarProps {
+  /** Keeps the input visible in compact headers instead of replacing it with an icon. */
+  alwaysExpanded?: boolean;
+}
+
+export function GlobalSearchBar({ alwaysExpanded = false }: GlobalSearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const collapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -121,7 +126,7 @@ export function GlobalSearchBar() {
           close();
         }
         // Also collapse mobile if clicking outside with empty input
-        if (isMobile && isExpanded && !query.trim()) {
+        if (isMobile && isExpanded && !alwaysExpanded && !query.trim()) {
           setIsExpanded(false);
         }
       }
@@ -129,7 +134,7 @@ export function GlobalSearchBar() {
 
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [isOpen, close, isMobile, isExpanded, query]);
+  }, [isOpen, close, isMobile, isExpanded, alwaysExpanded, query]);
 
   // Cleanup collapse timer on unmount
   useEffect(() => {
@@ -151,7 +156,7 @@ export function GlobalSearchBar() {
 
   // Handle blur on mobile: collapse after 200ms if input is empty
   const handleInputBlur = useCallback(() => {
-    if (!isMobile) return;
+    if (!isMobile || alwaysExpanded) return;
 
     // Clear any existing timer
     if (collapseTimerRef.current) {
@@ -164,7 +169,7 @@ export function GlobalSearchBar() {
       }
       collapseTimerRef.current = null;
     }, 200);
-  }, [isMobile, query]);
+  }, [isMobile, alwaysExpanded, query]);
 
   // Also expand on Ctrl+K for mobile
   useEffect(() => {
@@ -183,7 +188,7 @@ export function GlobalSearchBar() {
   }, [isMobile]);
 
   // Mobile collapsed state: show only the icon button
-  if (isMobile && !isExpanded) {
+  if (isMobile && !alwaysExpanded && !isExpanded) {
     return (
       <IconButton
         aria-label="Busca global"

@@ -31,11 +31,12 @@ export function DataTable<T>({
       borderWidth="1px"
       rounded="xl"
       overflow="hidden"
+      maxW="full"
       bg="card.bg"
       shadow="xs"
     >
       <Table.ScrollArea>
-        <Table.Root size="sm" stickyHeader interactive={!!onRowClick}>
+        <Table.Root size="sm" stickyHeader interactive={!!onRowClick} minW="max-content">
           <Table.Header>
             <Table.Row>
               {columns.map((col) => (

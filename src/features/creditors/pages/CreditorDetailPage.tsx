@@ -16,7 +16,7 @@ import {
   NativeSelect,
 } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
-import { LuPencil, LuPlus, LuSave, LuTrash2, LuPlug, LuTestTube2 } from 'react-icons/lu';
+import { LuPencil, LuPlus, LuSave, LuTrash2, LuPlug, LuTestTube } from 'react-icons/lu';
 import {
   useCreditorCommercialRulesQuery,
   useCreditorIxcIntegrationQuery,
@@ -108,7 +108,7 @@ export default function CreditorDetailPage() {
       </PageHeader>
 
       <Tabs.Root defaultValue="general">
-        <Tabs.List mb="4">
+        <Tabs.List mb="4" maxW="full" overflowX="auto" overflowY="hidden" whiteSpace="nowrap">
           <Tabs.Trigger value="general">Informações gerais</Tabs.Trigger>
           {canEdit && <Tabs.Trigger value="integrations">Integrações</Tabs.Trigger>}
           {canManageUsers && <Tabs.Trigger value="users">Usuários</Tabs.Trigger>}
@@ -380,8 +380,8 @@ export default function CreditorDetailPage() {
                     <Text fontSize="sm" fontWeight="medium">
                       Integração
                     </Text>
-                    <NativeSelect.Root>
-                      <NativeSelect.Field value="IXC" disabled>
+                    <NativeSelect.Root disabled>
+                      <NativeSelect.Field value="IXC">
                         <option value="IXC">IXC Provedor</option>
                       </NativeSelect.Field>
                       <NativeSelect.Indicator />
@@ -448,7 +448,7 @@ export default function CreditorDetailPage() {
                       })
                     }
                   >
-                    <LuTestTube2 /> Testar conexão
+                    <LuTestTube /> Testar conexão
                   </Button>
                 </HStack>
                 {ixcIntegration && (

@@ -16,10 +16,10 @@ export function PageHeader({ title, children }: PageHeaderProps) {
       gap="4"
       wrap="wrap"
     >
-      <Heading size="xl" fontWeight="700" letterSpacing="-0.02em">
+      <Heading fontSize={{ base: 'xl', md: '2xl' }} fontWeight="700" letterSpacing="-0.02em" minW="0">
         {title}
       </Heading>
-      {children && <Flex gap="2" align="center">{children}</Flex>}
+      {children && <Flex gap="2" align="center" wrap="wrap" w={{ base: 'full', sm: 'auto' }} justify={{ base: 'flex-start', sm: 'flex-end' }}>{children}</Flex>}
     </Flex>
   );
 }
