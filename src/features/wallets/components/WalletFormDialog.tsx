@@ -156,12 +156,31 @@ export function WalletFormDialog({
                   </Field.Root>
                   </SimpleGrid>
 
-                  <Field.Root invalid={!!errors.cobcomDiscountPercent}>
-                    <Field.Label>Desconto CobCom (%)</Field.Label>
-                    <Input type="number" min="0" max="100" step="0.01" {...register('cobcomDiscountPercent')} />
-                    <Field.HelperText>Aplicado ao valor atualizado para calcular a oferta de cada contrato.</Field.HelperText>
-                    <Field.ErrorText>{errors.cobcomDiscountPercent?.message}</Field.ErrorText>
-                  </Field.Root>
+                  <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap="4">
+                    <Field.Root invalid={!!errors.cobcomDiscountPercent}>
+                      <Field.Label>Desconto CobCom (%)</Field.Label>
+                      <Input type="number" min="0" max="100" step="0.01" {...register('cobcomDiscountPercent')} />
+                      <Field.HelperText>Usado para calcular a oferta.</Field.HelperText>
+                      <Field.ErrorText>{errors.cobcomDiscountPercent?.message}</Field.ErrorText>
+                    </Field.Root>
+                    <Field.Root invalid={!!errors.offerFirstInstallmentDays}>
+                      <Field.Label>1º pagamento (dias)</Field.Label>
+                      <Input type="number" min="1" max="365" {...register('offerFirstInstallmentDays')} />
+                      <Field.HelperText>Padrão: 5 dias.</Field.HelperText>
+                      <Field.ErrorText>{errors.offerFirstInstallmentDays?.message}</Field.ErrorText>
+                    </Field.Root>
+                    <Field.Root invalid={!!errors.offerMinInstallmentValue}>
+                      <Field.Label>Parcela mínima (R$)</Field.Label>
+                      <Input type="number" min="0.01" step="0.01" {...register('offerMinInstallmentValue')} />
+                      <Field.ErrorText>{errors.offerMinInstallmentValue?.message}</Field.ErrorText>
+                    </Field.Root>
+                    <Field.Root invalid={!!errors.offerMaxInstallments}>
+                      <Field.Label>Máximo de parcelas</Field.Label>
+                      <Input type="number" min="1" max="999" {...register('offerMaxInstallments')} />
+                      <Field.HelperText>Padrão: 1 parcela.</Field.HelperText>
+                      <Field.ErrorText>{errors.offerMaxInstallments?.message}</Field.ErrorText>
+                    </Field.Root>
+                  </SimpleGrid>
                   {isEdit && (
                     <Box borderWidth="1px" borderRadius="md" p="3">
                       <Text fontWeight="semibold" mb="1">Estratégia de desconto por faixa</Text>
@@ -170,7 +189,7 @@ export function WalletFormDialog({
                       </Text>
                       {fields.length === 0 ? (
                         <Text fontSize="sm" color="fg.muted">Este credor não possui faixas de desconto cadastradas. Configure-as primeiro no cadastro do credor.</Text>
-                      ) : <SimpleGrid columns={{ base: 1, lg: 2 }} gap="3">
+                      ) : <SimpleGrid columns={{ base: 1, lg: 2, xl: 3 }} gap="3">
                         {fields.map((field, index) => {
                           const ceiling = wallet?.creditor?.discountBands?.find((band) =>
                             band.minAgingDays === field.minAgingDays && band.maxAgingDays === field.maxAgingDays,
@@ -201,23 +220,6 @@ export function WalletFormDialog({
                       </SimpleGrid>}
                     </Box>
                   )}
-                  <Field.Root invalid={!!errors.offerFirstInstallmentDays}>
-                    <Field.Label>Prazo para o primeiro pagamento (dias)</Field.Label>
-                    <Input type="number" min="1" max="365" {...register('offerFirstInstallmentDays')} />
-                    <Field.HelperText>Padrão: 5 dias.</Field.HelperText>
-                    <Field.ErrorText>{errors.offerFirstInstallmentDays?.message}</Field.ErrorText>
-                  </Field.Root>
-                  <Field.Root invalid={!!errors.offerMinInstallmentValue}>
-                    <Field.Label>Valor mínimo por parcela (R$)</Field.Label>
-                    <Input type="number" min="0.01" step="0.01" {...register('offerMinInstallmentValue')} />
-                    <Field.ErrorText>{errors.offerMinInstallmentValue?.message}</Field.ErrorText>
-                  </Field.Root>
-                  <Field.Root invalid={!!errors.offerMaxInstallments}>
-                    <Field.Label>Máximo de parcelas</Field.Label>
-                    <Input type="number" min="1" max="999" {...register('offerMaxInstallments')} />
-                    <Field.HelperText>Padrão: 1 parcela. O valor mínimo pode reduzir este limite para cada contrato.</Field.HelperText>
-                    <Field.ErrorText>{errors.offerMaxInstallments?.message}</Field.ErrorText>
-                  </Field.Root>
                   <Field.Root invalid={!!errors.smsTemplate}>
                     <Field.Label>Modelo de mensagem SMS</Field.Label>
                     <Textarea rows={4} maxLength={1400} {...register('smsTemplate')} />
