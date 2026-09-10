@@ -574,7 +574,17 @@ export default function WalletDetailPage() {
               </HStack>
             </Card.Header>
             <Card.Body pt="0">
-              <AgreementDailyChart data={wallet.summary.agreementDailyHistory} />
+              {wallet.summary.agreementHistoryDatedCount === wallet.summary.agreementHistoryTotal ? (
+                <AgreementDailyChart data={wallet.summary.agreementDailyHistory} />
+              ) : (
+                <Box borderWidth="1px" borderColor="orange.200" bg="orange.50" rounded="md" p="4">
+                  <Text fontWeight="medium">Histórico diário ainda indisponível</Text>
+                  <Text mt="1" fontSize="sm" color="fg.muted">
+                    Esta carteira possui {wallet.summary.agreementHistoryTotal} acordo(s), mas somente {wallet.summary.agreementHistoryDatedCount} têm a data original registrada.
+                    O gráfico será exibido quando as datas históricas forem importadas, evitando uma distribuição incorreta.
+                  </Text>
+                </Box>
+              )}
             </Card.Body>
           </Card.Root>
         )}

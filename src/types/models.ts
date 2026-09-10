@@ -160,6 +160,8 @@ export interface WalletSummary {
   commissionRealizedValue: number;
   discountsConcededValue: number;
   efficiencyRate: number;
+  agreementHistoryTotal: number;
+  agreementHistoryDatedCount: number;
   agreementDailyHistory: Array<{ date: string; count: number; amount: number }>;
 }
 
