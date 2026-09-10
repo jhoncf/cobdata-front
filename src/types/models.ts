@@ -58,6 +58,18 @@ export interface Creditor {
   updatedAt: string;
 }
 
+export interface CreditorIxcIntegration {
+  id: string;
+  type: 'IXC';
+  baseUrl: string;
+  hasAccessToken: boolean;
+  lastTestedAt: string | null;
+  lastTestSucceeded: boolean | null;
+  lastTestMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CreditorDiscountBand {
   id?: string;
   minAgingDays: number;
@@ -213,7 +225,16 @@ export interface Contract {
 }
 
 export type InteractionChannel = 'AI_VOICE_CALL' | 'SMS' | 'WHATSAPP' | 'EMAIL' | 'SERASA';
-export type InteractionStatus = 'QUEUED' | 'SENT' | 'DELIVERED' | 'READ' | 'ANSWERED' | 'COMPLETED' | 'FAILED' | 'NO_ANSWER' | 'REJECTED';
+export type InteractionStatus =
+  | 'QUEUED'
+  | 'SENT'
+  | 'DELIVERED'
+  | 'READ'
+  | 'ANSWERED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'NO_ANSWER'
+  | 'REJECTED';
 
 export interface ContractInteraction {
   id: string;

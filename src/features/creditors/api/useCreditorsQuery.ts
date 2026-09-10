@@ -1,7 +1,7 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import api from '@/lib/api';
 import type { PaginatedResponse, ListCreditorsParams } from '@/types/api';
-import type { Creditor, CreditorCommercialRules } from '@/types/models';
+import type { Creditor, CreditorCommercialRules, CreditorIxcIntegration } from '@/types/models';
 
 export function useCreditorsQuery(params: ListCreditorsParams = {}, enabled = true) {
   return useQuery<PaginatedResponse<Creditor>>({
@@ -24,6 +24,14 @@ export function useCreditorCommercialRulesQuery(id: string) {
   return useQuery<CreditorCommercialRules>({
     queryKey: ['creditors', 'commercial-rules', id],
     queryFn: () => api.get(`/creditors/${id}/commercial-rules`).then((r) => r.data),
+    enabled: !!id,
+  });
+}
+
+export function useCreditorIxcIntegrationQuery(id: string) {
+  return useQuery<CreditorIxcIntegration | null>({
+    queryKey: ['creditors', 'ixc-integration', id],
+    queryFn: () => api.get(`/creditors/${id}/integrations/ixc`).then((r) => r.data),
     enabled: !!id,
   });
 }

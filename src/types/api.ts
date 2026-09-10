@@ -112,6 +112,16 @@ export interface UpdateCreditorDto {
   webhookAuthKey?: string;
 }
 
+export interface UpsertIxcIntegrationDto {
+  baseUrl: string;
+  accessToken: string;
+}
+
+export interface TestIxcIntegrationDto {
+  baseUrl: string;
+  accessToken?: string;
+}
+
 // ─── Wallet DTOs ─────────────────────────────────────────────────────────────
 export interface CreateWalletDto {
   name: string;
@@ -302,7 +312,17 @@ export interface ListContractsParams extends PaginationParams {
   debtorDocument?: string;
   search?: string;
   tags?: string[];
-  sortBy?: 'contractNumber' | 'debtorDocument' | 'originalValue' | 'updatedValue' | 'offerValue' | 'status' | 'paymentStatus' | 'serasaStatus' | 'occurrenceDate' | 'agingDays';
+  sortBy?:
+    | 'contractNumber'
+    | 'debtorDocument'
+    | 'originalValue'
+    | 'updatedValue'
+    | 'offerValue'
+    | 'status'
+    | 'paymentStatus'
+    | 'serasaStatus'
+    | 'occurrenceDate'
+    | 'agingDays';
   sortDirection?: 'asc' | 'desc';
 }
 

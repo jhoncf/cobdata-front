@@ -2,7 +2,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { toaster } from '@/components/ui/toaster';
 import { handleApiError } from '@/lib/error-handler';
-import type { CreateCreditorDto, InviteCreditorUserDto, UpdateCreditorDto } from '@/types/api';
+import type {
+  CreateCreditorDto,
+  InviteCreditorUserDto,
+  TestIxcIntegrationDto,
+  UpdateCreditorDto,
+  UpsertIxcIntegrationDto,
+} from '@/types/api';
 import type { CreditorCommercialRules } from '@/types/models';
 
 export function useCreateCreditorMutation() {
@@ -61,8 +67,47 @@ export function useInviteCreditorUserMutation() {
     mutationFn: ({ creditorId, data }: { creditorId: string; data: InviteCreditorUserDto }) =>
       api.post(`/creditors/${creditorId}/users/invite`, data),
     onSuccess: (_result, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['creditors', variables.creditorId, 'portal-users'] });
+      queryClient.invalidateQueries({
+        queryKey: ['creditors', variables.creditorId, 'portal-users'],
+      });
       toaster.create({ type: 'success', title: 'Convite enviado por e-mail' });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
+export function useUpsertCreditorIxcIntegrationMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ creditorId, data }: { creditorId: string; data: UpsertIxcIntegrationDto }) =>
+      api.put(`/creditors/${creditorId}/integrations/ixc`, data),
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['creditors', 'ixc-integration', variables.creditorId],
+      });
+      toaster.create({ type: 'success', title: 'Integração IXC salva com segurança' });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
+export function useTestCreditorIxcIntegrationMutation() {
+  return useMutation({
+    mutationFn: async ({ creditorId, data }: { creditorId: string; data: TestIxcIntegrationDto }) =>
+      (
+        await api.post<{ succeeded: boolean; message: string; openTitles?: number }>(
+          `/creditors/${creditorId}/integrations/ixc/test`,
+          data,
+        )
+      ).data,
+    onSuccess: (result) => {
+      toaster.create({
+        type: result.succeeded ? 'success' : 'error',
+        title: result.message,
+        ...(result.openTitles !== undefined
+          ? { description: `${result.openTitles.toLocaleString('pt-BR')} títulos localizados.` }
+          : {}),
+      });
     },
     onError: (error) => handleApiError(error),
   });
