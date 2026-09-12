@@ -10,6 +10,7 @@ export interface DashboardToday {
   };
   breachedAgreements: {
     count: number;
+    amount: number;
   };
 }
 

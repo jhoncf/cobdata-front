@@ -42,7 +42,7 @@ export default function DashboardPage() {
               <Box>
                 <Text fontSize="sm" color="fg.muted">Acordos quebrados</Text>
                 <Text fontSize={{ base: '3xl', md: '4xl' }} fontWeight="bold">{today?.breachedAgreements.count ?? 0}</Text>
-                <Text fontSize="xs" color="fg.muted">Total acumulado</Text>
+                <Text fontSize="xs" color="fg.muted">{formatCurrency(today?.breachedAgreements.amount ?? 0)} · total acumulado</Text>
               </Box>
             </SimpleGrid>
           )}
