@@ -8,6 +8,9 @@ export interface DashboardToday {
     count: number;
     amount: number;
   };
+  breachedAgreements: {
+    count: number;
+  };
 }
 
 export function useDashboardTodayQuery() {

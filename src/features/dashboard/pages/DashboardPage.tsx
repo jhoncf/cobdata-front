@@ -30,7 +30,7 @@ export default function DashboardPage() {
         </Card.Header>
         <Card.Body>
           {isLoadingToday ? <Spinner size="sm" /> : (
-            <SimpleGrid columns={{ base: 1, sm: 2 }} gap="5">
+            <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap="5">
               <Box>
                 <Text fontSize="sm" color="fg.muted">Acordos feitos</Text>
                 <Text fontSize={{ base: '3xl', md: '4xl' }} fontWeight="bold">{today?.agreements.count ?? 0}</Text>
@@ -38,6 +38,11 @@ export default function DashboardPage() {
               <Box>
                 <Text fontSize="sm" color="fg.muted">Valor negociado</Text>
                 <Text fontSize={{ base: '2xl', md: '3xl' }} fontWeight="bold">{formatCurrency(today?.agreements.amount ?? 0)}</Text>
+              </Box>
+              <Box>
+                <Text fontSize="sm" color="fg.muted">Acordos quebrados</Text>
+                <Text fontSize={{ base: '3xl', md: '4xl' }} fontWeight="bold">{today?.breachedAgreements.count ?? 0}</Text>
+                <Text fontSize="xs" color="fg.muted">Total acumulado</Text>
               </Box>
             </SimpleGrid>
           )}
