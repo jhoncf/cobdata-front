@@ -39,7 +39,7 @@ import { useOperationPreviewQuery } from '@/features/operations/api/useOperation
 import { CONTRACT_STATUS_LABELS, PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
 import { useAllWalletsQuery } from '../api/useWalletsQuery';
-import { ContractStatus, OperationAction, SerasaStatus, type PaymentStatus } from '@/types/enums';
+import { ContractStatus, OperationAction, PaymentStatus, SerasaStatus } from '@/types/enums';
 import type { CreateContractDto, OperationContractFilters, UpdateContractDto, UpdateWalletDto } from '@/types/api';
 import type { Contract } from '@/types/models';
 
@@ -218,10 +218,10 @@ export default function WalletDetailPage() {
     { status: SerasaStatus.FAILED, count: wallet?.summary?.serasaStatusTotals?.FAILED ?? 0 },
   ];
   const agreementPaymentStatuses: PaymentStatus[] = [
-    'IN_AGREEMENT',
-    'INSTALLMENT',
-    'PAID',
-    'AGREEMENT_BREACHED',
+    PaymentStatus.IN_AGREEMENT,
+    PaymentStatus.INSTALLMENT,
+    PaymentStatus.PAID,
+    PaymentStatus.AGREEMENT_BREACHED,
   ];
   const agreementsSummary = agreementPaymentStatuses.reduce(
     (total, status) => {
