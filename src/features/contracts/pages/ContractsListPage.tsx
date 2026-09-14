@@ -87,7 +87,7 @@ export default function ContractsListPage() {
     paymentStatus: paymentStatusFilter || undefined,
     serasaStatus: serasaStatusFilter || undefined,
     installmentOnly: installmentOnly === 'yes' ? true : undefined,
-    debtorDocument: isCreditorPortal && cpfSearch.length === 11 ? cpfSearch : undefined,
+    search: isCreditorPortal && cpfSearch.trim().length >= 3 ? cpfSearch.trim() : undefined,
   });
 
   const createMutation = useCreateContractMutation();
@@ -286,12 +286,11 @@ export default function ContractsListPage() {
           <Input
             size="sm"
             value={cpfSearch}
-            onChange={(event) => { setCpfSearch(event.target.value.replace(/\D/g, '').slice(0, 11)); setPage(1); }}
-            placeholder="Digite o CPF para consultar"
-            inputMode="numeric"
-            aria-label="Consultar contratos por CPF"
-          />
-          <Text mt="2" fontSize="sm" color="fg.muted">Informe os 11 dígitos do CPF para consultar os contratos.</Text>
+             onChange={(event) => { setCpfSearch(event.target.value); setPage(1); }}
+             placeholder="Digite o CPF ou número do contrato"
+             aria-label="Consultar contratos por CPF ou número do contrato"
+            />
+           <Text mt="2" fontSize="sm" color="fg.muted">Informe o CPF completo ou o número do contrato para consultar os registros vinculados ao seu credor.</Text>
         </Box>
       ) : (
       /* Credor / Carteira Selection */
@@ -390,10 +389,10 @@ export default function ContractsListPage() {
           title="Selecione uma carteira"
           description="Escolha um credor e uma carteira acima para visualizar os contratos"
         />
-      ) : isCreditorPortal && cpfSearch.length !== 11 ? (
-        <EmptyState
-          title="Consulte um CPF"
-          description="Digite o CPF completo para localizar os contratos vinculados ao seu credor."
+       ) : isCreditorPortal && cpfSearch.trim().length < 3 ? (
+          <EmptyState
+           title="Consulte um contrato"
+           description="Digite o CPF completo ou o número do contrato para localizar registros vinculados ao seu credor."
         />
       ) : (
         <>
