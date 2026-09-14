@@ -519,35 +519,54 @@ export default function WalletDetailPage() {
                   </Stat.ValueText>
                 </Stat.Root>
                 <Stat.Root minW="0">
-                  <SummaryTooltipLabel label="Acordos em geral" description="Soma dos contratos em acordo, parcelados, pagos e com acordo quebrado." />
-                  <Stat.ValueText fontSize={{ base: 'xl', xl: '2xl' }} lineHeight="short">{agreementsSummary.count}</Stat.ValueText>
-                  <Text fontSize="sm" color="fg.muted">{formatCurrency(agreementsSummary.amount)}</Text>
-                </Stat.Root>
-                {(['OPEN', ...agreementPaymentStatuses] as PaymentStatus[]).map((status) => {
-                  const stat = wallet.summary.paymentStatusTotals?.[status] ?? { count: 0, amount: 0 };
-                  return <Stat.Root key={status} minW="0">
-                    <SummaryTooltipLabel
-                      label={PAYMENT_STATUS_LABELS[status]}
-                      description={status === 'OPEN'
-                        ? 'Contratos sem quitação ou acordo finalizado. O valor exibido é a soma dos valores atualizados desses contratos.'
-                        : status === 'IN_AGREEMENT'
-                          ? 'Acordos fechados e aguardando o primeiro pagamento.'
-                          : status === 'INSTALLMENT'
-                            ? 'Acordos parcelados com pelo menos uma parcela registrada.'
-                            : status === 'PAID'
-                          ? 'Contratos quitados. O valor abaixo é a soma dos valores atualizados; o valor efetivamente recebido aparece em “Valor recuperado”.'
-                          : 'Contratos cujo acordo não foi cumprido no prazo. O valor exibido é a soma dos valores atualizados desses contratos.'}
-                    />
-                    <Stat.ValueText fontSize={{ base: 'xl', xl: '2xl' }} lineHeight="short">{stat.count}</Stat.ValueText>
-                    <Text fontSize="sm" color="fg.muted">{formatCurrency(stat.amount)}</Text>
-                  </Stat.Root>;
-                })}
-                <Stat.Root minW="0">
                   <SummaryTooltipLabel label="No Serasa" description="Contratos em estados enviados, registrados, atualizados ou em remoção junto à Serasa. O valor é a soma dos valores atualizados desses contratos." />
                   <Stat.ValueText fontSize={{ base: 'xl', xl: '2xl' }} lineHeight="short">{wallet.summary.serasaTotal?.count ?? 0}</Stat.ValueText>
                   <Text fontSize="sm" color="fg.muted">{formatCurrency(wallet.summary.serasaTotal?.amount ?? 0)}</Text>
                 </Stat.Root>
               </SimpleGrid>
+              <Accordion.Root mt="6" collapsible defaultValue={[]}>
+                <Accordion.Item value="agreement-statuses" borderWidth="1px" rounded="md">
+                  <Accordion.ItemTrigger px="4" py="3">
+                    <Flex flex="1" align="center" justify="space-between" gap="4">
+                      <Box textAlign="start">
+                        <Text fontWeight="semibold">Acordos e situação financeira</Text>
+                        <Text fontSize="sm" color="fg.muted">Clique para visualizar a distribuição dos acordos.</Text>
+                      </Box>
+                      <Accordion.ItemIndicator />
+                    </Flex>
+                  </Accordion.ItemTrigger>
+                  <Accordion.ItemContent>
+                    <Accordion.ItemBody px="4" pb="4">
+                      <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap="4">
+                        <Stat.Root minW="0">
+                          <SummaryTooltipLabel label="Acordos em geral" description="Soma dos contratos em acordo, parcelados, pagos e com acordo quebrado." />
+                          <Stat.ValueText fontSize={{ base: 'xl', xl: '2xl' }} lineHeight="short">{agreementsSummary.count}</Stat.ValueText>
+                          <Text fontSize="sm" color="fg.muted">{formatCurrency(agreementsSummary.amount)}</Text>
+                        </Stat.Root>
+                        {(['OPEN', ...agreementPaymentStatuses] as PaymentStatus[]).map((status) => {
+                          const stat = wallet.summary.paymentStatusTotals?.[status] ?? { count: 0, amount: 0 };
+                          return <Stat.Root key={status} minW="0">
+                            <SummaryTooltipLabel
+                              label={PAYMENT_STATUS_LABELS[status]}
+                              description={status === 'OPEN'
+                                ? 'Contratos sem quitação ou acordo finalizado. O valor exibido é a soma dos valores atualizados desses contratos.'
+                                : status === 'IN_AGREEMENT'
+                                  ? 'Acordos fechados e aguardando o primeiro pagamento.'
+                                  : status === 'INSTALLMENT'
+                                    ? 'Acordos parcelados com pelo menos uma parcela registrada.'
+                                    : status === 'PAID'
+                                      ? 'Contratos quitados. O valor abaixo é a soma dos valores atualizados; o valor efetivamente recebido aparece em “Valor recuperado”.'
+                                      : 'Contratos cujo acordo não foi cumprido no prazo. O valor exibido é a soma dos valores atualizados desses contratos.'}
+                            />
+                            <Stat.ValueText fontSize={{ base: 'xl', xl: '2xl' }} lineHeight="short">{stat.count}</Stat.ValueText>
+                            <Text fontSize="sm" color="fg.muted">{formatCurrency(stat.amount)}</Text>
+                          </Stat.Root>;
+                        })}
+                      </SimpleGrid>
+                    </Accordion.ItemBody>
+                  </Accordion.ItemContent>
+                </Accordion.Item>
+              </Accordion.Root>
               <SimpleGrid mt="6" columns={{ base: 1, sm: 2, xl: 4 }} gap="4">
                 <Stat.Root minW="0">
                   <SummaryTooltipLabel label="Valor recuperado" description="Total já recebido. Fórmula: Σ valor pago registrado; para quitações históricas sem valor pago, usa o valor acordado, da oferta ou atualizado. Eficiência = valor recuperado ÷ valor atualizado elegível." />
