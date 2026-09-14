@@ -56,6 +56,12 @@ const statusLabels: Record<ContractInteraction['status'], string> = {
   NO_ANSWER: 'Não atendido', REJECTED: 'Recusado',
 };
 
+function interactionChannelLabel(interaction: ContractInteraction): string {
+  return interaction.provider === 'CREDITOR_PORTAL' || interaction.summary?.includes('cancelado por solicitação do credor')
+    ? 'Portal CobCom'
+    : channelLabels[interaction.channel];
+}
+
 interface TranscriptMessage {
   role: 'assistant' | 'user';
   content: string;
@@ -390,7 +396,7 @@ export default function ContractDetailPage() {
             data={interactions}
             keyExtractor={(interaction) => interaction.id}
             columns={[
-              { key: 'channel', header: 'Canal', cell: (interaction) => channelLabels[interaction.channel] },
+              { key: 'channel', header: 'Canal', cell: (interaction) => interactionChannelLabel(interaction) },
               { key: 'status', header: 'Status', cell: (interaction) => <Badge>{statusLabels[interaction.status]}</Badge> },
               { key: 'summary', header: 'Resumo', minW: '260px', cell: (interaction) => (
                 <Stack gap="1">
