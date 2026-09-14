@@ -162,7 +162,7 @@ export interface WalletSummary {
   efficiencyRate: number;
   agreementHistoryTotal: number;
   agreementHistoryDatedCount: number;
-  agreementDailyHistory: Array<{ date: string; count: number; amount: number }>;
+  agreementDailyHistory: Array<{ date: string; count: number; amount: number; breachCount: number }>;
 }
 
 // ─── Contract ────────────────────────────────────────────────────────────────
@@ -203,6 +203,7 @@ export interface Contract {
   debtorEmail: string | null;
   isNegativated: boolean;
   cancelledAt: string | null;
+  cancellationReason: 'CREDITOR_REQUEST' | 'CONTESTATION' | null;
   status: ContractStatus;
   serasaStatus: SerasaStatus;
   debtId: string | null;
