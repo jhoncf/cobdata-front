@@ -48,7 +48,7 @@ import {
 } from '@/lib/constants';
 import type { Contract } from '@/types/models';
 import type { CreateContractDto, UpdateContractDto } from '@/types/api';
-import type { PaymentStatus, SerasaStatus } from '@/types/enums';
+import { ContractStatus, type PaymentStatus, type SerasaStatus } from '@/types/enums';
 
 export default function ContractsListPage() {
   const { canCreate, canEdit, canDelete } = usePermission();
@@ -90,7 +90,7 @@ export default function ContractsListPage() {
     paymentStatus: paymentStatusFilter || undefined,
     serasaStatus: serasaStatusFilter || undefined,
     installmentOnly: installmentOnly === 'yes' ? true : undefined,
-    status: showCancelled ? 'CANCELLED' : undefined,
+    status: showCancelled ? ContractStatus.CANCELLED : undefined,
     search: isCreditorPortal && cpfSearch.trim().length >= 3 ? cpfSearch.trim() : undefined,
   });
 
