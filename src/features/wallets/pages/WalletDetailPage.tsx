@@ -507,7 +507,7 @@ export default function WalletDetailPage() {
               <Card.Title>Resumo da Carteira</Card.Title>
             </Card.Header>
             <Card.Body>
-            <SimpleGrid columns={{ base: 2, sm: 3, xl: 6 }} gap={{ base: '4', xl: '3' }}>
+            <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap="4">
                 <Stat.Root minW="0">
                   <SummaryTooltipLabel label="Total de Contratos" description="Quantidade de contratos ativos e históricos da carteira. Fórmula: contagem de contratos não excluídos." />
                   <Stat.ValueText fontSize={{ base: 'xl', xl: '2xl' }} lineHeight="short">{wallet.summary.totalContracts}</Stat.ValueText>
