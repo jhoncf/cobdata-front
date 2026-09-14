@@ -217,6 +217,19 @@ export default function WalletDetailPage() {
     { status: SerasaStatus.REMOVED, count: wallet?.summary?.serasaStatusTotals?.REMOVED ?? 0 },
     { status: SerasaStatus.FAILED, count: wallet?.summary?.serasaStatusTotals?.FAILED ?? 0 },
   ];
+  const agreementPaymentStatuses: PaymentStatus[] = [
+    'IN_AGREEMENT',
+    'INSTALLMENT',
+    'PAID',
+    'AGREEMENT_BREACHED',
+  ];
+  const agreementsSummary = agreementPaymentStatuses.reduce(
+    (total, status) => {
+      const current = wallet?.summary?.paymentStatusTotals?.[status] ?? { count: 0, amount: 0 };
+      return { count: total.count + current.count, amount: total.amount + current.amount };
+    },
+    { count: 0, amount: 0 },
+  );
 
   const refreshContracts = useCallback(async () => {
     await Promise.all([refetchContracts(), refetchWallet()]);
@@ -505,14 +518,23 @@ export default function WalletDetailPage() {
                     {formatCurrency(wallet.summary.totalValue)}
                   </Stat.ValueText>
                 </Stat.Root>
-                {(['OPEN', 'PAID', 'AGREEMENT_BREACHED'] as PaymentStatus[]).map((status) => {
+                <Stat.Root minW="0">
+                  <SummaryTooltipLabel label="Acordos em geral" description="Soma dos contratos em acordo, parcelados, pagos e com acordo quebrado." />
+                  <Stat.ValueText fontSize={{ base: 'xl', xl: '2xl' }} lineHeight="short">{agreementsSummary.count}</Stat.ValueText>
+                  <Text fontSize="sm" color="fg.muted">{formatCurrency(agreementsSummary.amount)}</Text>
+                </Stat.Root>
+                {(['OPEN', ...agreementPaymentStatuses] as PaymentStatus[]).map((status) => {
                   const stat = wallet.summary.paymentStatusTotals?.[status] ?? { count: 0, amount: 0 };
                   return <Stat.Root key={status} minW="0">
                     <SummaryTooltipLabel
                       label={PAYMENT_STATUS_LABELS[status]}
                       description={status === 'OPEN'
                         ? 'Contratos sem quitação ou acordo finalizado. O valor exibido é a soma dos valores atualizados desses contratos.'
-                        : status === 'PAID'
+                        : status === 'IN_AGREEMENT'
+                          ? 'Acordos fechados e aguardando o primeiro pagamento.'
+                          : status === 'INSTALLMENT'
+                            ? 'Acordos parcelados com pelo menos uma parcela registrada.'
+                            : status === 'PAID'
                           ? 'Contratos quitados. O valor abaixo é a soma dos valores atualizados; o valor efetivamente recebido aparece em “Valor recuperado”.'
                           : 'Contratos cujo acordo não foi cumprido no prazo. O valor exibido é a soma dos valores atualizados desses contratos.'}
                     />
