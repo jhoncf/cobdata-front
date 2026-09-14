@@ -14,6 +14,7 @@ import {
   Dialog,
   Menu,
   Portal,
+  Accordion,
 } from '@chakra-ui/react';
 import { LuEllipsis, LuMessageSquare, LuPencil, LuRefreshCw, LuUnlink, LuVolume2 } from 'react-icons/lu';
 import { useContractInteractionsQuery, useContractQuery } from '../api/useContractsQuery';
@@ -231,14 +232,24 @@ export default function ContractDetailPage() {
               <Text fontSize="xs" color="fg.muted">Produto</Text>
               <Text>{contract.productName ?? '—'}</Text>
             </Stack>
+            <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Cancelado em</Text>
+              <Text>{contract.cancelledAt ? formatDate(contract.cancelledAt) : '—'}</Text>
+            </Stack>
           </HStack>
         </Card.Body>
       </Card.Root>
 
       {/* Card 3: Valores */}
       <Card.Root>
-        <Card.Body gap="3">
-          <Heading size="sm">Valores</Heading>
+        <Accordion.Root collapsible defaultValue={['values']}>
+          <Accordion.Item value="values" borderBottomWidth="0">
+            <Accordion.ItemTrigger px="5" py="4">
+              <Heading size="sm" flex="1" textAlign="start">Valores</Heading>
+              <Accordion.ItemIndicator />
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent>
+              <Accordion.ItemBody px="5" pb="5">
           <HStack gap="8" wrap="wrap">
             <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Valor Original</Text>
@@ -269,7 +280,10 @@ export default function ContractDetailPage() {
               <Text>{contract.commissionValue != null ? formatCurrency(contract.commissionValue) : '—'}</Text>
             </Stack>
           </HStack>
-        </Card.Body>
+              </Accordion.ItemBody>
+            </Accordion.ItemContent>
+          </Accordion.Item>
+        </Accordion.Root>
       </Card.Root>
 
       {/* Card 4: Status */}
@@ -298,8 +312,8 @@ export default function ContractDetailPage() {
               <Text>{contract.isNegativated ? 'Sim' : 'Não'}</Text>
             </Stack>
             <Stack gap="0">
-              <Text fontSize="xs" color="fg.muted">Cancelado em</Text>
-              <Text>{contract.cancelledAt ? formatDate(contract.cancelledAt) : '—'}</Text>
+              <Text fontSize="xs" color="fg.muted">Motivo do cancelamento</Text>
+              <Text>{contract.cancellationReason === 'CONTESTATION' ? 'Contestação do titular' : contract.cancellationReason === 'CREDITOR_REQUEST' ? 'Solicitação do credor' : '—'}</Text>
             </Stack>
           </HStack>
         </Card.Body>
@@ -307,8 +321,14 @@ export default function ContractDetailPage() {
 
       {/* Card 5: Acordo e pagamentos */}
       <Card.Root>
-        <Card.Body gap="3">
-          <Heading size="sm">Acordo e pagamentos</Heading>
+        <Accordion.Root collapsible defaultValue={['agreement-payments']}>
+          <Accordion.Item value="agreement-payments" borderBottomWidth="0">
+            <Accordion.ItemTrigger px="5" py="4">
+              <Heading size="sm" flex="1" textAlign="start">Acordo e pagamentos</Heading>
+              <Accordion.ItemIndicator />
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent>
+              <Accordion.ItemBody px="5" pb="5">
           <HStack gap="8" wrap="wrap">
             <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Referência do acordo</Text>
@@ -335,7 +355,10 @@ export default function ContractDetailPage() {
               <Text>{contract.lastPaymentAt ? formatDate(contract.lastPaymentAt) : '—'}</Text>
             </Stack>
           </HStack>
-        </Card.Body>
+              </Accordion.ItemBody>
+            </Accordion.ItemContent>
+          </Accordion.Item>
+        </Accordion.Root>
       </Card.Root>
 
       {/* Card 6: Carteira */}
