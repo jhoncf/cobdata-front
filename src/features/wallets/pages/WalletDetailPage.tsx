@@ -113,6 +113,7 @@ function TableTooltipLabel({ label, description }: { label: string; description:
 function AgreementDailyChart({ data }: { data: Array<{ date: string; count: number; amount: number; paidCount?: number; breachCount?: number }> }) {
   const chartData = data.map((item) => ({
     ...item,
+    totalCount: item.count + (item.paidCount ?? 0) + (item.breachCount ?? 0),
     label: new Date(`${item.date}T12:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
   }));
 
@@ -128,6 +129,7 @@ function AgreementDailyChart({ data }: { data: Array<{ date: string; count: numb
             labelFormatter={(_, items) => items[0]?.payload?.label ?? ''}
           />
           <Legend verticalAlign="top" height={24} iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+          <Line type="monotone" dataKey="totalCount" name="Acordos em geral" stroke="#475569" strokeWidth={3} strokeDasharray="6 4" dot={{ r: 3 }} activeDot={{ r: 5 }} />
           <Line type="monotone" dataKey="count" name="Acordos fechados" stroke="#2563eb" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }}>
             <LabelList dataKey="count" position="top" formatter={(value) => value || ''} fill="#1d4ed8" fontSize={11} fontWeight={700} />
           </Line>
