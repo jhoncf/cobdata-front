@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -52,7 +53,9 @@ import type { PaymentStatus, SerasaStatus } from '@/types/enums';
 export default function ContractsListPage() {
   const { canCreate, canEdit, canDelete } = usePermission();
   const { creditorId } = useAuth();
+  const location = useLocation();
   const isCreditorPortal = Boolean(creditorId);
+  const showCancelled = isCreditorPortal && location.pathname === '/contracts/baixados';
 
   // Credor/Carteira selection
   const [selectedCreditorId, setSelectedCreditorId] = useState<string>('');
@@ -87,6 +90,7 @@ export default function ContractsListPage() {
     paymentStatus: paymentStatusFilter || undefined,
     serasaStatus: serasaStatusFilter || undefined,
     installmentOnly: installmentOnly === 'yes' ? true : undefined,
+    status: showCancelled ? 'CANCELLED' : undefined,
     search: isCreditorPortal && cpfSearch.trim().length >= 3 ? cpfSearch.trim() : undefined,
   });
 
@@ -195,7 +199,7 @@ export default function ContractsListPage() {
         : 'À vista',
     },
     { key: 'occurrenceDate', header: 'Ocorrência', cell: (row) => formatDate(row.occurrenceDate) },
-    ...(isCreditorPortal
+    ...(isCreditorPortal && !showCancelled
       ? [{
           key: 'actions',
           header: 'Ações',
@@ -273,7 +277,7 @@ export default function ContractsListPage() {
 
   return (
     <>
-      <PageHeader title="Contratos">
+      <PageHeader title={showCancelled ? 'Contratos baixados' : 'Contratos'}>
         {canCreate && selectedWalletId && (
           <Button colorPalette="blue" size="sm" onClick={handleCreate}>
             <LuPlus /> Novo Contrato
@@ -290,7 +294,11 @@ export default function ContractsListPage() {
              placeholder="Digite o CPF ou número do contrato"
              aria-label="Consultar contratos por CPF ou número do contrato"
             />
-           <Text mt="2" fontSize="sm" color="fg.muted">Informe o CPF completo ou o número do contrato para consultar os registros vinculados ao seu credor.</Text>
+          <Text mt="2" fontSize="sm" color="fg.muted">
+            {showCancelled
+              ? 'Consulte os contratos baixados pelo seu credor usando o CPF completo ou o número do contrato.'
+              : 'Informe o CPF completo ou o número do contrato para consultar os registros vinculados ao seu credor.'}
+          </Text>
         </Box>
       ) : (
       /* Credor / Carteira Selection */
@@ -391,7 +399,7 @@ export default function ContractsListPage() {
         />
        ) : isCreditorPortal && cpfSearch.trim().length < 3 ? (
           <EmptyState
-           title="Consulte um contrato"
+           title={showCancelled ? 'Consulte um contrato baixado' : 'Consulte um contrato'}
            description="Digite o CPF completo ou o número do contrato para localizar registros vinculados ao seu credor."
         />
       ) : (

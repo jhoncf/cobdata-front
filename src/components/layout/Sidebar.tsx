@@ -29,6 +29,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LuLayoutDashboard, section: 'Principal' },
   { label: 'Contratos', path: '/contracts', icon: LuScrollText, section: 'Principal', portalOnly: true },
+  { label: 'Contratos baixados', path: '/contracts/baixados', icon: LuCircleX, section: 'Principal', portalOnly: true },
   { label: 'Remover dívidas', path: '/remover-dividas', icon: LuCircleX, section: 'Principal', portalOnly: true },
   { label: 'Credores', path: '/creditors', icon: LuBuilding2, section: 'Gestão' },
   { label: 'Carteiras', path: '/wallets', icon: LuWallet, section: 'Gestão' },
@@ -85,9 +86,12 @@ export function Sidebar({ onClose }: SidebarProps) {
           </Text>
           <VStack gap="0.5" align="stretch">
             {items.map((item) => {
-              const isActive =
-                location.pathname === item.path ||
-                location.pathname.startsWith(item.path + '/');
+              const isActive = item.path === '/contracts'
+                ? location.pathname === item.path || (
+                  location.pathname.startsWith('/contracts/') &&
+                  !location.pathname.startsWith('/contracts/baixados')
+                )
+                : location.pathname === item.path || location.pathname.startsWith(item.path + '/');
 
               const IconComp = item.icon;
 

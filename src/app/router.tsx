@@ -125,6 +125,10 @@ export const router = createBrowserRouter([
             element: <SuspenseLayout><ContractsListPage /></SuspenseLayout>,
           },
           {
+            path: '/contracts/baixados',
+            element: <SuspenseLayout><ContractsListPage /></SuspenseLayout>,
+          },
+          {
             path: '/remover-dividas',
             element: <SuspenseLayout><CreditorRemovalPage /></SuspenseLayout>,
           },

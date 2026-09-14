@@ -110,7 +110,7 @@ function TableTooltipLabel({ label, description }: { label: string; description:
   );
 }
 
-function AgreementDailyChart({ data }: { data: Array<{ date: string; count: number; amount: number; breachCount?: number }> }) {
+function AgreementDailyChart({ data }: { data: Array<{ date: string; count: number; amount: number; paidCount?: number; breachCount?: number }> }) {
   const chartData = data.map((item) => ({
     ...item,
     label: new Date(`${item.date}T12:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
@@ -124,14 +124,15 @@ function AgreementDailyChart({ data }: { data: Array<{ date: string; count: numb
           <XAxis dataKey="label" minTickGap={16} tick={{ fontSize: 11 }} />
           <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
           <RechartsTooltip
-            formatter={(value, name, item) => [name === 'Valor negociado' ? formatCurrency(Number(value)) : value, name]}
+            formatter={(value, name) => [name === 'Valor negociado' ? formatCurrency(Number(value)) : value, name]}
             labelFormatter={(_, items) => items[0]?.payload?.label ?? ''}
           />
           <Legend verticalAlign="top" height={24} iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-          <Line type="monotone" dataKey="count" name="Acordos" stroke="#2563eb" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }}>
+          <Line type="monotone" dataKey="count" name="Acordos fechados" stroke="#2563eb" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }}>
             <LabelList dataKey="count" position="top" formatter={(value) => value || ''} fill="#1d4ed8" fontSize={11} fontWeight={700} />
           </Line>
-          <Line type="monotone" dataKey="breachCount" name="Quebras de acordo" stroke="#dc2626" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+          <Line type="monotone" dataKey="paidCount" name="Acordos pagos" stroke="#059669" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+          <Line type="monotone" dataKey="breachCount" name="Acordos quebrados" stroke="#dc2626" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
           <Line dataKey="amount" name="Valor negociado" hide />
         </LineChart>
       </ResponsiveContainer>
@@ -554,8 +555,8 @@ export default function WalletDetailPage() {
             <Card.Header>
               <HStack justify="space-between" gap="3" wrap="wrap">
                 <Box>
-                  <Card.Title>Acordos fechados por dia</Card.Title>
-                  <Text fontSize="sm" color="fg.muted">Quantidade e valor dos acordos gerados nos últimos 30 dias.</Text>
+                  <Card.Title>Acordos por dia</Card.Title>
+                  <Text fontSize="sm" color="fg.muted">Acordos fechados, pagos e quebrados nos últimos 30 dias.</Text>
                 </Box>
                 <Text fontSize="sm" color="fg.muted">Base: data do acordo</Text>
               </HStack>
