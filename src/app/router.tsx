@@ -20,6 +20,7 @@ const SessionsPage = lazy(() => import('@/features/auth/pages/SessionsPage'));
 
 // Core features
 const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage'));
+const ReportsPage = lazy(() => import('@/features/reports/pages/ReportsPage'));
 const CreditorsListPage = lazy(() => import('@/features/creditors/pages/CreditorsListPage'));
 const CreditorDetailPage = lazy(() => import('@/features/creditors/pages/CreditorDetailPage'));
 const WalletsListPage = lazy(() => import('@/features/wallets/pages/WalletsListPage'));
@@ -88,6 +89,10 @@ export const router = createBrowserRouter([
           {
             path: '/dashboard',
             element: <SuspenseLayout><DashboardPage /></SuspenseLayout>,
+          },
+          {
+            path: '/reports',
+            element: <SuspenseLayout><ReportsPage /></SuspenseLayout>,
           },
           {
             path: '/change-password',

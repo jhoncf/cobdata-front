@@ -13,6 +13,7 @@ import {
   LuLandmark,
   LuKeyRound,
   LuCircleX,
+  LuChartNoAxesCombined,
 } from 'react-icons/lu';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -31,6 +32,7 @@ const navItems: NavItem[] = [
   { label: 'Remover dívidas', path: '/remover-dividas', icon: LuCircleX, section: 'Principal', portalOnly: true },
   { label: 'Credores', path: '/creditors', icon: LuBuilding2, section: 'Gestão' },
   { label: 'Carteiras', path: '/wallets', icon: LuWallet, section: 'Gestão' },
+  { label: 'Relatórios', path: '/reports', icon: LuChartNoAxesCombined, section: 'Gestão' },
 
   { label: 'Importações', path: '/imports', icon: LuUpload, section: 'Operacional' },
   { label: 'Usuários', path: '/users', icon: LuUsers, roles: ['ADMIN'], section: 'Administração' },
