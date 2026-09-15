@@ -397,7 +397,7 @@ export default function ContractsListPage() {
           title="Selecione uma carteira"
           description="Escolha um credor e uma carteira acima para visualizar os contratos"
         />
-       ) : isCreditorPortal && cpfSearch.trim().length < 3 ? (
+       ) : isCreditorPortal && !showCancelled && cpfSearch.trim().length < 3 ? (
           <EmptyState
            title={showCancelled ? 'Consulte um contrato baixado' : 'Consulte um contrato'}
            description="Digite o CPF completo ou o número do contrato para localizar registros vinculados ao seu credor."

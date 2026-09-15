@@ -162,6 +162,7 @@ export interface WalletSummary {
   efficiencyRate: number;
   agreementHistoryTotal: number;
   agreementHistoryDatedCount: number;
+  paidAgreementsLast30Days: { count: number; amount: number };
   agreementDailyHistory: Array<{ date: string; count: number; amount: number; breachCount: number }>;
 }
 

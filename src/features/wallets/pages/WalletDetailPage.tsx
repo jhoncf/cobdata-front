@@ -543,7 +543,12 @@ export default function WalletDetailPage() {
                           <Stat.ValueText fontSize={{ base: 'xl', xl: '2xl' }} lineHeight="short">{agreementsSummary.count}</Stat.ValueText>
                           <Text fontSize="sm" color="fg.muted">{formatCurrency(agreementsSummary.amount)}</Text>
                         </Stat.Root>
-                        {(['OPEN', ...agreementPaymentStatuses] as PaymentStatus[]).map((status) => {
+                        <Stat.Root minW="0">
+                          <SummaryTooltipLabel label="Acordos pagos (30 dias)" description="Mesmo critério do relatório: acordo Serasa totalmente quitado, com pagamento registrado nos últimos 30 dias." />
+                          <Stat.ValueText fontSize={{ base: 'xl', xl: '2xl' }} lineHeight="short">{wallet.summary.paidAgreementsLast30Days?.count ?? 0}</Stat.ValueText>
+                          <Text fontSize="sm" color="fg.muted">{formatCurrency(wallet.summary.paidAgreementsLast30Days?.amount ?? 0)}</Text>
+                        </Stat.Root>
+                        {(['OPEN', ...agreementPaymentStatuses.filter((status) => status !== PaymentStatus.PAID)] as PaymentStatus[]).map((status) => {
                           const stat = wallet.summary.paymentStatusTotals?.[status] ?? { count: 0, amount: 0 };
                           return <Stat.Root key={status} minW="0">
                             <SummaryTooltipLabel
@@ -904,13 +909,20 @@ export default function WalletDetailPage() {
                   </Table.Root>
                 </Table.ScrollArea>
 
-                {contractsData.meta && contractsData.meta.totalPages > 1 && (
-                  <PaginationBar
-                    page={contractsPage}
-                    totalPages={contractsData.meta.totalPages}
-                    pageSize={20}
-                    onChange={setContractsPage}
-                  />
+                {contractsData.meta && (
+                  <Flex mt="4" gap="3" align="center" justify="space-between" direction={{ base: 'column', sm: 'row' }}>
+                    <Text fontSize="sm" color="fg.muted">
+                      {contractsData.meta.total.toLocaleString('pt-BR')} contrato(s) encontrado(s)
+                    </Text>
+                    {contractsData.meta.totalPages > 1 && (
+                      <PaginationBar
+                        page={contractsPage}
+                        totalPages={contractsData.meta.totalPages}
+                        pageSize={20}
+                        onChange={setContractsPage}
+                      />
+                    )}
+                  </Flex>
                 )}
               </Stack>
             )}
