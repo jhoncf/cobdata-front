@@ -200,7 +200,13 @@ export default function ContractsListPage() {
         ? `${row.paidInstallments}/${row.totalInstallments} parcela(s)${row.agreementTotalAmount != null ? ` · ${formatCurrency(row.agreementTotalAmount)}` : ''}`
         : 'À vista',
     },
-    { key: 'occurrenceDate', header: 'Ocorrência', cell: (row) => formatDate(row.occurrenceDate) },
+    {
+      key: 'occurrenceDate',
+      header: showCancelled ? 'Data da remoção' : 'Ocorrência',
+      cell: (row) => showCancelled
+        ? (row.cancelledAt ? formatDate(row.cancelledAt) : '—')
+        : formatDate(row.occurrenceDate),
+    },
     ...(isCreditorPortal
       ? [{
           key: 'actions',
