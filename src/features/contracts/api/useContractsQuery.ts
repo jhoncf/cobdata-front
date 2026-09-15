@@ -3,10 +3,11 @@ import api from '@/lib/api';
 import type { PaginatedResponse, ListContractsParams } from '@/types/api';
 import type { Contract, ContractInteraction } from '@/types/models';
 
-export function useContractsQuery(params: ListContractsParams = {}) {
+export function useContractsQuery(params: ListContractsParams = {}, enabled = true) {
   return useQuery<PaginatedResponse<Contract>>({
     queryKey: ['contracts', 'list', params],
     queryFn: () => api.get('/contracts', { params }).then((r) => r.data),
+    enabled,
     placeholderData: keepPreviousData,
   });
 }

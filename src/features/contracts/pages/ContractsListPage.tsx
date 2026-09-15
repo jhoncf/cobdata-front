@@ -10,7 +10,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { NativeSelect } from '@chakra-ui/react';
-import { LuPlus, LuPencil, LuTrash2, LuBanknote, LuRefreshCw, LuUnlink, LuBan } from 'react-icons/lu';
+import { LuPlus, LuPencil, LuTrash2, LuBanknote, LuRefreshCw, LuUnlink, LuBan, LuReceiptText } from 'react-icons/lu';
 import {
   PageHeader,
   DataTable,
@@ -33,6 +33,7 @@ import {
   useCancelContractByCreditorMutation,
 } from '../api/useContractMutations';
 import { ContractFormDialog } from '../components/ContractFormDialog';
+import { CancellationReceiptDialog } from '../components/CancellationReceiptDialog';
 import { TagsManager } from '../components/TagsManager';
 import { CreateChargeDialog } from '@/features/payments/components/CreateChargeDialog';
 import { GeneratePixAction } from '@/features/payments/components/GeneratePixAction';
@@ -92,7 +93,7 @@ export default function ContractsListPage() {
     installmentOnly: installmentOnly === 'yes' ? true : undefined,
     status: showCancelled ? ContractStatus.CANCELLED : undefined,
     search: isCreditorPortal && cpfSearch.trim().length >= 3 ? cpfSearch.trim() : undefined,
-  });
+  }, !isCreditorPortal || showCancelled || cpfSearch.trim().length >= 3);
 
   const createMutation = useCreateContractMutation();
   const updateMutation = useUpdateContractMutation();
@@ -108,6 +109,7 @@ export default function ContractsListPage() {
   const [tagsTarget, setTagsTarget] = useState<Contract | null>(null);
   const [chargeTarget, setChargeTarget] = useState<Contract | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Contract | null>(null);
+  const [receiptTarget, setReceiptTarget] = useState<Contract | null>(null);
 
   const handleCreditorChange = (creditorId: string) => {
     setSelectedCreditorId(creditorId);
@@ -199,22 +201,28 @@ export default function ContractsListPage() {
         : 'À vista',
     },
     { key: 'occurrenceDate', header: 'Ocorrência', cell: (row) => formatDate(row.occurrenceDate) },
-    ...(isCreditorPortal && !showCancelled
+    ...(isCreditorPortal
       ? [{
           key: 'actions',
           header: 'Ações',
           textAlign: 'end' as const,
           cell: (row: Contract) => (
-            <Button
-              size="xs"
-              colorPalette="red"
-              variant="outline"
-              disabled={row.status === 'CANCELLED' || row.paymentStatus === 'PAID'}
-              onClick={(event) => { event.stopPropagation(); setCancelTarget(row); }}
-              title={row.status === 'CANCELLED' ? 'Contrato já cancelado' : row.paymentStatus === 'PAID' ? 'Contrato já está pago' : 'Dar baixa e retirar dos canais'}
-            >
-              <LuBan /> Dar baixa
-            </Button>
+            showCancelled ? (
+              <Button size="xs" variant="outline" colorPalette="blue" onClick={(event) => { event.stopPropagation(); setReceiptTarget(row); }}>
+                <LuReceiptText /> Recibo
+              </Button>
+            ) : (
+              <Button
+                size="xs"
+                colorPalette="red"
+                variant="outline"
+                disabled={row.status === 'CANCELLED' || row.paymentStatus === 'PAID'}
+                onClick={(event) => { event.stopPropagation(); setCancelTarget(row); }}
+                title={row.status === 'CANCELLED' ? 'Contrato já cancelado' : row.paymentStatus === 'PAID' ? 'Contrato já está pago' : 'Dar baixa e retirar dos canais'}
+              >
+                <LuBan /> Dar baixa
+              </Button>
+            )
           ),
         }]
       : canEdit || canDelete
@@ -466,6 +474,12 @@ export default function ContractsListPage() {
           contract={chargeTarget}
         />
       )}
+
+      <CancellationReceiptDialog
+        open={!!receiptTarget}
+        onOpenChange={(open) => !open && setReceiptTarget(null)}
+        contract={receiptTarget}
+      />
     </>
   );
 }
