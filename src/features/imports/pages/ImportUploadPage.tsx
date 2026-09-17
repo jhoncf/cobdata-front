@@ -111,6 +111,26 @@ export default function ImportUploadPage() {
   const uploadMutation = useUploadImportMutation();
   const suggestMappingMutation = useSuggestImportMappingMutation();
 
+  const requestAiSuggestion = useCallback((sourceHeaders: string[], examples: Record<string, string>, announce = false) => {
+    const sampleFormats = Object.fromEntries(sourceHeaders.map((header) => [header, anonymizedFormat(examples[header] ?? '')]));
+    suggestMappingMutation.mutate(
+      { headers: sourceHeaders, sampleFormats },
+      {
+        onSuccess: ({ data }) => {
+          if (data.provider !== 'bedrock' || Object.keys(data.mapping).length === 0) {
+            if (announce) toaster.create({ type: 'info', title: 'A IA não encontrou sugestões adicionais; revise os campos manualmente.' });
+            return;
+          }
+          setFieldMapping((current) => ({ ...current, ...data.mapping }));
+          if (announce) toaster.create({ type: 'success', title: 'Sugestões da IA atualizadas. Revise antes de enviar.' });
+        },
+        onError: () => {
+          if (announce) toaster.create({ type: 'warning', title: 'Não foi possível consultar a IA. As sugestões locais continuam disponíveis.' });
+        },
+      },
+    );
+  }, [suggestMappingMutation]);
+
   const handleFileAccept = useCallback((details: { files: File[] }) => {
     const accepted = details.files[0];
     if (!accepted) return;
@@ -124,13 +144,17 @@ export default function ImportUploadPage() {
         .map((header) => String(header ?? '').trim())
         .filter((header, index, values) => header && values.indexOf(header) === index);
       setHeaders(uniqueHeaders);
-      setColumnExamples(Object.fromEntries(
+      const examples = Object.fromEntries(
         sourceHeaders.map((header, index) => [
           String(header ?? '').trim(),
           String(sampleRow[index] ?? '').trim(),
         ]).filter(([header]) => Boolean(header)),
-      ));
+      );
+      setColumnExamples(examples);
       setFieldMapping(suggestedFieldMapping(uniqueHeaders));
+      // Runs by default using only headers and anonymized formats. The user
+      // can still edit every selected field while the suggestion is loading.
+      requestAiSuggestion(uniqueHeaders, examples);
     };
 
     if (accepted.name.endsWith('.csv')) {
@@ -164,28 +188,14 @@ export default function ImportUploadPage() {
       reader.onerror = () => toaster.create({ type: 'error', title: 'Erro ao ler o arquivo XLSX' });
       reader.readAsArrayBuffer(accepted);
     }
-  }, []);
+  }, [requestAiSuggestion]);
 
   const handleMappingChange = (target: string, header: string) => {
     setFieldMapping((prev) => ({ ...prev, [target]: header }));
   };
 
   const handleAiSuggestion = () => {
-    const sampleFormats = Object.fromEntries(headers.map((header) => [header, anonymizedFormat(columnExamples[header] ?? '')]));
-    suggestMappingMutation.mutate(
-      { headers, sampleFormats },
-      {
-        onSuccess: ({ data }) => {
-          if (data.provider !== 'bedrock' || Object.keys(data.mapping).length === 0) {
-            toaster.create({ type: 'info', title: 'A IA não encontrou sugestões adicionais; revise os campos manualmente.' });
-            return;
-          }
-          setFieldMapping((current) => ({ ...current, ...data.mapping }));
-          toaster.create({ type: 'success', title: 'Sugestões da IA aplicadas. Revise antes de enviar.' });
-        },
-        onError: () => toaster.create({ type: 'warning', title: 'Não foi possível consultar a IA. As sugestões locais continuam disponíveis.' }),
-      },
-    );
+    requestAiSuggestion(headers, columnExamples, true);
   };
 
   const handleSubmit = () => {
@@ -282,7 +292,7 @@ export default function ImportUploadPage() {
             Para cada campo do CRM, selecione a coluna equivalente da sua planilha. Campos obrigatórios precisam ser preenchidos; os demais são opcionais.
           </Text>
           <Button size="sm" variant="outline" mb="3" onClick={handleAiSuggestion} loading={suggestMappingMutation.isPending}>
-            Melhorar sugestões com IA
+            Refazer sugestões com IA
           </Button>
           <Text fontSize="xs" color="fg.muted" mb="3">
             A IA recebe somente os títulos das colunas e formatos anonimizados da amostra; nenhum dado pessoal da planilha é enviado.
