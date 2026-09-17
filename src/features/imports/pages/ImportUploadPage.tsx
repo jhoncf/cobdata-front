@@ -24,6 +24,7 @@ const TARGET_FIELDS = [
   { value: '', label: '(Ignorar coluna)' },
   { value: 'debtorDocument', label: 'CPF/CNPJ do Devedor' },
   { value: 'debtorName', label: 'Nome do Devedor' },
+  { value: 'debtorBirthDate', label: 'Data de Nascimento' },
   { value: 'contractNumber', label: 'Número do Contrato (NUM_ADM)' },
   { value: 'debtType', label: 'Tipo de Dívida' },
   { value: 'occurrenceDate', label: 'Data de Contratação (MES_CONTRATO)' },
@@ -49,6 +50,7 @@ const REQUIRED_TARGETS = ['debtorDocument', 'contractNumber', 'debtType', 'occur
 const HEADER_SUGGESTIONS: Record<string, string> = {
   cpf: 'debtorDocument', cnpj: 'debtorDocument', documento: 'debtorDocument',
   nome: 'debtorName', cliente: 'debtorName', nome_cliente: 'debtorName',
+  data_nascimento: 'debtorBirthDate', dt_nascimento: 'debtorBirthDate', nascimento: 'debtorBirthDate',
   contrato: 'contractNumber', num_adm: 'contractNumber', numero_contrato: 'contractNumber',
   m_contrato: 'occurrenceDate', mes_contrato: 'occurrenceDate', data_ocorrencia: 'occurrenceDate',
   vencimento: 'dueDate', data_vencimento: 'dueDate',

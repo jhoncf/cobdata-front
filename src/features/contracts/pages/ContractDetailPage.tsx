@@ -188,6 +188,10 @@ export default function ContractDetailPage() {
               <Text>{formatCPF(contract.debtorDocument)}</Text>
             </Stack>
             <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Data de nascimento</Text>
+              <Text>{contract.debtorBirthDate ? formatDate(contract.debtorBirthDate) : '—'}</Text>
+            </Stack>
+            <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Telefone</Text>
               <Text>{contract.debtorPhone ?? '—'}</Text>
             </Stack>

@@ -189,6 +189,7 @@ export interface Contract {
   wallet?: Wallet;
   debtorDocument: string;
   debtorName: string | null;
+  debtorBirthDate: string | null;
   contractNumber: string;
   debtType: DebtType;
   occurrenceDate: string;

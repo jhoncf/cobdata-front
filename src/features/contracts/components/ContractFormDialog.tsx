@@ -24,6 +24,7 @@ const contractFormSchema = z.object({
   walletId: z.string().min(1, 'Selecione uma carteira'),
   debtorDocument: z.string().min(1, 'CPF ou CNPJ é obrigatório'),
   debtorName: z.string().max(200, 'Nome deve ter no máximo 200 caracteres'),
+  debtorBirthDate: z.string().optional(),
   contractNumber: z.string().min(1, 'Número do contrato é obrigatório'),
   debtType: z.nativeEnum(DebtType),
   occurrenceDate: z.string().min(1, 'Data de contratação obrigatória'),
@@ -85,6 +86,7 @@ export function ContractFormDialog({
       walletId: '',
       debtorDocument: '',
       debtorName: '',
+      debtorBirthDate: '',
       contractNumber: '',
       debtType: DebtType.COMMERCIAL,
       occurrenceDate: '',
@@ -121,6 +123,7 @@ export function ContractFormDialog({
           walletId: contract.walletId,
           debtorDocument: contract.debtorDocument,
           debtorName: contract.debtorName ?? '',
+          debtorBirthDate: contract.debtorBirthDate?.split('T')[0] ?? '',
           contractNumber: contract.contractNumber,
           debtType: contract.debtType,
           occurrenceDate: contract.occurrenceDate.split('T')[0] ?? contract.occurrenceDate,
@@ -151,6 +154,7 @@ export function ContractFormDialog({
           walletId: defaultWalletId ?? '',
           debtorDocument: '',
           debtorName: '',
+          debtorBirthDate: '',
           contractNumber: '',
           debtType: DebtType.COMMERCIAL,
           occurrenceDate: '',
@@ -197,6 +201,7 @@ export function ContractFormDialog({
       const dto: UpdateContractDto = {
         walletId: values.walletId,
         debtorName: values.debtorName,
+        debtorBirthDate: values.debtorBirthDate || undefined,
         debtType: values.debtType,
         occurrenceDate: values.occurrenceDate,
         dueDate: values.dueDate,
@@ -221,6 +226,7 @@ export function ContractFormDialog({
         walletId: values.walletId,
         debtorDocument: doc,
         debtorName: values.debtorName,
+        debtorBirthDate: values.debtorBirthDate || undefined,
         contractNumber: values.contractNumber ?? '',
         debtType: values.debtType,
         occurrenceDate: values.occurrenceDate,
@@ -295,6 +301,10 @@ export function ContractFormDialog({
                       <Field.Label>Nome do Devedor</Field.Label>
                       <Input {...register('debtorName')} placeholder="Nome completo" />
                       <Field.ErrorText>{errors.debtorName?.message}</Field.ErrorText>
+                    </Field.Root>
+                    <Field.Root>
+                      <Field.Label>Data de Nascimento</Field.Label>
+                      <Input type="date" {...register('debtorBirthDate')} />
                     </Field.Root>
 
                     <Field.Root invalid={!!errors.debtType} required>

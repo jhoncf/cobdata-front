@@ -153,6 +153,7 @@ export interface CreateContractDto {
   walletId: string;
   debtorDocument: string;
   debtorName?: string;
+  debtorBirthDate?: string;
   contractNumber: string;
   debtType: DebtType;
   occurrenceDate: string;
@@ -173,6 +174,7 @@ export interface CreateContractDto {
 export interface UpdateContractDto {
   walletId?: string;
   debtorName?: string;
+  debtorBirthDate?: string;
   originalValue?: number;
   updatedValue?: number;
   offerDiscountPercent?: number;
