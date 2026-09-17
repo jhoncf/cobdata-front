@@ -23,6 +23,13 @@ export function useUploadImportMutation() {
   });
 }
 
+export function useSuggestImportMappingMutation() {
+  return useMutation({
+    mutationFn: (data: { headers: string[]; sampleFormats: Record<string, string> }) =>
+      api.post<{ mapping: Record<string, string>; provider: 'bedrock' | 'fallback' }>('/imports/suggest-mapping', data),
+  });
+}
+
 export function useConfirmImportMutation() {
   const queryClient = useQueryClient();
   return useMutation({

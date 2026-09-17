@@ -15,7 +15,7 @@ import { LuUpload } from 'react-icons/lu';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { useAllWalletsQuery } from '@/features/wallets/api/useWalletsQuery';
-import { useUploadImportMutation } from '../api/useImportMutations';
+import { useSuggestImportMappingMutation, useUploadImportMutation } from '../api/useImportMutations';
 import { PageHeader } from '@/components/common';
 import { NativeSelect } from '@chakra-ui/react';
 import { toaster } from '@/components/ui/toaster';
@@ -80,6 +80,21 @@ function suggestedFieldMapping(headers: string[]): Record<string, string> {
   return mapping;
 }
 
+/** Converts a local sample into a type hint without exposing its PII. */
+function anonymizedFormat(value: string): string {
+  const normalized = value.trim();
+  const digits = normalized.replace(/\D/g, '');
+  if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalized)) return '[e-mail]';
+  if (digits.length === 11 && /[.\-\s]/.test(normalized)) return '[CPF com 11 dígitos]';
+  if (digits.length === 14 && /[.\-\/\s]/.test(normalized)) return '[CNPJ com 14 dígitos]';
+  if (digits.length >= 10 && digits.length <= 13 && /[()\-\s]/.test(normalized)) return '[telefone]';
+  if (/^\d{2}[\/-]\d{2}[\/-]\d{4}$/.test(normalized)) return '[data DD/MM/AAAA]';
+  if (/^\d{4}[\/-]\d{2}[\/-]\d{2}$/.test(normalized)) return '[data AAAA-MM-DD]';
+  if (/^R?\$?\s*[\d.,]+$/.test(normalized)) return '[valor monetário]';
+  if (/^\d+$/.test(normalized)) return `[número com ${digits.length} dígitos]`;
+  return normalized ? '[texto]' : '[vazio]';
+}
+
 export default function ImportUploadPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -94,6 +109,7 @@ export default function ImportUploadPage() {
 
   const { data: walletsData } = useAllWalletsQuery();
   const uploadMutation = useUploadImportMutation();
+  const suggestMappingMutation = useSuggestImportMappingMutation();
 
   const handleFileAccept = useCallback((details: { files: File[] }) => {
     const accepted = details.files[0];
@@ -152,6 +168,24 @@ export default function ImportUploadPage() {
 
   const handleMappingChange = (target: string, header: string) => {
     setFieldMapping((prev) => ({ ...prev, [target]: header }));
+  };
+
+  const handleAiSuggestion = () => {
+    const sampleFormats = Object.fromEntries(headers.map((header) => [header, anonymizedFormat(columnExamples[header] ?? '')]));
+    suggestMappingMutation.mutate(
+      { headers, sampleFormats },
+      {
+        onSuccess: ({ data }) => {
+          if (data.provider !== 'bedrock' || Object.keys(data.mapping).length === 0) {
+            toaster.create({ type: 'info', title: 'A IA não encontrou sugestões adicionais; revise os campos manualmente.' });
+            return;
+          }
+          setFieldMapping((current) => ({ ...current, ...data.mapping }));
+          toaster.create({ type: 'success', title: 'Sugestões da IA aplicadas. Revise antes de enviar.' });
+        },
+        onError: () => toaster.create({ type: 'warning', title: 'Não foi possível consultar a IA. As sugestões locais continuam disponíveis.' }),
+      },
+    );
   };
 
   const handleSubmit = () => {
@@ -246,6 +280,12 @@ export default function ImportUploadPage() {
           <Fieldset.Legend>Mapeamento de campos</Fieldset.Legend>
           <Text fontSize="sm" color="fg.muted" mb="3">
             Para cada campo do CRM, selecione a coluna equivalente da sua planilha. Campos obrigatórios precisam ser preenchidos; os demais são opcionais.
+          </Text>
+          <Button size="sm" variant="outline" mb="3" onClick={handleAiSuggestion} loading={suggestMappingMutation.isPending}>
+            Melhorar sugestões com IA
+          </Button>
+          <Text fontSize="xs" color="fg.muted" mb="3">
+            A IA recebe somente os títulos das colunas e formatos anonimizados da amostra; nenhum dado pessoal da planilha é enviado.
           </Text>
           <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
             {IMPORT_FIELDS.map((field) => {
