@@ -17,6 +17,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { useCreditorsQuery } from '@/features/creditors/api/useCreditorsQuery';
+import { useSerasaWalletsQuery } from '@/features/providers/api/useSerasaWallets';
 import type { Wallet } from '@/types/models';
 
 const walletSchema = z.object({
@@ -56,6 +57,7 @@ export function WalletFormDialog({
   const isEdit = !!wallet;
 
   const { data: creditorsData } = useCreditorsQuery({ page: 1, limit: 100 });
+  const { data: serasaWallets } = useSerasaWalletsQuery();
 
   const {
     register,
@@ -159,9 +161,22 @@ export function WalletFormDialog({
                   </SimpleGrid>
 
                   <Field.Root invalid={!!errors.serasaWalletExternalId}>
-                    <Field.Label>ID da carteira no Serasa</Field.Label>
-                    <Input placeholder="Padrão da API: PRE_CALCULADA" {...register('serasaWalletExternalId')} />
-                    <Field.HelperText>Opcional. Sem um ID, o envio usa a carteira padrão de securitizadora da API Serasa: PRE_CALCULADA.</Field.HelperText>
+                    <Field.Label>Carteira Serasa</Field.Label>
+                    <NativeSelect.Root>
+                      <NativeSelect.Field {...register('serasaWalletExternalId')}>
+                        <option value="">Usar carteira padrão da API (PRE_CALCULADA)</option>
+                        {wallet?.serasaWalletExternalId && !serasaWallets?.some((serasaWallet) => serasaWallet.externalWalletId === wallet.serasaWalletExternalId) && (
+                          <option value={wallet.serasaWalletExternalId}>ID legado: {wallet.serasaWalletExternalId}</option>
+                        )}
+                        {serasaWallets?.filter((serasaWallet) => serasaWallet.active).map((serasaWallet) => (
+                          <option key={serasaWallet.id} value={serasaWallet.externalWalletId}>
+                            {serasaWallet.name} — {serasaWallet.externalWalletId}
+                          </option>
+                        ))}
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                    <Field.HelperText>Selecione uma carteira Serasa cadastrada ou mantenha o padrão PRE_CALCULADA para securitizadora.</Field.HelperText>
                     <Field.ErrorText>{errors.serasaWalletExternalId?.message}</Field.ErrorText>
                   </Field.Root>
 

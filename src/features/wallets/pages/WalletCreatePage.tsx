@@ -17,6 +17,7 @@ import { toaster } from '@/components/ui/toaster';
 import { PageHeader } from '@/components/common';
 import { useCreateWalletMutation } from '../api/useWalletMutations';
 import { useCreditorsQuery } from '@/features/creditors/api/useCreditorsQuery';
+import { useSerasaWalletsQuery } from '@/features/providers/api/useSerasaWallets';
 
 const walletSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -34,6 +35,7 @@ export default function WalletCreatePage() {
   const navigate = useNavigate();
   const createMutation = useCreateWalletMutation();
   const { data: creditorsData } = useCreditorsQuery({ page: 1, limit: 100 });
+  const { data: serasaWallets } = useSerasaWalletsQuery();
 
   const {
     register,
@@ -96,9 +98,19 @@ export default function WalletCreatePage() {
                 <Field.ErrorText>{errors.creditorId?.message}</Field.ErrorText>
               </Field.Root>
               <Field.Root invalid={!!errors.serasaWalletExternalId} maxW="400px">
-                <Field.Label>ID da carteira no Serasa</Field.Label>
-                <Input placeholder="Padrão da API: PRE_CALCULADA" {...register('serasaWalletExternalId')} />
-                <Field.HelperText>Opcional. Sem um ID, o envio usa PRE_CALCULADA.</Field.HelperText>
+                <Field.Label>Carteira Serasa</Field.Label>
+                <NativeSelect.Root>
+                  <NativeSelect.Field {...register('serasaWalletExternalId')}>
+                    <option value="">Usar carteira padrão da API (PRE_CALCULADA)</option>
+                    {serasaWallets?.filter((serasaWallet) => serasaWallet.active).map((serasaWallet) => (
+                      <option key={serasaWallet.id} value={serasaWallet.externalWalletId}>
+                        {serasaWallet.name} — {serasaWallet.externalWalletId}
+                      </option>
+                    ))}
+                  </NativeSelect.Field>
+                  <NativeSelect.Indicator />
+                </NativeSelect.Root>
+                <Field.HelperText>Selecione uma carteira Serasa cadastrada ou mantenha o padrão PRE_CALCULADA.</Field.HelperText>
                 <Field.ErrorText>{errors.serasaWalletExternalId?.message}</Field.ErrorText>
               </Field.Root>
               <Field.Root invalid={!!errors.cobcomDiscountPercent} maxW="400px">
