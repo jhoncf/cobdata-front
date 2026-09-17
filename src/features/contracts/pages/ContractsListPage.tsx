@@ -81,7 +81,9 @@ export default function ContractsListPage() {
   }, !isCreditorPortal);
 
   // Load wallet detail (with summary) when selected
-  const { data: walletDetail } = useWalletDetailQuery(selectedWalletId || undefined);
+  const { data: walletDetail } = useWalletDetailQuery(
+    isCreditorPortal ? undefined : selectedWalletId || undefined,
+  );
 
   // Load contracts when wallet is selected
   const { data: contractsData, isLoading: contractsLoading } = useContractsQuery({
