@@ -20,34 +20,31 @@ import { PageHeader } from '@/components/common';
 import { NativeSelect } from '@chakra-ui/react';
 import { toaster } from '@/components/ui/toaster';
 
-const TARGET_FIELDS = [
-  { value: '', label: '(Ignorar coluna)' },
-  { value: 'debtorDocument', label: 'CPF/CNPJ do Devedor' },
-  { value: 'debtorName', label: 'Nome do Devedor' },
-  { value: 'debtorBirthDate', label: 'Data de Nascimento' },
-  { value: 'contractNumber', label: 'Número do Contrato (NUM_ADM)' },
-  { value: 'debtType', label: 'Tipo de Dívida' },
-  { value: 'occurrenceDate', label: 'Data de Contratação (MES_CONTRATO)' },
-  { value: 'dueDate', label: 'Data de Vencimento' },
-  { value: 'originalValue', label: 'Valor em Aberto' },
-  { value: 'updatedValue', label: 'Valor Atualizado' },
-  { value: 'debtOrigin', label: 'Origem da Dívida' },
-  { value: 'productName', label: 'Produto' },
-  { value: 'debtorStreet', label: 'Endereço (Rua)' },
-  { value: 'debtorAddressNumber', label: 'Número do Endereço' },
-  { value: 'debtorAddressComplement', label: 'Complemento' },
-  { value: 'debtorNeighborhood', label: 'Bairro' },
-  { value: 'debtorCity', label: 'Cidade' },
-  { value: 'debtorState', label: 'UF' },
-  { value: 'debtorZipCode', label: 'CEP' },
-  { value: 'debtorPhone', label: 'Telefone' },
-  { value: 'debtorEmail', label: 'E-mail' },
-  { value: 'cancelledAt', label: 'Mês Cancelamento' },
-];
+const IMPORT_FIELDS = [
+  { value: 'debtorDocument', label: 'CPF/CNPJ do devedor', required: true },
+  { value: 'contractNumber', label: 'Número do contrato', required: true },
+  { value: 'debtType', label: 'Tipo de dívida', required: true },
+  { value: 'occurrenceDate', label: 'Data de ocorrência/contratação', required: true },
+  { value: 'originalValue', label: 'Valor da dívida', required: true },
+  { value: 'updatedValue', label: 'Valor atualizado', required: false },
+  { value: 'debtorName', label: 'Nome do devedor', required: false },
+  { value: 'debtorBirthDate', label: 'Data de nascimento', required: false },
+  { value: 'dueDate', label: 'Data de vencimento', required: false },
+  { value: 'debtOrigin', label: 'Origem da dívida', required: false },
+  { value: 'productName', label: 'Produto', required: false },
+  { value: 'debtorStreet', label: 'Endereço (rua)', required: false },
+  { value: 'debtorAddressNumber', label: 'Número do endereço', required: false },
+  { value: 'debtorAddressComplement', label: 'Complemento', required: false },
+  { value: 'debtorNeighborhood', label: 'Bairro', required: false },
+  { value: 'debtorCity', label: 'Cidade', required: false },
+  { value: 'debtorState', label: 'UF', required: false },
+  { value: 'debtorZipCode', label: 'CEP', required: false },
+  { value: 'debtorPhone', label: 'Telefone', required: false },
+  { value: 'debtorEmail', label: 'E-mail', required: false },
+  { value: 'cancelledAt', label: 'Data de cancelamento', required: false },
+] as const;
 
-// A single balance column is common in creditor files. It is mapped as the
-// original value and the importer copies it to the updated value when needed.
-const REQUIRED_TARGETS = ['debtorDocument', 'contractNumber', 'debtType', 'occurrenceDate', 'originalValue'];
+const REQUIRED_TARGETS = IMPORT_FIELDS.filter((field) => field.required).map((field) => field.value);
 
 const HEADER_SUGGESTIONS: Record<string, string> = {
   cpf: 'debtorDocument', cnpj: 'debtorDocument', documento: 'debtorDocument',
@@ -74,10 +71,13 @@ function normalizedHeader(value: string): string {
     .replace(/^_|_$/g, '');
 }
 
-function suggestedMapping(headers: string[]): Record<string, string> {
-  return Object.fromEntries(
-    headers.map((header) => [header, HEADER_SUGGESTIONS[normalizedHeader(header)] ?? '']),
-  );
+function suggestedFieldMapping(headers: string[]): Record<string, string> {
+  const mapping: Record<string, string> = {};
+  for (const header of headers) {
+    const target = HEADER_SUGGESTIONS[normalizedHeader(header)];
+    if (target && !mapping[target]) mapping[target] = header;
+  }
+  return mapping;
 }
 
 export default function ImportUploadPage() {
@@ -88,7 +88,9 @@ export default function ImportUploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [headers, setHeaders] = useState<string[]>([]);
   const [columnExamples, setColumnExamples] = useState<Record<string, string>>({});
-  const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
+  // Maps each CRM field to the selected source column. This direction makes
+  // all required fields visible even when the spreadsheet does not contain it.
+  const [fieldMapping, setFieldMapping] = useState<Record<string, string>>({});
 
   const { data: walletsData } = useAllWalletsQuery();
   const uploadMutation = useUploadImportMutation();
@@ -99,7 +101,7 @@ export default function ImportUploadPage() {
     setFile(accepted);
     setHeaders([]);
     setColumnExamples({});
-    setColumnMapping({});
+    setFieldMapping({});
 
     const setDetectedHeaders = (sourceHeaders: unknown[], sampleRow: unknown[] = []) => {
       const uniqueHeaders = sourceHeaders
@@ -112,7 +114,7 @@ export default function ImportUploadPage() {
           String(sampleRow[index] ?? '').trim(),
         ]).filter(([header]) => Boolean(header)),
       ));
-      setColumnMapping(suggestedMapping(uniqueHeaders));
+      setFieldMapping(suggestedFieldMapping(uniqueHeaders));
     };
 
     if (accepted.name.endsWith('.csv')) {
@@ -148,8 +150,8 @@ export default function ImportUploadPage() {
     }
   }, []);
 
-  const handleMappingChange = (header: string, target: string) => {
-    setColumnMapping((prev) => ({ ...prev, [header]: target }));
+  const handleMappingChange = (target: string, header: string) => {
+    setFieldMapping((prev) => ({ ...prev, [target]: header }));
   };
 
   const handleSubmit = () => {
@@ -158,11 +160,13 @@ export default function ImportUploadPage() {
       return;
     }
 
-    // Filter out empty mappings
-    const filteredMapping: Record<string, string> = {};
-    Object.entries(columnMapping).forEach(([key, val]) => {
-      if (val) filteredMapping[key] = val;
-    });
+    // The API receives source column -> CRM field. The UI intentionally keeps
+    // the reverse direction so the user can audit every CRM field first.
+    const filteredMapping = Object.fromEntries(
+      Object.entries(fieldMapping)
+        .filter(([, header]) => Boolean(header))
+        .map(([target, header]) => [header, target]),
+    );
 
     const missingRequired = REQUIRED_TARGETS.filter(
       (target) => !Object.values(filteredMapping).includes(target),
@@ -239,33 +243,39 @@ export default function ImportUploadPage() {
 
       {headers.length > 0 && (
         <Fieldset.Root>
-          <Fieldset.Legend>Mapeamento de Colunas</Fieldset.Legend>
+          <Fieldset.Legend>Mapeamento de campos</Fieldset.Legend>
           <Text fontSize="sm" color="fg.muted" mb="3">
-            Confira uma amostra antes de confirmar o destino de cada coluna. As sugestões podem ser alteradas livremente.
+            Para cada campo do CRM, selecione a coluna equivalente da sua planilha. Campos obrigatórios precisam ser preenchidos; os demais são opcionais.
           </Text>
           <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
-            {headers.map((header) => (
-              <Box key={header} borderWidth="1px" rounded="md" p="3">
+            {IMPORT_FIELDS.map((field) => {
+              const selectedHeader = fieldMapping[field.value] ?? '';
+              return (
+              <Box key={field.value} borderWidth="1px" rounded="md" p="3">
                 <Stack direction="row" justify="space-between" mb="1">
-                  <Text fontSize="sm" fontWeight="medium">{header}</Text>
-                  {REQUIRED_TARGETS.includes(columnMapping[header] ?? '') && <Badge colorPalette="orange">Obrigatório</Badge>}
+                  <Text fontSize="sm" fontWeight="medium">{field.label}</Text>
+                  <Badge colorPalette={field.required ? 'orange' : 'gray'}>{field.required ? 'Obrigatório' : 'Opcional'}</Badge>
                 </Stack>
                 <Text fontSize="xs" color="fg.muted" mb="2" lineClamp="1">
-                  Exemplo: {columnExamples[header] || '—'}
+                  {selectedHeader ? `Amostra de “${selectedHeader}”: ${columnExamples[selectedHeader] || '—'}` : 'Nenhuma coluna selecionada'}
                 </Text>
                 <NativeSelect.Root size="sm">
                   <NativeSelect.Field
-                    value={columnMapping[header] ?? ''}
-                    onChange={(e) => handleMappingChange(header, e.target.value)}
+                    value={selectedHeader}
+                    onChange={(e) => handleMappingChange(field.value, e.target.value)}
                   >
-                    {TARGET_FIELDS.map((tf) => (
-                      <option key={tf.value} value={tf.value}>{tf.label}</option>
+                    <option value="">{field.required ? 'Selecione a coluna obrigatória' : 'Não importar este campo'}</option>
+                    {headers.map((header) => (
+                      <option key={header} value={header} disabled={Boolean(fieldMapping && Object.entries(fieldMapping).some(([otherTarget, mappedHeader]) => otherTarget !== field.value && mappedHeader === header))}>
+                        {header}
+                      </option>
                     ))}
                   </NativeSelect.Field>
                 <NativeSelect.Indicator />
                 </NativeSelect.Root>
               </Box>
-            ))}
+              );
+            })}
           </SimpleGrid>
         </Fieldset.Root>
       )}
