@@ -44,7 +44,7 @@ const TARGET_FIELDS = [
   { value: 'cancelledAt', label: 'Mês Cancelamento' },
 ];
 
-const REQUIRED_TARGETS = ['debtorDocument', 'contractNumber', 'occurrenceDate', 'originalValue'];
+const REQUIRED_TARGETS = ['debtorDocument', 'contractNumber', 'debtType', 'occurrenceDate', 'originalValue', 'updatedValue'];
 
 const HEADER_SUGGESTIONS: Record<string, string> = {
   cpf: 'debtorDocument', cnpj: 'debtorDocument', documento: 'debtorDocument',
