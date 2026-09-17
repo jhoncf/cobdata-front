@@ -45,7 +45,9 @@ const TARGET_FIELDS = [
   { value: 'cancelledAt', label: 'Mês Cancelamento' },
 ];
 
-const REQUIRED_TARGETS = ['debtorDocument', 'contractNumber', 'debtType', 'occurrenceDate', 'originalValue', 'updatedValue'];
+// A single balance column is common in creditor files. It is mapped as the
+// original value and the importer copies it to the updated value when needed.
+const REQUIRED_TARGETS = ['debtorDocument', 'contractNumber', 'debtType', 'occurrenceDate', 'originalValue'];
 
 const HEADER_SUGGESTIONS: Record<string, string> = {
   cpf: 'debtorDocument', cnpj: 'debtorDocument', documento: 'debtorDocument',
