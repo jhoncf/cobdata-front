@@ -21,6 +21,7 @@ import { useCreditorsQuery } from '@/features/creditors/api/useCreditorsQuery';
 const walletSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   creditorId: z.string().min(1, 'Selecione um credor'),
+  serasaWalletExternalId: z.string().max(120, 'Máximo 120 caracteres'),
   cobcomDiscountPercent: z.coerce.number().min(0).max(100),
   offerFirstInstallmentDays: z.coerce.number().int().min(1).max(365),
   offerMinInstallmentValue: z.coerce.number().min(0.01),
@@ -40,14 +41,14 @@ export default function WalletCreatePage() {
     formState: { errors, isSubmitting },
   } = useForm<WalletFormValues>({
     resolver: zodResolver(walletSchema),
-    defaultValues: { name: '', creditorId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1 },
+    defaultValues: { name: '', creditorId: '', serasaWalletExternalId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1 },
   });
 
   async function onSubmit(data: WalletFormValues) {
     try {
       await createMutation.mutateAsync({
         creditorId: data.creditorId,
-        data: { name: data.name, cobcomDiscountPercent: data.cobcomDiscountPercent, offerFirstInstallmentDays: data.offerFirstInstallmentDays, offerMinInstallmentValue: data.offerMinInstallmentValue, offerMaxInstallments: data.offerMaxInstallments },
+        data: { name: data.name, serasaWalletExternalId: data.serasaWalletExternalId, cobcomDiscountPercent: data.cobcomDiscountPercent, offerFirstInstallmentDays: data.offerFirstInstallmentDays, offerMinInstallmentValue: data.offerMinInstallmentValue, offerMaxInstallments: data.offerMaxInstallments },
       });
       toaster.create({
         type: 'success',
@@ -93,6 +94,12 @@ export default function WalletCreatePage() {
                   <NativeSelect.Indicator />
                 </NativeSelect.Root>
                 <Field.ErrorText>{errors.creditorId?.message}</Field.ErrorText>
+              </Field.Root>
+              <Field.Root invalid={!!errors.serasaWalletExternalId} maxW="400px">
+                <Field.Label>ID da carteira no Serasa</Field.Label>
+                <Input placeholder="Padrão da API: PRE_CALCULADA" {...register('serasaWalletExternalId')} />
+                <Field.HelperText>Opcional. Sem um ID, o envio usa PRE_CALCULADA.</Field.HelperText>
+                <Field.ErrorText>{errors.serasaWalletExternalId?.message}</Field.ErrorText>
               </Field.Root>
               <Field.Root invalid={!!errors.cobcomDiscountPercent} maxW="400px">
                 <Field.Label>Desconto CobCom (%)</Field.Label>

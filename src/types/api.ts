@@ -125,6 +125,7 @@ export interface TestIxcIntegrationDto {
 // ─── Wallet DTOs ─────────────────────────────────────────────────────────────
 export interface CreateWalletDto {
   name: string;
+  serasaWalletExternalId?: string;
   cobcomDiscountPercent?: number;
   offerFirstInstallmentDays?: number;
   offerMinInstallmentValue?: number;
@@ -134,6 +135,7 @@ export interface CreateWalletDto {
 
 export interface UpdateWalletDto {
   name?: string;
+  serasaWalletExternalId?: string;
   status?: WalletStatus;
   cobcomDiscountPercent?: number;
   offerFirstInstallmentDays?: number;

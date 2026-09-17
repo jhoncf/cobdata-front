@@ -95,6 +95,7 @@ export interface Wallet {
   id: string;
   name: string;
   creditorId: string;
+  serasaWalletExternalId?: string | null;
   creditor?: Creditor & { commissionPercent?: number; discountBands?: DiscountBand[] };
   status: WalletStatus;
   cobcomDiscountPercent?: number;

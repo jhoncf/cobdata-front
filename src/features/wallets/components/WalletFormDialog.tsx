@@ -22,6 +22,7 @@ import type { Wallet } from '@/types/models';
 const walletSchema = z.object({
   name: z.string().min(1, 'Nome obrigatório').max(120, 'Máximo 120 caracteres'),
   creditorId: z.string().min(1, 'Selecione um credor'),
+  serasaWalletExternalId: z.string().max(120, 'Máximo 120 caracteres'),
   cobcomDiscountPercent: z.coerce.number().min(0).max(100),
   offerFirstInstallmentDays: z.coerce.number().int().min(1).max(365),
   offerMinInstallmentValue: z.coerce.number().min(0.01),
@@ -41,7 +42,7 @@ interface WalletFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   wallet?: Wallet | null;
-  onSubmit: (data: { name: string; creditorId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number; smsTemplate: string; discountBands?: WalletFormValues['discountBands'] }) => void;
+  onSubmit: (data: { name: string; creditorId: string; serasaWalletExternalId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number; smsTemplate: string; discountBands?: WalletFormValues['discountBands'] }) => void;
   loading?: boolean;
 }
 
@@ -64,7 +65,7 @@ export function WalletFormDialog({
     formState: { errors },
   } = useForm<WalletFormValues>({
     resolver: zodResolver(walletSchema),
-    defaultValues: { name: '', creditorId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, smsTemplate: 'Confira os detalhes pelo link seguro.', discountBands: [] },
+    defaultValues: { name: '', creditorId: '', serasaWalletExternalId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, smsTemplate: 'Confira os detalhes pelo link seguro.', discountBands: [] },
   });
   const { fields } = useFieldArray({ control, name: 'discountBands' });
 
@@ -74,6 +75,7 @@ export function WalletFormDialog({
         reset({
           name: wallet.name,
           creditorId: wallet.creditorId,
+          serasaWalletExternalId: wallet.serasaWalletExternalId ?? '',
           cobcomDiscountPercent: wallet.cobcomDiscountPercent ?? 0,
           offerFirstInstallmentDays: wallet.offerFirstInstallmentDays ?? 5,
           offerMinInstallmentValue: wallet.offerMinInstallmentValue ?? 0.01,
@@ -92,7 +94,7 @@ export function WalletFormDialog({
           }),
         });
       } else {
-        reset({ name: '', creditorId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, smsTemplate: 'Confira os detalhes pelo link seguro.', discountBands: [] });
+        reset({ name: '', creditorId: '', serasaWalletExternalId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, smsTemplate: 'Confira os detalhes pelo link seguro.', discountBands: [] });
       }
     }
   }, [open, wallet, reset]);
@@ -155,6 +157,13 @@ export function WalletFormDialog({
                     </Field.ErrorText>
                   </Field.Root>
                   </SimpleGrid>
+
+                  <Field.Root invalid={!!errors.serasaWalletExternalId}>
+                    <Field.Label>ID da carteira no Serasa</Field.Label>
+                    <Input placeholder="Padrão da API: PRE_CALCULADA" {...register('serasaWalletExternalId')} />
+                    <Field.HelperText>Opcional. Sem um ID, o envio usa a carteira padrão de securitizadora da API Serasa: PRE_CALCULADA.</Field.HelperText>
+                    <Field.ErrorText>{errors.serasaWalletExternalId?.message}</Field.ErrorText>
+                  </Field.Root>
 
                   <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap="4">
                     <Field.Root invalid={!!errors.cobcomDiscountPercent}>
