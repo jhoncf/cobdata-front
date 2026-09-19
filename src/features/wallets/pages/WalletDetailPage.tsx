@@ -710,6 +710,20 @@ export default function WalletDetailPage() {
                           <Menu.Item value="sms-filtered" onClick={() => { setLigueLeadContractId(undefined); setFilteredSmsDispatch(true); setShowLigueLead(true); }}>
                             Enviar SMS para contratos filtrados
                           </Menu.Item>
+                          <Menu.Item
+                            value="send-filtered-serasa"
+                            disabled={serasaStatusFilter === 'SYNCED'}
+                            onClick={() => handleBulkAction(OperationAction.CREATE_OR_UPDATE)}
+                          >
+                            <LuRefreshCw /> Enviar contratos filtrados ao Serasa
+                          </Menu.Item>
+                          <Menu.Item
+                            value="remove-filtered-serasa"
+                            color="fg.error"
+                            onClick={() => handleBulkAction(OperationAction.REMOVE)}
+                          >
+                            <LuUnlink /> Remover contratos filtrados do Serasa
+                          </Menu.Item>
                         </Menu.Content>
                       </Menu.Positioner>
                     </Portal>
@@ -925,36 +939,6 @@ export default function WalletDetailPage() {
                         onChange={setContractsPage}
                       />
                     )}
-                  </Flex>
-                )}
-                {canEdit && (
-                  <Flex justify="flex-end">
-                    <Menu.Root>
-                      <Menu.Trigger asChild>
-                        <Button colorPalette="blue"><LuEllipsis /> Ações</Button>
-                      </Menu.Trigger>
-                      <Portal>
-                        <Menu.Positioner>
-                          <Menu.Content>
-                            <Menu.Item
-                              value="send-filtered-serasa"
-                              disabled={(contractsData?.meta.total ?? 0) === 0 || serasaStatusFilter === 'SYNCED'}
-                              onClick={() => handleBulkAction(OperationAction.CREATE_OR_UPDATE)}
-                            >
-                              <LuRefreshCw /> Enviar contratos filtrados ao Serasa
-                            </Menu.Item>
-                            <Menu.Item
-                              value="remove-filtered-serasa"
-                              color="fg.error"
-                              disabled={(contractsData?.meta.total ?? 0) === 0}
-                              onClick={() => handleBulkAction(OperationAction.REMOVE)}
-                            >
-                              <LuUnlink /> Remover contratos filtrados do Serasa
-                            </Menu.Item>
-                          </Menu.Content>
-                        </Menu.Positioner>
-                      </Portal>
-                    </Menu.Root>
                   </Flex>
                 )}
               </Stack>
