@@ -238,7 +238,7 @@ export interface Contract {
   updatedAt: string;
 }
 
-export type InteractionChannel = 'AI_VOICE_CALL' | 'SMS' | 'WHATSAPP' | 'EMAIL' | 'SERASA';
+export type InteractionChannel = 'AI_VOICE_CALL' | 'SMS' | 'WHATSAPP' | 'EMAIL' | 'SERASA' | 'PAYMENT';
 export type InteractionStatus =
   | 'QUEUED'
   | 'SENT'
