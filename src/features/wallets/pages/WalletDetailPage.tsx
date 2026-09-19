@@ -21,7 +21,7 @@ import {
   Tooltip,
   Tabs,
 } from '@chakra-ui/react';
-import { LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw, LuUnlink, LuEllipsis, LuCalculator, LuInfo, LuDownload } from 'react-icons/lu';
+import { LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuMail, LuEye, LuRefreshCw, LuUnlink, LuEllipsis, LuCalculator, LuInfo, LuDownload } from 'react-icons/lu';
 import { CartesianGrid, LabelList, Legend, Line, LineChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState, ConfirmDialog } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
@@ -152,6 +152,7 @@ export default function WalletDetailPage() {
   const [showEditForm, setShowEditForm] = useState(false);
   const [showLigueLead, setShowLigueLead] = useState(false);
   const [ligueLeadContractId, setLigueLeadContractId] = useState<string>();
+  const [communicationTab, setCommunicationTab] = useState<'agent' | 'sms' | 'calls' | 'email'>('agent');
   const [filteredSmsDispatch, setFilteredSmsDispatch] = useState(false);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -395,7 +396,7 @@ export default function WalletDetailPage() {
                 <Menu.Content>
                   <Menu.Item value="new-contract" onClick={() => setShowContractForm(true)}><LuPlus /> Novo contrato</Menu.Item>
                   <Menu.Item value="import" asChild><RouterLink to={`/imports/new?walletId=${id}`}><LuUpload /> Importar contratos</RouterLink></Menu.Item>
-                  {canEdit && <Menu.Item value="communications" onClick={() => { setLigueLeadContractId(undefined); setShowLigueLead(true); }}><LuRadio /> Comunicações</Menu.Item>}
+                  {canEdit && <Menu.Item value="communications" onClick={() => { setCommunicationTab('agent'); setLigueLeadContractId(undefined); setShowLigueLead(true); }}><LuRadio /> Comunicações</Menu.Item>}
                   {canEdit && <Menu.Separator />}
                   {canEdit && <Menu.Item value="recalculate-offers" onClick={() => recalculateOffersMutation.mutate(id!)}><LuCalculator /> Recalcular ofertas</Menu.Item>}
                 </Menu.Content>
@@ -650,6 +651,9 @@ export default function WalletDetailPage() {
                           <Menu.Item value="sms-filtered" onClick={() => { setLigueLeadContractId(undefined); setFilteredSmsDispatch(true); setShowLigueLead(true); }}>
                             Enviar SMS para contratos filtrados
                           </Menu.Item>
+                          <Menu.Item value="email-filtered" onClick={() => { setCommunicationTab('email'); setLigueLeadContractId(undefined); setShowLigueLead(true); }}>
+                            <LuMail /> Enviar e-mail
+                          </Menu.Item>
                           <Menu.Item
                             value="send-filtered-serasa"
                             disabled={serasaStatusFilter === 'SYNCED'}
@@ -852,6 +856,7 @@ export default function WalletDetailPage() {
                                   disabled={!contract.debtorPhone || contract.status !== 'ACTIVE' || contract.paymentStatus === 'PAID'}
                                   onClick={() => {
                                     setLigueLeadContractId(contract.id);
+                                    setCommunicationTab('calls');
                                     setShowLigueLead(true);
                                   }}
                                 >
@@ -976,11 +981,12 @@ export default function WalletDetailPage() {
           setShowLigueLead(open);
           if (!open) setLigueLeadContractId(undefined);
           if (!open) setFilteredSmsDispatch(false);
+          if (!open) setCommunicationTab('agent');
         }}
         walletId={id!}
         contracts={contractsData?.data ?? []}
         initialContractId={ligueLeadContractId}
-        initialTab={filteredSmsDispatch ? 'sms' : ligueLeadContractId ? 'calls' : 'agent'}
+        initialTab={filteredSmsDispatch ? 'sms' : communicationTab}
         smsTemplate={wallet.smsTemplate}
         filteredSmsCount={contractsData?.meta.total ?? 0}
         filteredSmsFilters={filteredSmsDispatch ? {
