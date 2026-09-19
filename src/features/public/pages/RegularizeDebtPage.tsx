@@ -235,7 +235,7 @@ export default function RegularizeDebtPage() {
         </Box>
       </Box>
 
-      <Flex px={{ base: 3, sm: 4 }} py={{ base: 8, md: 20 }} justify="center">
+      <Flex px={{ base: 3, sm: 4 }} pt={{ base: 8, md: 20 }} pb={{ base: 28, md: 32 }} justify="center">
         <Stack w="full" maxW="2xl" gap="6">
           <Stack textAlign="center" align="center" gap="3">
             <Box bg="#e7f3ff" color="#0088ff" p="3" rounded="full"><LuShieldCheck size={28} /></Box>
@@ -292,9 +292,14 @@ export default function RegularizeDebtPage() {
           )}
         </Stack>
       </Flex>
-      <Box textAlign="center" pb="8"><Text fontSize="sm" color="gray.600">© {new Date().getFullYear()} CobCom. Todos os direitos reservados.</Text></Box>
+      <Box position="fixed" insetInline="0" bottom="0" zIndex="sticky" bg="white" borderTopWidth="1px" borderColor="blackAlpha.100" px="4" py="3" textAlign="center" shadow="sm">
+        <Text fontSize={{ base: 'xs', sm: 'sm' }} color="gray.600">
+          COBCOM SOLUCOES LTDA · CNPJ 50.703.286/0001-40 ·{' '}
+          <a href="https://bm.cobiconvc.com.br/" target="_blank" rel="noreferrer" style={{ color: '#006dc9', fontWeight: 600 }}>bm.cobiconvc.com.br</a>
+        </Text>
+      </Box>
 
-      <Box position="fixed" right={{ base: 3, sm: 5 }} bottom={{ base: 3, sm: 5 }} zIndex="overlay">
+      <Box position="fixed" right={{ base: 3, sm: 5 }} bottom={{ base: 14, sm: 16 }} zIndex="overlay">
         <Button
           rounded="full"
           size="lg"
