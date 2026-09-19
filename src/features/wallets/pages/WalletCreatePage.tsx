@@ -27,6 +27,7 @@ const walletSchema = z.object({
   offerFirstInstallmentDays: z.coerce.number().int().min(1).max(365),
   offerMinInstallmentValue: z.coerce.number().min(0.01),
   offerMaxInstallments: z.coerce.number().int().min(1).max(999),
+  defaultDebtType: z.string().min(1),
 });
 
 type WalletFormValues = z.infer<typeof walletSchema>;
@@ -43,14 +44,14 @@ export default function WalletCreatePage() {
     formState: { errors, isSubmitting },
   } = useForm<WalletFormValues>({
     resolver: zodResolver(walletSchema),
-    defaultValues: { name: '', creditorId: '', serasaWalletExternalId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1 },
+    defaultValues: { name: '', creditorId: '', serasaWalletExternalId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, defaultDebtType: 'OTHER' },
   });
 
   async function onSubmit(data: WalletFormValues) {
     try {
       await createMutation.mutateAsync({
         creditorId: data.creditorId,
-        data: { name: data.name, serasaWalletExternalId: data.serasaWalletExternalId, cobcomDiscountPercent: data.cobcomDiscountPercent, offerFirstInstallmentDays: data.offerFirstInstallmentDays, offerMinInstallmentValue: data.offerMinInstallmentValue, offerMaxInstallments: data.offerMaxInstallments },
+        data: { name: data.name, serasaWalletExternalId: data.serasaWalletExternalId, cobcomDiscountPercent: data.cobcomDiscountPercent, offerFirstInstallmentDays: data.offerFirstInstallmentDays, offerMinInstallmentValue: data.offerMinInstallmentValue, offerMaxInstallments: data.offerMaxInstallments, defaultDebtType: data.defaultDebtType },
       });
       toaster.create({
         type: 'success',
@@ -128,6 +129,24 @@ export default function WalletCreatePage() {
               <Field.Root invalid={!!errors.offerMaxInstallments} maxW="400px">
                 <Field.Label>Máximo de parcelas</Field.Label>
                 <Input type="number" min="1" max="999" {...register('offerMaxInstallments')} />
+              </Field.Root>
+              <Field.Root invalid={!!errors.defaultDebtType} maxW="400px">
+                <Field.Label>Tipo padrão da dívida</Field.Label>
+                <NativeSelect.Root>
+                  <NativeSelect.Field {...register('defaultDebtType')}>
+                    <option value="OTHER">Outro</option>
+                    <option value="COMMERCIAL">Comercial</option>
+                    <option value="BANKING">Bancária</option>
+                    <option value="SERVICES">Serviços</option>
+                    <option value="UTILITIES">Utilidades</option>
+                    <option value="TELECOM">Telecomunicações</option>
+                    <option value="EDUCATION">Educação</option>
+                    <option value="HEALTH">Saúde</option>
+                    <option value="CONDOMINIAL">Condominial</option>
+                  </NativeSelect.Field>
+                  <NativeSelect.Indicator />
+                </NativeSelect.Root>
+                <Field.HelperText>Aplicado quando o arquivo não tiver a coluna de tipo.</Field.HelperText>
               </Field.Root>
             </Card.Body>
           </Card.Root>

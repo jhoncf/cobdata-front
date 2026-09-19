@@ -23,7 +23,7 @@ import { toaster } from '@/components/ui/toaster';
 const IMPORT_FIELDS = [
   { value: 'debtorDocument', label: 'CPF/CNPJ do devedor', required: true },
   { value: 'contractNumber', label: 'Número do contrato', required: true },
-  { value: 'debtType', label: 'Tipo de dívida', required: true },
+  { value: 'debtType', label: 'Tipo de dívida (opcional — usa o padrão da carteira)', required: false },
   { value: 'occurrenceDate', label: 'Data de ocorrência/contratação', required: true },
   { value: 'originalValue', label: 'Valor da dívida', required: true },
   { value: 'updatedValue', label: 'Valor atualizado', required: false },

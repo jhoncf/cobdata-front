@@ -28,6 +28,7 @@ const walletSchema = z.object({
   offerFirstInstallmentDays: z.coerce.number().int().min(1).max(365),
   offerMinInstallmentValue: z.coerce.number().min(0.01),
   offerMaxInstallments: z.coerce.number().int().min(1).max(999),
+  defaultDebtType: z.string().min(1),
   smsTemplate: z.string().max(1400, 'Máximo 1.400 caracteres'),
   discountBands: z.array(z.object({
     minAgingDays: z.coerce.number().int().min(0),
@@ -43,7 +44,7 @@ interface WalletFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   wallet?: Wallet | null;
-  onSubmit: (data: { name: string; creditorId: string; serasaWalletExternalId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number; smsTemplate: string; discountBands?: WalletFormValues['discountBands'] }) => void;
+  onSubmit: (data: { name: string; creditorId: string; serasaWalletExternalId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number; defaultDebtType: string; smsTemplate: string; discountBands?: WalletFormValues['discountBands'] }) => void;
   loading?: boolean;
 }
 
@@ -67,7 +68,7 @@ export function WalletFormDialog({
     formState: { errors },
   } = useForm<WalletFormValues>({
     resolver: zodResolver(walletSchema),
-    defaultValues: { name: '', creditorId: '', serasaWalletExternalId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, smsTemplate: 'Confira os detalhes pelo link seguro.', discountBands: [] },
+    defaultValues: { name: '', creditorId: '', serasaWalletExternalId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, defaultDebtType: 'OTHER', smsTemplate: 'Confira os detalhes pelo link seguro.', discountBands: [] },
   });
   const { fields } = useFieldArray({ control, name: 'discountBands' });
 
@@ -82,6 +83,7 @@ export function WalletFormDialog({
           offerFirstInstallmentDays: wallet.offerFirstInstallmentDays ?? 5,
           offerMinInstallmentValue: wallet.offerMinInstallmentValue ?? 0.01,
           offerMaxInstallments: wallet.offerMaxInstallments ?? 1,
+          defaultDebtType: wallet.defaultDebtType ?? 'OTHER',
           smsTemplate: wallet.smsTemplate ?? 'Confira os detalhes pelo link seguro.',
           discountBands: (wallet.creditor?.discountBands ?? []).map((ceiling) => {
             const strategy = wallet.discountBands?.find((band) =>
@@ -96,7 +98,7 @@ export function WalletFormDialog({
           }),
         });
       } else {
-        reset({ name: '', creditorId: '', serasaWalletExternalId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, smsTemplate: 'Confira os detalhes pelo link seguro.', discountBands: [] });
+        reset({ name: '', creditorId: '', serasaWalletExternalId: '', cobcomDiscountPercent: 0, offerFirstInstallmentDays: 5, offerMinInstallmentValue: 0.01, offerMaxInstallments: 1, defaultDebtType: 'OTHER', smsTemplate: 'Confira os detalhes pelo link seguro.', discountBands: [] });
       }
     }
   }, [open, wallet, reset]);
@@ -203,6 +205,24 @@ export function WalletFormDialog({
                       <Input type="number" min="1" max="999" {...register('offerMaxInstallments')} />
                       <Field.HelperText>Padrão: 1 parcela.</Field.HelperText>
                       <Field.ErrorText>{errors.offerMaxInstallments?.message}</Field.ErrorText>
+                    </Field.Root>
+                    <Field.Root invalid={!!errors.defaultDebtType}>
+                      <Field.Label>Tipo padrão da dívida</Field.Label>
+                      <NativeSelect.Root>
+                        <NativeSelect.Field {...register('defaultDebtType')}>
+                          <option value="OTHER">Outro</option>
+                          <option value="COMMERCIAL">Comercial</option>
+                          <option value="BANKING">Bancária</option>
+                          <option value="SERVICES">Serviços</option>
+                          <option value="UTILITIES">Utilidades</option>
+                          <option value="TELECOM">Telecomunicações</option>
+                          <option value="EDUCATION">Educação</option>
+                          <option value="HEALTH">Saúde</option>
+                          <option value="CONDOMINIAL">Condominial</option>
+                        </NativeSelect.Field>
+                        <NativeSelect.Indicator />
+                      </NativeSelect.Root>
+                      <Field.HelperText>Usado quando a planilha não informa o tipo.</Field.HelperText>
                     </Field.Root>
                   </SimpleGrid>
                   {isEdit && (

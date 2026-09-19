@@ -105,15 +105,15 @@ export default function WalletsListPage() {
     updateParams({ page: newPage > 1 ? String(newPage) : undefined });
   };
 
-  const handleFormSubmit = (formData: { name: string; creditorId: string; serasaWalletExternalId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number; smsTemplate: string }) => {
+  const handleFormSubmit = (formData: { name: string; creditorId: string; serasaWalletExternalId: string; cobcomDiscountPercent: number; offerFirstInstallmentDays: number; offerMinInstallmentValue: number; offerMaxInstallments: number; defaultDebtType: string; smsTemplate: string }) => {
     if (editingWallet) {
       updateMutation.mutate(
-        { id: editingWallet.id, data: { name: formData.name, serasaWalletExternalId: formData.serasaWalletExternalId, cobcomDiscountPercent: formData.cobcomDiscountPercent, offerFirstInstallmentDays: formData.offerFirstInstallmentDays, offerMinInstallmentValue: formData.offerMinInstallmentValue, offerMaxInstallments: formData.offerMaxInstallments, smsTemplate: formData.smsTemplate } },
+        { id: editingWallet.id, data: { name: formData.name, serasaWalletExternalId: formData.serasaWalletExternalId, cobcomDiscountPercent: formData.cobcomDiscountPercent, offerFirstInstallmentDays: formData.offerFirstInstallmentDays, offerMinInstallmentValue: formData.offerMinInstallmentValue, offerMaxInstallments: formData.offerMaxInstallments, defaultDebtType: formData.defaultDebtType, smsTemplate: formData.smsTemplate } },
         { onSuccess: () => updateParams({ action: undefined, id: undefined }) },
       );
     } else {
       createMutation.mutate(
-        { creditorId: formData.creditorId, data: { name: formData.name, serasaWalletExternalId: formData.serasaWalletExternalId, cobcomDiscountPercent: formData.cobcomDiscountPercent, offerFirstInstallmentDays: formData.offerFirstInstallmentDays, offerMinInstallmentValue: formData.offerMinInstallmentValue, offerMaxInstallments: formData.offerMaxInstallments, smsTemplate: formData.smsTemplate } },
+        { creditorId: formData.creditorId, data: { name: formData.name, serasaWalletExternalId: formData.serasaWalletExternalId, cobcomDiscountPercent: formData.cobcomDiscountPercent, offerFirstInstallmentDays: formData.offerFirstInstallmentDays, offerMinInstallmentValue: formData.offerMinInstallmentValue, offerMaxInstallments: formData.offerMaxInstallments, defaultDebtType: formData.defaultDebtType, smsTemplate: formData.smsTemplate } },
         { onSuccess: () => updateParams({ action: undefined, id: undefined }) },
       );
     }
