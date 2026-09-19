@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Flex, HStack, IconButton, Text, Badge, Portal, Menu, Separator } from '@chakra-ui/react';
+import { Box, Flex, HStack, IconButton, Text, Badge, Portal, Menu, Separator, Image } from '@chakra-ui/react';
 import { LuMenu, LuMoon, LuSun, LuLogOut, LuUser, LuKey, LuPanelLeftClose, LuPanelLeftOpen } from 'react-icons/lu';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores/authStore';
@@ -90,18 +90,8 @@ export function Header({ onMenuClick, sidebarCollapsed = false, onSidebarToggle 
           {sidebarCollapsed ? <LuPanelLeftOpen /> : <LuPanelLeftClose />}
         </IconButton>
         <Flex align="center" gap="2">
-          <Box
-            w="7"
-            h="7"
-            rounded="lg"
-            bg="brand.solid"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Text fontSize="xs" fontWeight="bold" color="white">
-              CC
-            </Text>
+          <Box w="7" h="7" rounded="lg" bg="white" overflow="hidden" flexShrink="0">
+            <Image src="/cobcom-logo.png" alt="CobCom" w="full" h="full" objectFit="contain" />
           </Box>
           <Text fontWeight="bold" fontSize="md" color="fg" display={{ base: 'none', sm: 'block' }} whiteSpace="nowrap">
             CobCom - CRM
