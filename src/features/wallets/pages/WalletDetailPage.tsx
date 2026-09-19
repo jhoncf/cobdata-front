@@ -178,6 +178,11 @@ export default function WalletDetailPage() {
     ...(offerValue ? { offerValueOperator, offerValue: Number(offerValue) } : {}),
     ...(aging ? { agingOperator, aging: Number(aging) } : {}),
   }), [paymentStatusFilter, serasaStatusFilter, installmentOnly, updatedValueOperator, updatedValue, offerValueOperator, offerValue, agingOperator, aging]);
+  const filteredSerasaOperationFilters = useMemo<OperationContractFilters>(() => ({
+    ...operationFilters,
+    contractStatus: contractStatusFilter,
+    ...(contractSearch.trim() ? { search: contractSearch.trim() } : {}),
+  }), [operationFilters, contractStatusFilter, contractSearch]);
 
   const { data: wallet, isLoading, refetch: refetchWallet } = useWalletDetailQuery(id ?? '');
   const { data: contractsData, isLoading: contractsLoading, isFetching: contractsRefreshing, refetch: refetchContracts } = useContractsQuery({
@@ -200,7 +205,7 @@ export default function WalletDetailPage() {
   const { data: bulkPreview, isLoading: bulkPreviewLoading, isError: bulkPreviewError } = useOperationPreviewQuery(
     id,
     bulkAction ?? undefined,
-    operationFilters,
+    filteredSerasaOperationFilters,
   );
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
   const removeFromSerasaMutation = useRemoveContractFromSerasaMutation();
@@ -392,7 +397,6 @@ export default function WalletDetailPage() {
                   {canEdit && <Menu.Item value="communications" onClick={() => { setLigueLeadContractId(undefined); setShowLigueLead(true); }}><LuRadio /> Comunicações</Menu.Item>}
                   {canEdit && <Menu.Separator />}
                   {canEdit && <Menu.Item value="recalculate-offers" onClick={() => recalculateOffersMutation.mutate(id!)}><LuCalculator /> Recalcular ofertas</Menu.Item>}
-                  {canEdit && <Menu.Item value="sync-serasa" onClick={() => handleBulkAction(OperationAction.CREATE_OR_UPDATE)}><LuRefreshCw /> Enviar em massa ao Serasa</Menu.Item>}
                   {canEdit && <Menu.Item value="remove-serasa" color="fg.error" onClick={() => handleBulkAction(OperationAction.REMOVE)}><LuUnlink /> Remover em massa do Serasa</Menu.Item>}
                 </Menu.Content>
               </Menu.Positioner>
@@ -924,6 +928,17 @@ export default function WalletDetailPage() {
                     )}
                   </Flex>
                 )}
+                {canEdit && (
+                  <Flex justify="flex-end">
+                    <Button
+                      colorPalette="blue"
+                      onClick={() => handleBulkAction(OperationAction.CREATE_OR_UPDATE)}
+                      disabled={(contractsData?.meta.total ?? 0) === 0 || serasaStatusFilter === 'SYNCED'}
+                    >
+                      <LuRefreshCw /> Enviar contratos filtrados ao Serasa
+                    </Button>
+                  </Flex>
+                )}
               </Stack>
             )}
           </Card.Body>
@@ -994,7 +1009,7 @@ export default function WalletDetailPage() {
           createOperationMutation.mutate(
             // The API receives operation filters at the top level. A nested
             // `filters` object is rejected by the backend DTO validation.
-            { walletId: id, action: bulkAction, ...operationFilters },
+            { walletId: id, action: bulkAction, ...filteredSerasaOperationFilters },
             { onSuccess: () => setBulkAction(null) },
           );
         }}

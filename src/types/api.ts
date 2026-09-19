@@ -227,6 +227,8 @@ export interface CreateOperationDto {
 }
 
 export interface OperationContractFilters {
+  contractStatus?: ContractStatus;
+  search?: string;
   paymentStatus?: PaymentStatus;
   serasaStatus?: SerasaStatus;
   installmentOnly?: boolean;
