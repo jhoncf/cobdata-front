@@ -123,6 +123,12 @@ export default function ImportDetailPage() {
         </Box>
       </SimpleGrid>
 
+      <Box borderWidth="1px" borderColor="yellow.muted" bg="yellow.subtle" rounded="md" p="3">
+        <Text fontSize="sm">
+          Datas de nascimento são opcionais: quando estiverem inválidas, o CRM ignora apenas esse dado e mantém o contrato apto para importação.
+        </Text>
+      </Box>
+
       {/* Errors table */}
       {errorsData && errorsData.data.length > 0 && (
         <Box>
