@@ -7,17 +7,30 @@ import { AppBreadcrumb } from './AppBreadcrumb';
 
 export function AppShell() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.sessionStorage.getItem('sidebar-collapsed') === 'true');
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed((current) => {
+      const next = !current;
+      window.sessionStorage.setItem('sidebar-collapsed', String(next));
+      return next;
+    });
+  };
 
   return (
     <Flex h="dvh" direction="column">
       {/* Header */}
-      <Header onMenuClick={() => setDrawerOpen(true)} />
+      <Header
+        onMenuClick={() => setDrawerOpen(true)}
+        sidebarCollapsed={sidebarCollapsed}
+        onSidebarToggle={toggleSidebar}
+      />
 
       <Flex flex="1" overflow="hidden">
         {/* Desktop Sidebar */}
         <Box
           as="nav"
-          w="60"
+          w={sidebarCollapsed ? '16' : '60'}
           borderRightWidth="1px"
           borderColor="sidebar.border"
           overflowY="auto"
@@ -25,7 +38,7 @@ export function AppShell() {
           bg="sidebar.bg"
           flexShrink={0}
         >
-          <Sidebar />
+          <Sidebar collapsed={sidebarCollapsed} />
         </Box>
 
         {/* Mobile Drawer */}

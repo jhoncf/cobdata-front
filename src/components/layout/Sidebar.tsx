@@ -47,9 +47,10 @@ const navItems: NavItem[] = [
 
 interface SidebarProps {
   onClose?: () => void;
+  collapsed?: boolean;
 }
 
-export function Sidebar({ onClose }: SidebarProps) {
+export function Sidebar({ onClose, collapsed = false }: SidebarProps) {
   const { role, user } = useAuth();
   const location = useLocation();
 
@@ -69,7 +70,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   }, {});
 
   return (
-    <VStack gap="2" align="stretch" py="4" px="3" h="full">
+    <VStack gap="2" align="stretch" py="4" px={collapsed ? '2' : '3'} h="full">
       {Object.entries(sections).map(([sectionName, items]) => (
         <Box key={sectionName}>
           <Text
@@ -81,6 +82,7 @@ export function Sidebar({ onClose }: SidebarProps) {
             px="3"
             mb="1.5"
             mt="2"
+            display={collapsed ? 'none' : 'block'}
           >
             {sectionName}
           </Text>
@@ -104,7 +106,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                 >
                   <Flex
                   align="center"
-                  gap="3"
+                  gap={collapsed ? '0' : '3'}
                   px="3"
                   py="2"
                   rounded="lg"
@@ -123,13 +125,16 @@ export function Sidebar({ onClose }: SidebarProps) {
                   aria-current={isActive ? 'page' : undefined}
                   w="full"
                   textAlign="start"
+                  justifyContent={collapsed ? 'center' : 'flex-start'}
+                  aria-label={collapsed ? item.label : undefined}
+                  title={collapsed ? item.label : undefined}
                 >
                   <Box
                     as={IconComp}
                     boxSize="4.5"
                     opacity={isActive ? 1 : 0.7}
                   />
-                  <Text>{item.label}</Text>
+                  {!collapsed && <Text>{item.label}</Text>}
                 </Flex>
                 </RouterLink>
               );

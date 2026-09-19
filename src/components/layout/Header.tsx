@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Box, Flex, HStack, IconButton, Text, Badge, Portal, Menu, Separator } from '@chakra-ui/react';
-import { LuMenu, LuMoon, LuSun, LuLogOut, LuUser, LuKey } from 'react-icons/lu';
+import { LuMenu, LuMoon, LuSun, LuLogOut, LuUser, LuKey, LuPanelLeftClose, LuPanelLeftOpen } from 'react-icons/lu';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -9,9 +9,11 @@ import { GlobalSearchBar } from '@/features/search/components';
 
 interface HeaderProps {
   onMenuClick?: () => void;
+  sidebarCollapsed?: boolean;
+  onSidebarToggle?: () => void;
 }
 
-export function Header({ onMenuClick }: HeaderProps) {
+export function Header({ onMenuClick, sidebarCollapsed = false, onSidebarToggle }: HeaderProps) {
   const { userName, role, creditorId } = useAuth();
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
@@ -76,6 +78,16 @@ export function Header({ onMenuClick }: HeaderProps) {
           onClick={onMenuClick}
         >
           <LuMenu />
+        </IconButton>
+        <IconButton
+          aria-label={sidebarCollapsed ? 'Expandir menu lateral' : 'Retrair menu lateral'}
+          title={sidebarCollapsed ? 'Expandir menu lateral' : 'Retrair menu lateral'}
+          variant="ghost"
+          size="sm"
+          display={{ base: 'none', lg: 'flex' }}
+          onClick={onSidebarToggle}
+        >
+          {sidebarCollapsed ? <LuPanelLeftOpen /> : <LuPanelLeftClose />}
         </IconButton>
         <Flex align="center" gap="2">
           <Box
