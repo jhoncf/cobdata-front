@@ -104,7 +104,7 @@ export default function ImportDetailPage() {
         </Box>
       </SimpleGrid>
 
-      <SimpleGrid columns={{ base: 2, md: 4 }} gap="4">
+      <SimpleGrid columns={{ base: 2, md: 5 }} gap="4">
         <Box borderWidth="1px" rounded="md" p="3">
           <Text fontSize="xs" color="fg.muted">Válidas</Text>
           <Text fontWeight="bold" color="green.fg">{batch.validLines}</Text>
@@ -120,6 +120,11 @@ export default function ImportDetailPage() {
         <Box borderWidth="1px" rounded="md" p="3">
           <Text fontSize="xs" color="fg.muted">Atualizadas</Text>
           <Text fontWeight="bold">{batch.updatedCount}</Text>
+        </Box>
+        <Box borderWidth="1px" rounded="md" p="3">
+          <Text fontSize="xs" color="fg.muted">Ignoradas</Text>
+          <Text fontWeight="bold">{batch.ignoredCount}</Text>
+          <Text fontSize="xs" color="fg.muted">Duplicadas ou sem alteração</Text>
         </Box>
       </SimpleGrid>
 
