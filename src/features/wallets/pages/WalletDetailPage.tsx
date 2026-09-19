@@ -19,6 +19,7 @@ import {
   Input,
   NativeSelect,
   Tooltip,
+  Tabs,
 } from '@chakra-ui/react';
 import { LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuEye, LuRefreshCw, LuUnlink, LuEllipsis, LuCalculator, LuInfo, LuDownload } from 'react-icons/lu';
 import { CartesianGrid, LabelList, Legend, Line, LineChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
@@ -404,7 +405,15 @@ export default function WalletDetailPage() {
         </HStack>
       </PageHeader>
 
-      <Stack gap="6">
+      <Tabs.Root defaultValue="contracts" lazyMount>
+        <Tabs.List mb="4" maxW="full" overflowX="auto" overflowY="hidden" whiteSpace="nowrap">
+          <Tabs.Trigger value="contracts">Visão geral e contratos</Tabs.Trigger>
+          <Tabs.Trigger value="offers">Configurações de ofertas</Tabs.Trigger>
+          <Tabs.Indicator />
+        </Tabs.List>
+
+        <Tabs.Content value="contracts">
+          <Stack gap="6">
         {/* Informações Gerais */}
         <Card.Root>
           <Card.Header>
@@ -431,75 +440,6 @@ export default function WalletDetailPage() {
                 <Text>{formatDate(wallet.createdAt)}</Text>
               </Box>
             </SimpleGrid>
-          </Card.Body>
-        </Card.Root>
-
-        <Card.Root>
-          <Card.Header>
-            <Card.Title>Configuração de ofertas</Card.Title>
-          </Card.Header>
-          <Card.Body>
-            <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} gap="4">
-              <Box><Text fontSize="sm" color="fg.muted">Desconto CobCom</Text><Text fontWeight="semibold">{wallet.cobcomDiscountPercent ?? 0}%</Text></Box>
-              <Box><Text fontSize="sm" color="fg.muted">Primeiro pagamento</Text><Text fontWeight="semibold">{wallet.offerFirstInstallmentDays ?? 5} dias</Text></Box>
-              <Box><Text fontSize="sm" color="fg.muted">Parcela mínima</Text><Text fontWeight="semibold">{formatCurrency(wallet.offerMinInstallmentValue ?? 0.01)}</Text></Box>
-              <Box><Text fontSize="sm" color="fg.muted">Máximo de parcelas</Text><Text fontWeight="semibold">{wallet.offerMaxInstallments ?? 1}</Text></Box>
-            </SimpleGrid>
-          </Card.Body>
-        </Card.Root>
-
-        <Card.Root>
-          <Card.Header>
-            <Card.Title>Faixas de desconto da carteira</Card.Title>
-            <Text fontSize="sm" color="fg.muted">
-              A carteira define a estratégia; os limites comerciais do credor são o teto de cada faixa.
-            </Text>
-          </Card.Header>
-          <Card.Body>
-            {(wallet.creditor?.discountBands?.length ?? 0) > 0 ? (
-              <Table.ScrollArea maxW="full">
-              <Table.Root size="sm" variant="line" minW="560px">
-                <Table.Header>
-                  <Table.Row>
-                    <Table.ColumnHeader>
-                      <TableTooltipLabel label="Faixa de atraso" description="Idade da dívida em dias, calculada a partir da data de ocorrência. Define qual regra comercial será usada." />
-                    </Table.ColumnHeader>
-                    <Table.ColumnHeader>
-                      <TableTooltipLabel label="Estratégia à vista" description="Desconto que esta carteira oferece para pagamento à vista. O valor entre parênteses é o teto máximo autorizado pelo credor." />
-                    </Table.ColumnHeader>
-                    <Table.ColumnHeader>
-                      <TableTooltipLabel label="Estratégia parcelada" description="Desconto que esta carteira oferece em acordo parcelado. O valor entre parênteses é o teto máximo autorizado pelo credor." />
-                    </Table.ColumnHeader>
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {wallet.creditor?.discountBands?.map((ceiling) => {
-                    const strategy = wallet.discountBands?.find((band) =>
-                      band.minAgingDays === ceiling.minAgingDays && band.maxAgingDays === ceiling.maxAgingDays,
-                    );
-                    const range = ceiling.maxAgingDays == null
-                      ? `${ceiling.minAgingDays}+ dias`
-                      : `${ceiling.minAgingDays} a ${ceiling.maxAgingDays} dias`;
-                    return (
-                        <Table.Row key={`${ceiling.minAgingDays}-${ceiling.maxAgingDays ?? 'plus'}`}>
-                          <Table.Cell fontWeight="medium">{range}</Table.Cell>
-                        <Table.Cell>
-                          {strategy?.cashStrategyDiscountPercent ?? wallet.cobcomDiscountPercent ?? 0}%
-                          <Text as="span" color="fg.muted"> (teto: {ceiling.cashDiscountPercent}%)</Text>
-                        </Table.Cell>
-                        <Table.Cell>
-                          {strategy?.installmentStrategyDiscountPercent ?? wallet.cobcomDiscountPercent ?? 0}%
-                          <Text as="span" color="fg.muted"> (teto: {ceiling.installmentDiscountPercent}%)</Text>
-                        </Table.Cell>
-                      </Table.Row>
-                    );
-                  })}
-                </Table.Body>
-              </Table.Root>
-              </Table.ScrollArea>
-            ) : (
-              <Text color="fg.muted">Este credor ainda não possui faixas comerciais cadastradas. Configure-as no cadastro do credor para definir os limites da carteira.</Text>
-            )}
           </Card.Body>
         </Card.Root>
 
@@ -945,7 +885,82 @@ export default function WalletDetailPage() {
             )}
           </Card.Body>
         </Card.Root>
-      </Stack>
+          </Stack>
+        </Tabs.Content>
+
+        <Tabs.Content value="offers">
+          <Stack gap="6">
+            <Card.Root>
+              <Card.Header>
+                <Card.Title>Configuração de ofertas</Card.Title>
+              </Card.Header>
+              <Card.Body>
+                <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} gap="4">
+                  <Box><Text fontSize="sm" color="fg.muted">Desconto CobCom</Text><Text fontWeight="semibold">{wallet.cobcomDiscountPercent ?? 0}%</Text></Box>
+                  <Box><Text fontSize="sm" color="fg.muted">Primeiro pagamento</Text><Text fontWeight="semibold">{wallet.offerFirstInstallmentDays ?? 5} dias</Text></Box>
+                  <Box><Text fontSize="sm" color="fg.muted">Parcela mínima</Text><Text fontWeight="semibold">{formatCurrency(wallet.offerMinInstallmentValue ?? 0.01)}</Text></Box>
+                  <Box><Text fontSize="sm" color="fg.muted">Máximo de parcelas</Text><Text fontWeight="semibold">{wallet.offerMaxInstallments ?? 1}</Text></Box>
+                </SimpleGrid>
+              </Card.Body>
+            </Card.Root>
+
+            <Card.Root>
+              <Card.Header>
+                <Card.Title>Faixas de desconto da carteira</Card.Title>
+                <Text fontSize="sm" color="fg.muted">
+                  A carteira define a estratégia; os limites comerciais do credor são o teto de cada faixa.
+                </Text>
+              </Card.Header>
+              <Card.Body>
+                {(wallet.creditor?.discountBands?.length ?? 0) > 0 ? (
+                  <Table.ScrollArea maxW="full">
+                    <Table.Root size="sm" variant="line" minW="560px">
+                      <Table.Header>
+                        <Table.Row>
+                          <Table.ColumnHeader>
+                            <TableTooltipLabel label="Faixa de atraso" description="Idade da dívida em dias, calculada a partir da data de ocorrência. Define qual regra comercial será usada." />
+                          </Table.ColumnHeader>
+                          <Table.ColumnHeader>
+                            <TableTooltipLabel label="Estratégia à vista" description="Desconto que esta carteira oferece para pagamento à vista. O valor entre parênteses é o teto máximo autorizado pelo credor." />
+                          </Table.ColumnHeader>
+                          <Table.ColumnHeader>
+                            <TableTooltipLabel label="Estratégia parcelada" description="Desconto que esta carteira oferece em acordo parcelado. O valor entre parênteses é o teto máximo autorizado pelo credor." />
+                          </Table.ColumnHeader>
+                        </Table.Row>
+                      </Table.Header>
+                      <Table.Body>
+                        {wallet.creditor?.discountBands?.map((ceiling) => {
+                          const strategy = wallet.discountBands?.find((band) =>
+                            band.minAgingDays === ceiling.minAgingDays && band.maxAgingDays === ceiling.maxAgingDays,
+                          );
+                          const range = ceiling.maxAgingDays == null
+                            ? `${ceiling.minAgingDays}+ dias`
+                            : `${ceiling.minAgingDays} a ${ceiling.maxAgingDays} dias`;
+                          return (
+                            <Table.Row key={`${ceiling.minAgingDays}-${ceiling.maxAgingDays ?? 'plus'}`}>
+                              <Table.Cell fontWeight="medium">{range}</Table.Cell>
+                              <Table.Cell>
+                                {strategy?.cashStrategyDiscountPercent ?? wallet.cobcomDiscountPercent ?? 0}%
+                                <Text as="span" color="fg.muted"> (teto: {ceiling.cashDiscountPercent}%)</Text>
+                              </Table.Cell>
+                              <Table.Cell>
+                                {strategy?.installmentStrategyDiscountPercent ?? wallet.cobcomDiscountPercent ?? 0}%
+                                <Text as="span" color="fg.muted"> (teto: {ceiling.installmentDiscountPercent}%)</Text>
+                              </Table.Cell>
+                            </Table.Row>
+                          );
+                        })}
+                      </Table.Body>
+                    </Table.Root>
+                  </Table.ScrollArea>
+                ) : (
+                  <Text color="fg.muted">Este credor ainda não possui faixas comerciais cadastradas. Configure-as no cadastro do credor para definir os limites da carteira.</Text>
+                )}
+              </Card.Body>
+            </Card.Root>
+          </Stack>
+        </Tabs.Content>
+      </Tabs.Root>
 
       {/* Edit Wallet Dialog */}
       <WalletFormDialog
