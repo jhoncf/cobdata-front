@@ -1,12 +1,13 @@
 import { Breadcrumb, Link } from '@chakra-ui/react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { useContractQuery } from '@/features/contracts/api/useContractsQuery';
 
 interface Crumb {
   label: string;
   to?: string;
 }
 
-function resolveCrumbs(pathname: string): Crumb[] {
+function resolveCrumbs(pathname: string, wallet?: { id: string; name: string }): Crumb[] {
   const segments = pathname.split('/').filter(Boolean);
   const [section, identifier] = segments;
   const sectionLabel: Record<string, string> = {
@@ -27,6 +28,14 @@ function resolveCrumbs(pathname: string): Crumb[] {
   };
 
   if (!section || !sectionLabel[section]) return [{ label: 'Início', to: '/dashboard' }];
+  if (section === 'contracts' && identifier && identifier !== 'new' && wallet) {
+    return [
+      { label: 'Início', to: '/dashboard' },
+      { label: 'Carteiras', to: '/wallets' },
+      { label: wallet.name, to: `/wallets/${wallet.id}` },
+      { label: 'Detalhes do contrato' },
+    ];
+  }
   const crumbs: Crumb[] = [{ label: 'Início', to: '/dashboard' }];
   if (section !== 'dashboard') crumbs.push({ label: sectionLabel[section], to: `/${section}` });
   else crumbs.push({ label: 'Dashboard' });
@@ -46,7 +55,9 @@ function resolveCrumbs(pathname: string): Crumb[] {
 
 export function AppBreadcrumb() {
   const { pathname } = useLocation();
-  const crumbs = resolveCrumbs(pathname);
+  const [section, contractId] = pathname.split('/').filter(Boolean);
+  const { data: contract } = useContractQuery(section === 'contracts' && contractId && contractId !== 'new' ? contractId : '');
+  const crumbs = resolveCrumbs(pathname, contract?.wallet ? { id: contract.walletId, name: contract.wallet.name } : undefined);
 
   return (
     <Breadcrumb.Root size="sm" mb="4" colorPalette="blue">
