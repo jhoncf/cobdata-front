@@ -13,10 +13,12 @@ import {
   SimpleGrid,
   Flex,
   Tabs,
-  NativeSelect,
+  Dialog,
+  Portal,
+  Field,
 } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
-import { LuPencil, LuPlus, LuSave, LuTrash2, LuPlug, LuTestTube } from 'react-icons/lu';
+import { LuPencil, LuPlus, LuSave, LuTrash2, LuPlug, LuTestTube, LuDatabase, LuClock3 } from 'react-icons/lu';
 import {
   useCreditorCommercialRulesQuery,
   useCreditorIxcIntegrationQuery,
@@ -59,6 +61,11 @@ export default function CreditorDetailPage() {
   const [portalName, setPortalName] = useState('');
   const [ixcBaseUrl, setIxcBaseUrl] = useState('');
   const [ixcAccessToken, setIxcAccessToken] = useState('');
+  const [ixcDialogOpen, setIxcDialogOpen] = useState(false);
+  const [ixcMinOverdueDays, setIxcMinOverdueDays] = useState(0);
+  const [ixcMinDebtValue, setIxcMinDebtValue] = useState(0);
+  const [ixcEveryDays, setIxcEveryDays] = useState(1);
+  const [ixcSyncTime, setIxcSyncTime] = useState('07:00');
   const { data: portalUsers = [] } = useQuery({
     queryKey: ['creditors', id, 'portal-users'],
     queryFn: async () =>
@@ -84,7 +91,12 @@ export default function CreditorDetailPage() {
   }, [commercialRules]);
 
   useEffect(() => {
-    if (ixcIntegration) setIxcBaseUrl(ixcIntegration.baseUrl);
+    if (!ixcIntegration) return;
+    setIxcBaseUrl(ixcIntegration.baseUrl);
+    setIxcMinOverdueDays(ixcIntegration.syncMinOverdueDays ?? 0);
+    setIxcMinDebtValue(ixcIntegration.syncMinDebtValue ?? 0);
+    setIxcEveryDays(ixcIntegration.syncEveryDays ?? 1);
+    setIxcSyncTime(`${String(ixcIntegration.syncAtHour ?? 7).padStart(2, '0')}:${String(ixcIntegration.syncAtMinute ?? 0).padStart(2, '0')}`);
   }, [ixcIntegration]);
 
   if (isLoading) {
@@ -366,115 +378,52 @@ export default function CreditorDetailPage() {
         </Tabs.Content>
         {canEdit && (
           <Tabs.Content value="integrations">
-            <Card.Root>
-              <Card.Body gap="4">
-                <Stack gap="0">
-                  <Heading size="sm">Integração com sistema do credor</Heading>
-                  <Text fontSize="sm" color="fg.muted">
-                    Configure a conexão do credor. Nesta primeira etapa, o teste consulta somente um
-                    título no IXC e não altera nenhum dado.
-                  </Text>
-                </Stack>
-                <SimpleGrid columns={{ base: 1, md: 2 }} gap="4" maxW="760px">
-                  <Stack gap="1">
-                    <Text fontSize="sm" fontWeight="medium">
-                      Integração
-                    </Text>
-                    <NativeSelect.Root disabled>
-                      <NativeSelect.Field value="IXC">
-                        <option value="IXC">IXC Provedor</option>
-                      </NativeSelect.Field>
-                      <NativeSelect.Indicator />
-                    </NativeSelect.Root>
-                  </Stack>
-                  <Stack gap="1">
-                    <Text fontSize="sm" fontWeight="medium">
-                      URL do IXC
-                    </Text>
-                    <Input
-                      value={ixcBaseUrl}
-                      onChange={(event) => setIxcBaseUrl(event.target.value)}
-                      placeholder="https://ixc.exemplo.com.br"
-                    />
-                  </Stack>
-                  <Stack gap="1" gridColumn={{ md: 'span 2' }}>
-                    <Text fontSize="sm" fontWeight="medium">
-                      Token de acesso
-                    </Text>
-                    <Input
-                      type="password"
-                      value={ixcAccessToken}
-                      onChange={(event) => setIxcAccessToken(event.target.value)}
-                      placeholder={
-                        ixcIntegration?.hasAccessToken
-                          ? 'Token salvo — informe novamente apenas para alterá-lo'
-                          : 'usuário:token'
-                      }
-                      autoComplete="new-password"
-                    />
-                    <Text fontSize="xs" color="fg.muted">
-                      O token é criptografado antes de ser salvo e não volta a ser exibido no CRM.
-                    </Text>
-                  </Stack>
-                </SimpleGrid>
-                <HStack gap="2" wrap="wrap">
-                  <Button
-                    colorPalette="blue"
-                    loading={saveIxcIntegrationMutation.isPending}
-                    disabled={!ixcBaseUrl || !ixcAccessToken}
-                    onClick={() =>
-                      saveIxcIntegrationMutation.mutate(
-                        {
-                          creditorId: id!,
-                          data: { baseUrl: ixcBaseUrl, accessToken: ixcAccessToken },
-                        },
-                        { onSuccess: () => setIxcAccessToken('') },
-                      )
-                    }
-                  >
-                    <LuSave /> Salvar integração
-                  </Button>
-                  <Button
-                    variant="outline"
-                    loading={testIxcIntegrationMutation.isPending}
-                    disabled={!ixcBaseUrl || (!ixcAccessToken && !ixcIntegration?.hasAccessToken)}
-                    onClick={() =>
-                      testIxcIntegrationMutation.mutate({
-                        creditorId: id!,
-                        data: {
-                          baseUrl: ixcBaseUrl,
-                          ...(ixcAccessToken ? { accessToken: ixcAccessToken } : {}),
-                        },
-                      })
-                    }
-                  >
-                    <LuTestTube /> Testar conexão
-                  </Button>
-                </HStack>
-                {ixcIntegration && (
-                  <Stack gap="1" pt="1">
-                    <HStack>
-                      <LuPlug />
-                      <Text fontSize="sm" fontWeight="medium">
-                        IXC configurado
-                      </Text>
-                    </HStack>
-                    {ixcIntegration.lastTestedAt && (
-                      <Text
-                        fontSize="xs"
-                        color={ixcIntegration.lastTestSucceeded ? 'green.600' : 'red.600'}
-                      >
-                        {ixcIntegration.lastTestSucceeded
-                          ? 'Último teste aprovado'
-                          : 'Último teste falhou'}{' '}
-                        em {new Date(ixcIntegration.lastTestedAt).toLocaleString('pt-BR')}:{' '}
-                        {ixcIntegration.lastTestMessage}
-                      </Text>
-                    )}
-                  </Stack>
-                )}
-              </Card.Body>
-            </Card.Root>
+            <Stack gap="4">
+              <Stack gap="0">
+                <Heading size="sm">Integrações</Heading>
+                <Text fontSize="sm" color="fg.muted">Selecione uma integração para configurar credenciais e regras próprias.</Text>
+              </Stack>
+              <SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} gap="4">
+                <Card.Root cursor="pointer" borderColor={ixcIntegration ? 'blue.500' : undefined} _hover={{ borderColor: 'blue.500', shadow: 'md' }} transition="all 0.2s" onClick={() => setIxcDialogOpen(true)}>
+                  <Card.Body gap="3">
+                    <Flex justify="space-between" align="start">
+                      <Flex bg="blue.50" color="blue.600" rounded="lg" p="3"><LuDatabase size={24} /></Flex>
+                      <Badge colorPalette={ixcIntegration ? 'green' : 'gray'}>{ixcIntegration ? 'Configurada' : 'Disponível'}</Badge>
+                    </Flex>
+                    <Stack gap="0"><Heading size="sm">IXC ERP</Heading><Text fontSize="sm" color="fg.muted">Cobranças e dados de contato do sistema IXC.</Text></Stack>
+                    <Text fontSize="xs" color="blue.600" fontWeight="medium">Configurar integração →</Text>
+                  </Card.Body>
+                </Card.Root>
+              </SimpleGrid>
+            </Stack>
+
+            <Dialog.Root open={ixcDialogOpen} onOpenChange={(details) => setIxcDialogOpen(details.open)} size="lg">
+              <Portal>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                  <Dialog.Content>
+                    <Dialog.Header><Stack gap="0"><Dialog.Title>Configurar IXC ERP</Dialog.Title><Text fontSize="sm" color="fg.muted">As credenciais ficam protegidas e as regras serão usadas na sincronização do ERP.</Text></Stack></Dialog.Header>
+                    <Dialog.Body>
+                      <Stack gap="5">
+                        <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
+                          <Field.Root required><Field.Label>URL do IXC</Field.Label><Input value={ixcBaseUrl} onChange={(event) => setIxcBaseUrl(event.target.value)} placeholder="https://ixc.exemplo.com.br" /></Field.Root>
+                          <Field.Root required={!ixcIntegration?.hasAccessToken}><Field.Label>Token de acesso</Field.Label><Input type="password" value={ixcAccessToken} onChange={(event) => setIxcAccessToken(event.target.value)} placeholder={ixcIntegration?.hasAccessToken ? 'Token salvo — informe apenas para alterá-lo' : 'usuário:token'} autoComplete="new-password" /></Field.Root>
+                        </SimpleGrid>
+                        <Text fontSize="xs" color="fg.muted">O token é criptografado antes de ser salvo e não volta a ser exibido no CRM.</Text>
+                        <Stack gap="1"><HStack><LuClock3 /><Heading size="xs">Critérios de sincronização</Heading></HStack><Text fontSize="xs" color="fg.muted">Aplicáveis às cobranças buscadas do ERP. A importação automática só será ativada quando o destino da carteira for definido.</Text></Stack>
+                        <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
+                          <Field.Root><Field.Label>Em aberto há pelo menos (dias)</Field.Label><Input type="number" min="0" value={ixcMinOverdueDays} onChange={(event) => setIxcMinOverdueDays(Number(event.target.value))} /></Field.Root>
+                          <Field.Root><Field.Label>Valor mínimo (R$)</Field.Label><Input type="number" min="0" step="0.01" value={ixcMinDebtValue} onChange={(event) => setIxcMinDebtValue(Number(event.target.value))} /></Field.Root>
+                          <Field.Root><Field.Label>Atualizar a cada (dias)</Field.Label><Input type="number" min="1" max="365" value={ixcEveryDays} onChange={(event) => setIxcEveryDays(Number(event.target.value))} /></Field.Root>
+                          <Field.Root><Field.Label>Horário da atualização</Field.Label><Input type="time" value={ixcSyncTime} onChange={(event) => setIxcSyncTime(event.target.value)} /></Field.Root>
+                        </SimpleGrid>
+                      </Stack>
+                    </Dialog.Body>
+                    <Dialog.Footer><HStack><Button variant="outline" onClick={() => setIxcDialogOpen(false)}>Cancelar</Button><Button variant="outline" loading={testIxcIntegrationMutation.isPending} disabled={!ixcBaseUrl || (!ixcAccessToken && !ixcIntegration?.hasAccessToken)} onClick={() => testIxcIntegrationMutation.mutate({ creditorId: id!, data: { baseUrl: ixcBaseUrl, ...(ixcAccessToken ? { accessToken: ixcAccessToken } : {}) } })}><LuTestTube /> Testar conexão</Button><Button colorPalette="blue" loading={saveIxcIntegrationMutation.isPending} disabled={!ixcBaseUrl || (!ixcAccessToken && !ixcIntegration?.hasAccessToken)} onClick={() => { const [hours, minutes] = ixcSyncTime.split(':').map(Number); saveIxcIntegrationMutation.mutate({ creditorId: id!, data: { baseUrl: ixcBaseUrl, ...(ixcAccessToken ? { accessToken: ixcAccessToken } : {}), syncMinOverdueDays: ixcMinOverdueDays, syncMinDebtValue: ixcMinDebtValue, syncEveryDays: ixcEveryDays, syncAtHour: hours, syncAtMinute: minutes } }, { onSuccess: () => { setIxcAccessToken(''); setIxcDialogOpen(false); } }); }}><LuSave /> Salvar</Button></HStack></Dialog.Footer>
+                  </Dialog.Content>
+                </Dialog.Positioner>
+              </Portal>
+            </Dialog.Root>
           </Tabs.Content>
         )}
         {canManageUsers && (

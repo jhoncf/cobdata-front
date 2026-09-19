@@ -114,7 +114,12 @@ export interface UpdateCreditorDto {
 
 export interface UpsertIxcIntegrationDto {
   baseUrl: string;
-  accessToken: string;
+  accessToken?: string;
+  syncMinOverdueDays?: number;
+  syncMinDebtValue?: number;
+  syncEveryDays?: number;
+  syncAtHour?: number;
+  syncAtMinute?: number;
 }
 
 export interface TestIxcIntegrationDto {

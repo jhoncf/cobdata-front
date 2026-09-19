@@ -63,6 +63,11 @@ export interface CreditorIxcIntegration {
   type: 'IXC';
   baseUrl: string;
   hasAccessToken: boolean;
+  syncMinOverdueDays: number;
+  syncMinDebtValue: number;
+  syncEveryDays: number;
+  syncAtHour: number;
+  syncAtMinute: number;
   lastTestedAt: string | null;
   lastTestSucceeded: boolean | null;
   lastTestMessage: string | null;
