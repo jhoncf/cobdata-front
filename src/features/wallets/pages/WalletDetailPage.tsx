@@ -154,6 +154,7 @@ export default function WalletDetailPage() {
   const [ligueLeadContractId, setLigueLeadContractId] = useState<string>();
   const [communicationTab, setCommunicationTab] = useState<'agent' | 'sms' | 'calls' | 'email'>('agent');
   const [filteredSmsDispatch, setFilteredSmsDispatch] = useState(false);
+  const [filteredEmailDispatch, setFilteredEmailDispatch] = useState(false);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [bulkAction, setBulkAction] = useState<OperationAction | null>(null);
@@ -651,7 +652,7 @@ export default function WalletDetailPage() {
                           <Menu.Item value="sms-filtered" onClick={() => { setLigueLeadContractId(undefined); setFilteredSmsDispatch(true); setShowLigueLead(true); }}>
                             Enviar SMS para contratos filtrados
                           </Menu.Item>
-                          <Menu.Item value="email-filtered" onClick={() => { setCommunicationTab('email'); setLigueLeadContractId(undefined); setShowLigueLead(true); }}>
+                          <Menu.Item value="email-filtered" onClick={() => { setCommunicationTab('email'); setFilteredEmailDispatch(true); setLigueLeadContractId(undefined); setShowLigueLead(true); }}>
                             <LuMail /> Enviar e-mail
                           </Menu.Item>
                           <Menu.Item
@@ -981,6 +982,7 @@ export default function WalletDetailPage() {
           setShowLigueLead(open);
           if (!open) setLigueLeadContractId(undefined);
           if (!open) setFilteredSmsDispatch(false);
+          if (!open) setFilteredEmailDispatch(false);
           if (!open) setCommunicationTab('agent');
         }}
         walletId={id!}
@@ -990,6 +992,13 @@ export default function WalletDetailPage() {
         smsTemplate={wallet.smsTemplate}
         filteredSmsCount={contractsData?.meta.total ?? 0}
         filteredSmsFilters={filteredSmsDispatch ? {
+          ...operationFilters,
+          status: contractStatusFilter,
+          ...(contractSearch.trim() ? { search: contractSearch.trim() } : {}),
+          ...(serasaStatusFilter === 'SYNCED' ? { serasaStatus: 'SYNCED' } : {}),
+        } : undefined}
+        filteredEmailCount={contractsData?.meta.total ?? 0}
+        filteredEmailFilters={filteredEmailDispatch ? {
           ...operationFilters,
           status: contractStatusFilter,
           ...(contractSearch.trim() ? { search: contractSearch.trim() } : {}),
