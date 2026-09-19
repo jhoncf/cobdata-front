@@ -930,13 +930,24 @@ export default function WalletDetailPage() {
                 )}
                 {canEdit && (
                   <Flex justify="flex-end">
-                    <Button
-                      colorPalette="blue"
-                      onClick={() => handleBulkAction(OperationAction.CREATE_OR_UPDATE)}
-                      disabled={(contractsData?.meta.total ?? 0) === 0 || serasaStatusFilter === 'SYNCED'}
-                    >
-                      <LuRefreshCw /> Enviar contratos filtrados ao Serasa
-                    </Button>
+                    <Menu.Root>
+                      <Menu.Trigger asChild>
+                        <Button colorPalette="blue"><LuEllipsis /> Ações</Button>
+                      </Menu.Trigger>
+                      <Portal>
+                        <Menu.Positioner>
+                          <Menu.Content>
+                            <Menu.Item
+                              value="send-filtered-serasa"
+                              disabled={(contractsData?.meta.total ?? 0) === 0 || serasaStatusFilter === 'SYNCED'}
+                              onClick={() => handleBulkAction(OperationAction.CREATE_OR_UPDATE)}
+                            >
+                              <LuRefreshCw /> Enviar contratos filtrados ao Serasa
+                            </Menu.Item>
+                          </Menu.Content>
+                        </Menu.Positioner>
+                      </Portal>
+                    </Menu.Root>
                   </Flex>
                 )}
               </Stack>
