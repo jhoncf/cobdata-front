@@ -15,8 +15,9 @@ import {
   Menu,
   Portal,
   Accordion,
+  Tooltip,
 } from '@chakra-ui/react';
-import { LuEllipsis, LuMessageSquare, LuPencil, LuRefreshCw, LuUnlink, LuVolume2 } from 'react-icons/lu';
+import { LuEllipsis, LuInfo, LuMessageSquare, LuPencil, LuRefreshCw, LuUnlink, LuVolume2 } from 'react-icons/lu';
 import { useContractInteractionsQuery, useContractQuery } from '../api/useContractsQuery';
 import { useRemoveContractFromSerasaMutation, useSyncContractWithSerasaMutation, useUpdateContractMutation } from '../api/useContractMutations';
 import { ContractFormDialog } from '../components/ContractFormDialog';
@@ -40,6 +41,17 @@ function formatCurrency(value: number): string {
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('pt-BR');
+}
+
+function ValueTooltipLabel({ label, description }: { label: string; description: string }) {
+  return <Tooltip.Root positioning={{ placement: 'top' }} openDelay={150}>
+    <Tooltip.Trigger asChild>
+      <HStack gap="1" width="fit-content" cursor="help" tabIndex={0} aria-label={`${label}: ${description}`}>
+        <Text fontSize="xs" color="fg.muted">{label}</Text><LuInfo size={13} />
+      </HStack>
+    </Tooltip.Trigger>
+    <Portal><Tooltip.Positioner><Tooltip.Content maxW="xs">{description}</Tooltip.Content></Tooltip.Positioner></Portal>
+  </Tooltip.Root>;
 }
 
 const channelLabels: Record<ContractInteraction['channel'], string> = {
@@ -266,11 +278,11 @@ export default function ContractDetailPage() {
               <Text>{formatCurrency(contract.originalValue)}</Text>
             </Stack>
             <Stack gap="0">
-              <Text fontSize="xs" color="fg.muted">Valor Atualizado</Text>
+              <ValueTooltipLabel label="Valor Atualizado" description="Valor atual da dívida antes de descontos. É a referência usada para calcular a oferta." />
               <Text>{contract.updatedValue != null ? formatCurrency(contract.updatedValue) : '—'}</Text>
             </Stack>
             <Stack gap="0">
-              <Text fontSize="xs" color="fg.muted">Valor da oferta</Text>
+              <ValueTooltipLabel label="Valor da oferta" description="Valor final oferecido para pagamento, calculado a partir do valor atualizado com o desconto aplicável à carteira e ao contrato." />
               <Text>{contract.offerValue != null ? formatCurrency(contract.offerValue) : '—'}</Text>
             </Stack>
             <Stack gap="0">
