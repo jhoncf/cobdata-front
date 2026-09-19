@@ -397,7 +397,6 @@ export default function WalletDetailPage() {
                   {canEdit && <Menu.Item value="communications" onClick={() => { setLigueLeadContractId(undefined); setShowLigueLead(true); }}><LuRadio /> Comunicações</Menu.Item>}
                   {canEdit && <Menu.Separator />}
                   {canEdit && <Menu.Item value="recalculate-offers" onClick={() => recalculateOffersMutation.mutate(id!)}><LuCalculator /> Recalcular ofertas</Menu.Item>}
-                  {canEdit && <Menu.Item value="remove-serasa" color="fg.error" onClick={() => handleBulkAction(OperationAction.REMOVE)}><LuUnlink /> Remover em massa do Serasa</Menu.Item>}
                 </Menu.Content>
               </Menu.Positioner>
             </Portal>
@@ -944,6 +943,14 @@ export default function WalletDetailPage() {
                             >
                               <LuRefreshCw /> Enviar contratos filtrados ao Serasa
                             </Menu.Item>
+                            <Menu.Item
+                              value="remove-filtered-serasa"
+                              color="fg.error"
+                              disabled={(contractsData?.meta.total ?? 0) === 0}
+                              onClick={() => handleBulkAction(OperationAction.REMOVE)}
+                            >
+                              <LuUnlink /> Remover contratos filtrados do Serasa
+                            </Menu.Item>
                           </Menu.Content>
                         </Menu.Positioner>
                       </Portal>
@@ -1004,7 +1011,7 @@ export default function WalletDetailPage() {
       <ConfirmDialog
         open={!!bulkAction}
         onOpenChange={(open) => !open && setBulkAction(null)}
-        title={bulkAction === OperationAction.REMOVE ? 'Remover carteira do Serasa' : 'Enviar carteira ao Serasa'}
+        title={bulkAction === OperationAction.REMOVE ? 'Remover contratos filtrados do Serasa' : 'Enviar contratos filtrados ao Serasa'}
         message={bulkPreviewLoading
           ? 'Calculando os contratos elegíveis...'
           : bulkPreviewError
