@@ -21,7 +21,7 @@ import {
   Tooltip,
   Tabs,
 } from '@chakra-ui/react';
-import { LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuMail, LuEye, LuRefreshCw, LuUnlink, LuEllipsis, LuCalculator, LuInfo, LuDownload, LuTriangleAlert } from 'react-icons/lu';
+import { LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuMail, LuEye, LuRefreshCw, LuUnlink, LuEllipsis, LuCalculator, LuInfo, LuDownload, LuTriangleAlert, LuArchive, LuTrash2 } from 'react-icons/lu';
 import { CartesianGrid, LabelList, Legend, Line, LineChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState, ConfirmDialog } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
@@ -40,7 +40,7 @@ import { useOperationPreviewQuery } from '@/features/operations/api/useOperation
 import { CONTRACT_STATUS_LABELS, PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
 import { usePermission } from '@/hooks/usePermission';
 import { useAllWalletsQuery } from '../api/useWalletsQuery';
-import { ContractStatus, OperationAction, PaymentStatus, SerasaStatus } from '@/types/enums';
+import { ContractStatus, OperationAction, PaymentStatus, SerasaStatus, WalletStatus } from '@/types/enums';
 import type { CreateContractDto, OperationContractFilters, UpdateContractDto, UpdateWalletDto } from '@/types/api';
 import type { Contract } from '@/types/models';
 
@@ -389,7 +389,6 @@ export default function WalletDetailPage() {
       <PageHeader title={wallet.name}>
         <HStack gap="2" wrap="wrap">
           {canEdit && <Button size="sm" variant="outline" onClick={() => setShowEditForm(true)}><LuPencil /> Editar</Button>}
-          {canDelete && <Button size="sm" variant="outline" colorPalette="red" onClick={() => setDangerDialogOpen(true)}><LuTriangleAlert /> Área de perigo</Button>}
           <Menu.Root>
             <Menu.Trigger asChild>
               <Button size="sm" colorPalette="blue">
@@ -404,6 +403,8 @@ export default function WalletDetailPage() {
                   {canEdit && <Menu.Item value="communications" onClick={() => { setCommunicationTab('agent'); setLigueLeadContractId(undefined); setShowLigueLead(true); }}><LuRadio /> Comunicações</Menu.Item>}
                   {canEdit && <Menu.Separator />}
                   {canEdit && <Menu.Item value="recalculate-offers" onClick={() => recalculateOffersMutation.mutate(id!)}><LuCalculator /> Recalcular ofertas</Menu.Item>}
+                  {canDelete && <Menu.Separator />}
+                  {canDelete && <Menu.Item value="danger-zone" color="fg.error" onClick={() => setDangerDialogOpen(true)}><LuTriangleAlert /> Área de perigo</Menu.Item>}
                 </Menu.Content>
               </Menu.Positioner>
             </Portal>
@@ -980,16 +981,37 @@ export default function WalletDetailPage() {
         onSubmit={handleEditWallet}
         loading={updateWalletMutation.isPending}
       />
-      <ConfirmDialog
-        open={dangerDialogOpen}
-        onOpenChange={setDangerDialogOpen}
-        title="Excluir carteira e contratos"
-        message={`A carteira “${wallet.name}” e todos os seus contratos locais serão apagados da operação. Esta ação é bloqueada se existir qualquer contrato com sincronização pendente ou ativa na Serasa; nesse caso, remova-o da Serasa primeiro.`}
-        confirmLabel="Apagar carteira"
-        colorPalette="red"
-        loading={deleteWalletMutation.isPending}
-        onConfirm={() => deleteWalletMutation.mutate(id!, { onSuccess: () => navigate('/wallets') })}
-      />
+      <Dialog.Root open={dangerDialogOpen} onOpenChange={(event) => setDangerDialogOpen(event.open)} size={{ mdDown: 'full', md: 'md' }}>
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header><Dialog.Title>Área de perigo</Dialog.Title></Dialog.Header>
+              <Dialog.Body>
+                <Stack gap="4">
+                  <Text fontSize="sm" color="fg.muted">Escolha o que deseja fazer com a carteira “{wallet.name}”.</Text>
+                  <Card.Root variant="outline">
+                    <Card.Body gap="3">
+                      <HStack gap="2"><LuArchive color="var(--chakra-colors-orange-fg)" /><Text fontWeight="semibold">Arquivar carteira</Text></HStack>
+                      <Text fontSize="sm" color="fg.muted">Mantém todos os contratos e o histórico. A carteira fica inativa e não aceita novos contratos ou operações.</Text>
+                      <Button alignSelf="start" size="sm" variant="outline" colorPalette="orange" loading={updateWalletMutation.isPending} onClick={() => updateWalletMutation.mutate({ id: id!, data: { status: WalletStatus.INACTIVE } }, { onSuccess: () => navigate('/wallets') })}><LuArchive /> Arquivar</Button>
+                    </Card.Body>
+                  </Card.Root>
+                  <Card.Root variant="outline" borderColor="red.muted">
+                    <Card.Body gap="3">
+                      <HStack gap="2"><LuTrash2 color="var(--chakra-colors-red-fg)" /><Text fontWeight="semibold">Deletar carteira</Text></HStack>
+                      <Text fontSize="sm" color="fg.muted">Apaga a carteira e todos os contratos locais da operação. Se existir sincronização pendente ou ativa na Serasa, a exclusão será bloqueada até a remoção.</Text>
+                      <Button alignSelf="start" size="sm" colorPalette="red" loading={deleteWalletMutation.isPending} onClick={() => deleteWalletMutation.mutate(id!, { onSuccess: () => navigate('/wallets') })}><LuTrash2 /> Deletar carteira</Button>
+                    </Card.Body>
+                  </Card.Root>
+                </Stack>
+              </Dialog.Body>
+              <Dialog.Footer><Button variant="outline" onClick={() => setDangerDialogOpen(false)}>Fechar</Button></Dialog.Footer>
+              <Dialog.CloseTrigger asChild><Button aria-label="Fechar área de perigo" variant="ghost" size="sm" position="absolute" top="2" right="2">×</Button></Dialog.CloseTrigger>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
       <LigueLeadDialog
         open={showLigueLead}
         onOpenChange={(open) => {
