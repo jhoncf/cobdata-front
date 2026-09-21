@@ -217,7 +217,7 @@ export function GlobalSearchBar({ alwaysExpanded = false }: GlobalSearchBarProps
       >
         <Input
           ref={inputRef}
-          placeholder="Buscar credor, carteira ou CPF..."
+          placeholder="Buscar credor, carteira, contrato ou CPF..."
           aria-label="Busca global"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
