@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, useParams, Link as RouterLink } from 'react-router-dom';
 import {
   Box,
   Accordion,
@@ -21,11 +21,11 @@ import {
   Tooltip,
   Tabs,
 } from '@chakra-ui/react';
-import { LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuMail, LuEye, LuRefreshCw, LuUnlink, LuEllipsis, LuCalculator, LuInfo, LuDownload } from 'react-icons/lu';
+import { LuUpload, LuPlus, LuPencil, LuArrowUp, LuArrowDown, LuRadio, LuPhoneCall, LuMail, LuEye, LuRefreshCw, LuUnlink, LuEllipsis, LuCalculator, LuInfo, LuDownload, LuTriangleAlert } from 'react-icons/lu';
 import { CartesianGrid, LabelList, Legend, Line, LineChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import { PageHeader, StatusBadge, LoadingOverlay, PaginationBar, EmptyState, ConfirmDialog } from '@/components/common';
 import { useWalletDetailQuery } from '../api/useWalletDetailQuery';
-import { useRecalculateWalletOffersMutation, useUpdateWalletMutation } from '../api/useWalletMutations';
+import { useDeleteWalletMutation, useRecalculateWalletOffersMutation, useUpdateWalletMutation } from '../api/useWalletMutations';
 import { useContractsQuery } from '@/features/contracts/api/useContractsQuery';
 import { useBulkTransferContractsMutation, useCreateContractMutation, useUpdateContractMutation, useSyncContractWithSerasaMutation, useRemoveContractFromSerasaMutation } from '@/features/contracts/api/useContractMutations';
 import { ContractFormDialog } from '@/features/contracts/components/ContractFormDialog';
@@ -145,7 +145,8 @@ function AgreementDailyChart({ data }: { data: Array<{ date: string; count: numb
 
 export default function WalletDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { canEdit } = usePermission();
+  const navigate = useNavigate();
+  const { canEdit, canDelete } = usePermission();
   const [contractsPage, setContractsPage] = useState(1);
   const [showContractForm, setShowContractForm] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
@@ -172,6 +173,7 @@ export default function WalletDetailPage() {
   const [transferOpen, setTransferOpen] = useState(false);
   const [destinationWalletId, setDestinationWalletId] = useState('');
   const [isExporting, setIsExporting] = useState(false);
+  const [dangerDialogOpen, setDangerDialogOpen] = useState(false);
 
   const operationFilters = useMemo<OperationContractFilters>(() => ({
     ...(paymentStatusFilter ? { paymentStatus: paymentStatusFilter } : {}),
@@ -202,6 +204,7 @@ export default function WalletDetailPage() {
   const updateContractMutation = useUpdateContractMutation();
   const updateWalletMutation = useUpdateWalletMutation();
   const recalculateOffersMutation = useRecalculateWalletOffersMutation();
+  const deleteWalletMutation = useDeleteWalletMutation();
   const bulkTransferMutation = useBulkTransferContractsMutation();
   const { data: allWallets } = useAllWalletsQuery();
   const createOperationMutation = useCreateOperationMutation();
@@ -386,6 +389,7 @@ export default function WalletDetailPage() {
       <PageHeader title={wallet.name}>
         <HStack gap="2" wrap="wrap">
           {canEdit && <Button size="sm" variant="outline" onClick={() => setShowEditForm(true)}><LuPencil /> Editar</Button>}
+          {canDelete && <Button size="sm" variant="outline" colorPalette="red" onClick={() => setDangerDialogOpen(true)}><LuTriangleAlert /> Área de perigo</Button>}
           <Menu.Root>
             <Menu.Trigger asChild>
               <Button size="sm" colorPalette="blue">
@@ -975,6 +979,16 @@ export default function WalletDetailPage() {
         wallet={wallet}
         onSubmit={handleEditWallet}
         loading={updateWalletMutation.isPending}
+      />
+      <ConfirmDialog
+        open={dangerDialogOpen}
+        onOpenChange={setDangerDialogOpen}
+        title="Excluir carteira e contratos"
+        message={`A carteira “${wallet.name}” e todos os seus contratos locais serão apagados da operação. Esta ação é bloqueada se existir qualquer contrato com sincronização pendente ou ativa na Serasa; nesse caso, remova-o da Serasa primeiro.`}
+        confirmLabel="Apagar carteira"
+        colorPalette="red"
+        loading={deleteWalletMutation.isPending}
+        onConfirm={() => deleteWalletMutation.mutate(id!, { onSuccess: () => navigate('/wallets') })}
       />
       <LigueLeadDialog
         open={showLigueLead}
