@@ -12,7 +12,10 @@ import {
   LuCreditCard,
   LuLandmark,
   LuKeyRound,
-  LuCircleX,
+  LuFileText,
+  LuCircleCheck,
+  LuFileCheck2,
+  LuTrash2,
   LuChartNoAxesCombined,
 } from 'react-icons/lu';
 import { useAuth } from '@/hooks/useAuth';
@@ -28,10 +31,10 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LuLayoutDashboard, section: 'Principal' },
-  { label: 'Contratos', path: '/contracts', icon: LuScrollText, section: 'Principal', portalOnly: true },
-  { label: 'Acordos pagos', path: '/contracts/acordos-pagos', icon: LuChartNoAxesCombined, section: 'Principal', portalOnly: true },
-  { label: 'Contratos baixados', path: '/contracts/baixados', icon: LuCircleX, section: 'Principal', portalOnly: true },
-  { label: 'Remover dívidas', path: '/remover-dividas', icon: LuCircleX, section: 'Principal', portalOnly: true },
+  { label: 'Contratos', path: '/contracts', icon: LuFileText, section: 'Principal', portalOnly: true },
+  { label: 'Acordos pagos', path: '/contracts/acordos-pagos', icon: LuCircleCheck, section: 'Principal', portalOnly: true },
+  { label: 'Contratos baixados', path: '/contracts/baixados', icon: LuFileCheck2, section: 'Principal', portalOnly: true },
+  { label: 'Remover dívidas', path: '/remover-dividas', icon: LuTrash2, section: 'Principal', portalOnly: true },
   { label: 'Credores', path: '/creditors', icon: LuBuilding2, section: 'Gestão' },
   { label: 'Carteiras', path: '/wallets', icon: LuWallet, section: 'Gestão' },
   { label: 'Relatórios', path: '/reports', icon: LuChartNoAxesCombined, section: 'Gestão' },
