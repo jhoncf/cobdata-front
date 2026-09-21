@@ -15,6 +15,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { LuCircleCheck, LuCopy, LuMessageCircle, LuSearch, LuShieldCheck } from 'react-icons/lu';
+import { formatDate } from '@/lib/formatters';
 
 declare global {
   interface Window {
@@ -268,7 +269,7 @@ export default function RegularizeDebtPage() {
                 {contracts.map((contract) => (
                   <Box key={contract.id} borderWidth="2px" borderColor={selected?.id === contract.id ? '#0088ff' : 'gray.100'} rounded="md" p={{ base: 3, sm: 4 }} cursor="pointer" bg={selected?.id === contract.id ? '#f0f8ff' : 'white'} onClick={() => setSelected(contract)}>
                     <Flex direction={{ base: 'column', sm: 'row' }} justify="space-between" align={{ base: 'stretch', sm: 'start' }} gap={{ base: 4, sm: 6 }} minW="0">
-                      <Stack gap="1" minW="0" flex="1"><Text fontWeight="bold" wordBreak="break-word">{contract.creditor.name}</Text><Text fontSize="sm" color="gray.600" wordBreak="break-word">CNPJ: {formatCnpj(contract.creditor.cnpj)}</Text>{contract.debtorName && <Text fontSize="sm" color="gray.700" fontWeight="medium" wordBreak="break-word">Em nome de: {contract.debtorName}</Text>}{contract.productName && <Text fontSize="sm" color="gray.700" wordBreak="break-word">{contract.productName}</Text>}<Text fontSize="sm" color="gray.600" wordBreak="break-word">Contrato: {contract.contractNumber}{contract.dueDate ? ` · Vencimento: ${new Date(contract.dueDate).toLocaleDateString('pt-BR')}` : ''}</Text></Stack>
+                      <Stack gap="1" minW="0" flex="1"><Text fontWeight="bold" wordBreak="break-word">{contract.creditor.name}</Text><Text fontSize="sm" color="gray.600" wordBreak="break-word">CNPJ: {formatCnpj(contract.creditor.cnpj)}</Text>{contract.debtorName && <Text fontSize="sm" color="gray.700" fontWeight="medium" wordBreak="break-word">Em nome de: {contract.debtorName}</Text>}{contract.productName && <Text fontSize="sm" color="gray.700" wordBreak="break-word">{contract.productName}</Text>}<Text fontSize="sm" color="gray.600" wordBreak="break-word">Contrato: {contract.contractNumber}{contract.dueDate ? ` · Vencimento: ${formatDate(contract.dueDate)}` : ''}</Text></Stack>
                       <Stack gap="0" align={{ base: 'start', sm: 'end' }} flexShrink="0">
                         {Number(contract.cobcomDiscountPercent ?? 0) > 0 && <Text fontSize="sm" color="gray.600">Valor atualizado: {formatMoney(contract.updatedAmount ?? contract.amount)}</Text>}
                         <Text fontWeight="bold" color="#006dc9" fontSize={{ base: 'md', sm: 'sm' }} wordBreak="break-word">{Number(contract.cobcomDiscountPercent ?? 0) > 0 ? `Com Desconto CobCom: ${formatMoney(contract.amount)}` : formatMoney(contract.amount)}</Text>

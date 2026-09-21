@@ -26,6 +26,7 @@ import { ConfirmDialog, DataTable, PageHeader, StatusBadge } from '@/components/
 import type { ContractInteraction } from '@/types/models';
 import type { UpdateContractDto } from '@/types/api';
 import { CONTRACT_STATUS_LABELS, PAYMENT_STATUS_LABELS, PROVIDER_STATUS_LABELS } from '@/lib/constants';
+import { formatDate } from '@/lib/formatters';
 import api from '@/lib/api';
 import { toaster } from '@/components/ui/toaster';
 
@@ -37,10 +38,6 @@ function formatCPF(cpf: string): string {
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('pt-BR');
 }
 
 function ValueTooltipLabel({ label, description }: { label: string; description: string }) {

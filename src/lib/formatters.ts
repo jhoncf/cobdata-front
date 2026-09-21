@@ -30,6 +30,13 @@ export function formatCNPJ(cnpj: string): string {
  * @example formatDate("2024-01-15") → "15/01/2024"
  */
 export function formatDate(date: string | Date): string {
+  // Contract dates (due date, occurrence, birth date and cancellation) are
+  // calendar dates. The API serializes them at midnight UTC, but treating that
+  // timestamp as an instant shifts the displayed day for Brazilian timezones.
+  if (typeof date === 'string') {
+    const civilDate = /^(\d{4})-(\d{2})-(\d{2})(?:T00:00:00(?:\.000)?Z)?$/.exec(date);
+    if (civilDate) return `${civilDate[3]}/${civilDate[2]}/${civilDate[1]}`;
+  }
   const d = typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleDateString('pt-BR', {
     day: '2-digit',
