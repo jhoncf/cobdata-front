@@ -49,7 +49,7 @@ import {
 } from '@/lib/constants';
 import type { Contract } from '@/types/models';
 import type { CreateContractDto, UpdateContractDto } from '@/types/api';
-import { ContractStatus, type PaymentStatus, type SerasaStatus } from '@/types/enums';
+import { ContractStatus, PaymentStatus, type SerasaStatus } from '@/types/enums';
 
 export default function ContractsListPage() {
   const { canCreate, canEdit, canDelete } = usePermission();
@@ -93,7 +93,7 @@ export default function ContractsListPage() {
     page,
     limit,
     walletId: selectedWalletId || undefined,
-    paymentStatus: showPaidAgreements ? 'PAID' : paymentStatusFilter || undefined,
+    paymentStatus: showPaidAgreements ? PaymentStatus.PAID : paymentStatusFilter || undefined,
     paymentDateFrom: showPaidAgreements ? paymentDateFrom || undefined : undefined,
     paymentDateTo: showPaidAgreements ? paymentDateTo || undefined : undefined,
     serasaStatus: serasaStatusFilter || undefined,
