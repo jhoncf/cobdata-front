@@ -57,6 +57,7 @@ export default function ContractsListPage() {
   const location = useLocation();
   const isCreditorPortal = Boolean(creditorId);
   const showCancelled = isCreditorPortal && location.pathname === '/contracts/baixados';
+  const showPaidAgreements = isCreditorPortal && location.pathname === '/contracts/acordos-pagos';
 
   // Credor/Carteira selection
   const [selectedCreditorId, setSelectedCreditorId] = useState<string>('');
@@ -65,6 +66,8 @@ export default function ContractsListPage() {
   const [serasaStatusFilter, setSerasaStatusFilter] = useState<SerasaStatus | ''>('');
   const [installmentOnly, setInstallmentOnly] = useState('');
   const [cpfSearch, setCpfSearch] = useState('');
+  const [paymentDateFrom, setPaymentDateFrom] = useState('');
+  const [paymentDateTo, setPaymentDateTo] = useState('');
 
   // Contracts pagination
   const [page, setPage] = useState(1);
@@ -90,12 +93,14 @@ export default function ContractsListPage() {
     page,
     limit,
     walletId: selectedWalletId || undefined,
-    paymentStatus: paymentStatusFilter || undefined,
+    paymentStatus: showPaidAgreements ? 'PAID' : paymentStatusFilter || undefined,
+    paymentDateFrom: showPaidAgreements ? paymentDateFrom || undefined : undefined,
+    paymentDateTo: showPaidAgreements ? paymentDateTo || undefined : undefined,
     serasaStatus: serasaStatusFilter || undefined,
     installmentOnly: installmentOnly === 'yes' ? true : undefined,
     status: showCancelled ? ContractStatus.CANCELLED : undefined,
     search: isCreditorPortal && cpfSearch.trim().length >= 3 ? cpfSearch.trim() : undefined,
-  }, !isCreditorPortal || showCancelled || cpfSearch.trim().length >= 3);
+  }, !isCreditorPortal || showCancelled || showPaidAgreements || cpfSearch.trim().length >= 3);
 
   const createMutation = useCreateContractMutation();
   const updateMutation = useUpdateContractMutation();
@@ -179,7 +184,14 @@ export default function ContractsListPage() {
       ]
     : [];
 
-  const columns: DataTableColumn<Contract>[] = [
+  const paidAgreementColumns: DataTableColumn<Contract>[] = [
+    { key: 'contractNumber', header: 'Nº Contrato', cell: (row) => row.contractNumber, minW: '130px' },
+    { key: 'debtorDocument', header: 'CPF', cell: (row) => row.debtorDocument, minW: '150px' },
+    { key: 'dueDate', header: 'Vencimento', cell: (row) => row.dueDate ? formatDate(row.dueDate) : '—', minW: '130px' },
+    { key: 'updatedValue', header: 'Valor atualizado', cell: (row) => formatCurrency(row.updatedValue), textAlign: 'end', minW: '160px' },
+  ];
+
+  const columns: DataTableColumn<Contract>[] = showPaidAgreements ? paidAgreementColumns : [
     { key: 'contractNumber', header: 'Nº Contrato', cell: (row) => row.contractNumber, minW: '120px' },
     { key: 'debtorDocument', header: 'Documento', cell: (row) => row.debtorDocument },
     { key: 'debtType', header: 'Tipo', cell: (row) => DEBT_TYPE_LABELS[row.debtType] },
@@ -293,7 +305,7 @@ export default function ContractsListPage() {
 
   return (
     <>
-      <PageHeader title={showCancelled ? 'Contratos baixados' : 'Contratos'}>
+      <PageHeader title={showPaidAgreements ? 'Acordos pagos' : showCancelled ? 'Contratos baixados' : 'Contratos'}>
         {canCreate && selectedWalletId && (
           <Button colorPalette="blue" size="sm" onClick={handleCreate}>
             <LuPlus /> Novo Contrato
@@ -301,7 +313,19 @@ export default function ContractsListPage() {
         )}
       </PageHeader>
 
-      {isCreditorPortal ? (
+      {isCreditorPortal && showPaidAgreements ? (
+        <HStack mb="5" gap="3" flexWrap="wrap" align="end">
+          <Box>
+            <Text fontSize="sm" mb="1">Pagamento de</Text>
+            <Input size="sm" type="date" value={paymentDateFrom} onChange={(event) => { setPaymentDateFrom(event.target.value); setPage(1); }} aria-label="Data inicial de pagamento" />
+          </Box>
+          <Box>
+            <Text fontSize="sm" mb="1">até</Text>
+            <Input size="sm" type="date" value={paymentDateTo} onChange={(event) => { setPaymentDateTo(event.target.value); setPage(1); }} aria-label="Data final de pagamento" />
+          </Box>
+          <Text fontSize="sm" color="fg.muted" pb="1">Exibe somente acordos totalmente pagos no período selecionado.</Text>
+        </HStack>
+      ) : isCreditorPortal ? (
         <Box mb="5" maxW="lg">
           <Input
             size="sm"
@@ -413,7 +437,7 @@ export default function ContractsListPage() {
           title="Selecione uma carteira"
           description="Escolha um credor e uma carteira acima para visualizar os contratos"
         />
-       ) : isCreditorPortal && !showCancelled && cpfSearch.trim().length < 3 ? (
+       ) : isCreditorPortal && !showCancelled && !showPaidAgreements && cpfSearch.trim().length < 3 ? (
           <EmptyState
            title={showCancelled ? 'Consulte um contrato baixado' : 'Consulte um contrato'}
            description="Digite o CPF completo ou o número do contrato para localizar registros vinculados ao seu credor."

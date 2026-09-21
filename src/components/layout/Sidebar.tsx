@@ -29,6 +29,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LuLayoutDashboard, section: 'Principal' },
   { label: 'Contratos', path: '/contracts', icon: LuScrollText, section: 'Principal', portalOnly: true },
+  { label: 'Acordos pagos', path: '/contracts/acordos-pagos', icon: LuChartNoAxesCombined, section: 'Principal', portalOnly: true },
   { label: 'Contratos baixados', path: '/contracts/baixados', icon: LuCircleX, section: 'Principal', portalOnly: true },
   { label: 'Remover dívidas', path: '/remover-dividas', icon: LuCircleX, section: 'Principal', portalOnly: true },
   { label: 'Credores', path: '/creditors', icon: LuBuilding2, section: 'Gestão' },
@@ -91,7 +92,8 @@ export function Sidebar({ onClose, collapsed = false }: SidebarProps) {
               const isActive = item.path === '/contracts'
                 ? location.pathname === item.path || (
                   location.pathname.startsWith('/contracts/') &&
-                  !location.pathname.startsWith('/contracts/baixados')
+                  !location.pathname.startsWith('/contracts/baixados') &&
+                  !location.pathname.startsWith('/contracts/acordos-pagos')
                 )
                 : location.pathname === item.path || location.pathname.startsWith(item.path + '/');
 

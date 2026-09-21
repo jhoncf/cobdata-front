@@ -249,6 +249,8 @@ export interface OperationContractFilters {
   aging?: number;
   dateFrom?: string;
   dateTo?: string;
+  paymentDateFrom?: string;
+  paymentDateTo?: string;
 }
 
 export interface OperationPreviewResponse {
