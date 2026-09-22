@@ -89,6 +89,6 @@ export default function CreditorRemovalPage() {
       {preview.samples.length > 0 && <Stack gap="1"><Text fontSize="sm" fontWeight="medium">Amostra dos cadastros conferidos</Text>{preview.samples.map((row) => <Text key={row.contractNumber} fontSize="sm">Contrato {row.contractNumber} · CPF/CNPJ {row.debtorDocument}</Text>)}</Stack>}
       <HStack><Button colorPalette="red" disabled={!preview.matchedCount} onClick={() => setConfirmOpen(true)}><LuTrash2 /> Confirmo a remoção de {preview.matchedCount} cadastro(s)</Button></HStack>
     </Card.Body></Card.Root>}
-    <ConfirmDialog open={confirmOpen} onOpenChange={setConfirmOpen} title="Confirmar remoção em massa" message={`Tem certeza que deseja remover ${preview?.matchedCount ?? 0} cadastro(s)? Eles serão cancelados no CRM e retirados dos canais de cobrança ativos.`} confirmLabel="Confirmar remoção" colorPalette="red" loading={loading} onConfirm={() => void send('confirm')} />
+    <ConfirmDialog open={confirmOpen} onOpenChange={setConfirmOpen} title={`Confirmar ${preview?.matchedCount ?? 0} remoção(ões)`} message={`${preview?.matchedCount ?? 0} cadastro(s) encontrado(s) e elegível(is) serão baixados. Registros não encontrados, divergentes, pagos, cancelados ou repetidos não serão alterados.`} confirmLabel={`Remover ${preview?.matchedCount ?? 0} cadastro(s)`} colorPalette="red" loading={loading} onConfirm={() => void send('confirm')} />
   </Stack>;
 }
