@@ -76,6 +76,22 @@ export function useInviteCreditorUserMutation() {
   });
 }
 
+export function useSetCreditorUserBlockedMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ creditorId, userId, blocked }: { creditorId: string; userId: string; blocked: boolean }) =>
+      api.patch(`/creditors/${creditorId}/users/${userId}/block`, { blocked }),
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['creditors', variables.creditorId, 'portal-users'] });
+      toaster.create({
+        type: 'success',
+        title: variables.blocked ? 'Usuário bloqueado' : 'Usuário liberado',
+      });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
 export function useUpsertCreditorIxcIntegrationMutation() {
   const queryClient = useQueryClient();
   return useMutation({

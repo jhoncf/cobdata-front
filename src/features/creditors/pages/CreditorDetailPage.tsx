@@ -18,7 +18,7 @@ import {
   Field,
 } from '@chakra-ui/react';
 import { useQuery } from '@tanstack/react-query';
-import { LuPencil, LuPlus, LuSave, LuTrash2, LuPlug, LuTestTube, LuDatabase, LuClock3 } from 'react-icons/lu';
+import { LuPencil, LuPlus, LuSave, LuTrash2, LuPlug, LuTestTube, LuDatabase, LuClock3, LuBan, LuCircleCheck } from 'react-icons/lu';
 import {
   useCreditorCommercialRulesQuery,
   useCreditorIxcIntegrationQuery,
@@ -26,12 +26,13 @@ import {
 } from '../api/useCreditorsQuery';
 import {
   useInviteCreditorUserMutation,
+  useSetCreditorUserBlockedMutation,
   useTestCreditorIxcIntegrationMutation,
   useUpdateCreditorCommercialRulesMutation,
   useUpdateCreditorMutation,
   useUpsertCreditorIxcIntegrationMutation,
 } from '../api/useCreditorMutations';
-import { PageHeader } from '@/components/common';
+import { ConfirmDialog, PageHeader } from '@/components/common';
 import type { CreditorDiscountBand } from '@/types/models';
 import { CreditorFormDialog } from '../components/CreditorFormDialog';
 import { usePermission } from '@/hooks/usePermission';
@@ -51,6 +52,7 @@ export default function CreditorDetailPage() {
   const commercialRulesMutation = useUpdateCreditorCommercialRulesMutation();
   const creditorMutation = useUpdateCreditorMutation();
   const invitePortalUserMutation = useInviteCreditorUserMutation();
+  const setPortalUserBlockedMutation = useSetCreditorUserBlockedMutation();
   const saveIxcIntegrationMutation = useUpsertCreditorIxcIntegrationMutation();
   const testIxcIntegrationMutation = useTestCreditorIxcIntegrationMutation();
   const { canEdit, canManageUsers } = usePermission();
@@ -59,6 +61,7 @@ export default function CreditorDetailPage() {
   const [commissionPercent, setCommissionPercent] = useState(0);
   const [portalEmail, setPortalEmail] = useState('');
   const [portalName, setPortalName] = useState('');
+  const [portalUserBlockTarget, setPortalUserBlockTarget] = useState<{ id: string; name: string | null; email: string; blocked: boolean } | null>(null);
   const [ixcBaseUrl, setIxcBaseUrl] = useState('');
   const [ixcAccessToken, setIxcAccessToken] = useState('');
   const [ixcDialogOpen, setIxcDialogOpen] = useState(false);
@@ -504,9 +507,27 @@ export default function CreditorDetailPage() {
                             {portalUser.email}
                           </Text>
                         </Stack>
-                        <Badge colorPalette={portalUser.status === 'ACTIVE' ? 'green' : 'orange'}>
-                          {portalUser.status === 'ACTIVE' ? 'Ativo' : 'Convite pendente'}
-                        </Badge>
+                        <HStack gap="2">
+                          <Badge colorPalette={portalUser.status === 'ACTIVE' ? 'green' : portalUser.status === 'INACTIVE' ? 'red' : 'orange'}>
+                            {portalUser.status === 'ACTIVE' ? 'Ativo' : portalUser.status === 'INACTIVE' ? 'Bloqueado' : 'Convite pendente'}
+                          </Badge>
+                          {portalUser.status !== 'PENDING' && (
+                            <Button
+                              size="xs"
+                              variant="outline"
+                              colorPalette={portalUser.status === 'ACTIVE' ? 'red' : 'green'}
+                              onClick={() => setPortalUserBlockTarget({
+                                id: portalUser.id,
+                                name: portalUser.name,
+                                email: portalUser.email,
+                                blocked: portalUser.status === 'ACTIVE',
+                              })}
+                            >
+                              {portalUser.status === 'ACTIVE' ? <LuBan /> : <LuCircleCheck />}
+                              {portalUser.status === 'ACTIVE' ? 'Bloquear' : 'Liberar'}
+                            </Button>
+                          )}
+                        </HStack>
                       </Flex>
                     ))
                   )}
@@ -528,6 +549,21 @@ export default function CreditorDetailPage() {
             { onSuccess: () => setEditOpen(false) },
           )
         }
+      />
+      <ConfirmDialog
+        open={Boolean(portalUserBlockTarget)}
+        onOpenChange={(open) => !open && setPortalUserBlockTarget(null)}
+        title={portalUserBlockTarget?.blocked ? 'Bloquear usuário do credor' : 'Liberar usuário do credor'}
+        message={portalUserBlockTarget?.blocked
+          ? `Bloquear ${portalUserBlockTarget.name || portalUserBlockTarget.email}? O acesso ao portal será interrompido e o usuário não poderá entrar novamente até ser liberado.`
+          : `Liberar ${portalUserBlockTarget?.name || portalUserBlockTarget?.email}? O acesso ao portal será restabelecido.`}
+        confirmLabel={portalUserBlockTarget?.blocked ? 'Bloquear usuário' : 'Liberar usuário'}
+        colorPalette={portalUserBlockTarget?.blocked ? 'red' : 'green'}
+        loading={setPortalUserBlockedMutation.isPending}
+        onConfirm={() => portalUserBlockTarget && setPortalUserBlockedMutation.mutate(
+          { creditorId: id!, userId: portalUserBlockTarget.id, blocked: portalUserBlockTarget.blocked },
+          { onSuccess: () => setPortalUserBlockTarget(null) },
+        )}
       />
     </Stack>
   );
