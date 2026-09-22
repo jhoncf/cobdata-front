@@ -929,7 +929,7 @@ export default function WalletDetailPage() {
                       <Table.Header>
                         <Table.Row>
                           <Table.ColumnHeader>
-                            <TableTooltipLabel label="Faixa de atraso" description="Idade da dívida em dias, calculada a partir da data de ocorrência. Define qual regra comercial será usada." />
+                            <TableTooltipLabel label="Faixa de atraso" description="Dias desde o vencimento da fatura. Define qual regra comercial será usada." />
                           </Table.ColumnHeader>
                           <Table.ColumnHeader>
                             <TableTooltipLabel label="Estratégia à vista" description="Desconto que esta carteira oferece para pagamento à vista. O valor entre parênteses é o teto máximo autorizado pelo credor." />
