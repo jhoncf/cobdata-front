@@ -29,7 +29,10 @@ export default function CreditorRemovalPage() {
     setPreview(null); setFile(selected ?? null); setHeaders([]);
     if (!selected) return;
     try {
-      const workbook = XLSX.read(await selected.arrayBuffer(), { type: 'array' });
+      // The browser only needs the header for mapping. Limiting SheetJS to one
+      // row avoids parsing every record of a large creditor-removal file on
+      // the UI thread before the user can proceed.
+      const workbook = XLSX.read(await selected.arrayBuffer(), { type: 'array', sheetRows: 1 });
       const sheetName = workbook.SheetNames[0];
       if (!sheetName) throw new Error();
       const firstSheet = workbook.Sheets[sheetName];
