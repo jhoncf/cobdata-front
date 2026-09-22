@@ -1,5 +1,6 @@
 import { Box, Button, Card, HStack, Input, Link, SimpleGrid, Spinner, Table, Tabs, Text, VStack } from '@chakra-ui/react';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '@/components/common';
 import { formatCurrency } from '@/lib/formatters';
 import { downloadSerasaAgreements, ReportPeriod, useReportFilters, useReportQuery } from '../api/useReportsQueries';
@@ -10,6 +11,11 @@ type PixPayment = { amount: number; paidAt: string; externalPaymentId: string; p
 type Communication = { channel: string; status: string; contact: string | null; summary: string | null; occurredAt: string; contract: { id: string; contractNumber: string; debtorName: string; wallet: Wallet } };
 type ListReport<T> = { total: number; amount?: number; data: T[]; meta?: { page: number; totalPages: number } };
 type Scope = { creditorId: string; walletId: string };
+type ReportTab = 'agreements' | 'pix' | 'communications';
+
+const reportTabs: ReportTab[] = ['agreements', 'pix', 'communications'];
+const isReportTab = (value: string | null): value is ReportTab =>
+  value !== null && reportTabs.includes(value as ReportTab);
 
 const toDateInput = (date: Date) => date.toISOString().slice(0, 10);
 const initialPeriod = (): ReportPeriod => {
@@ -35,11 +41,20 @@ function Pagination({ report, onChange }: { report?: ListReport<unknown>; onChan
 function ContractLink({ id, number }: { id: string; number: string }) { return <Link href={`/contracts/${id}`} target="_blank" rel="noopener noreferrer" color="blue.600" fontWeight="medium" _hover={{ textDecoration: 'underline' }}>{number}</Link>; }
 
 export default function ReportsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [period, setPeriod] = useState<ReportPeriod>(initialPeriod); const [scope, setScope] = useState<Scope>({ creditorId: '', walletId: '' }); const [page, setPage] = useState(1);
+  const selectedTab = searchParams.get('tab');
+  const activeTab: ReportTab = isReportTab(selectedTab) ? selectedTab : 'agreements';
+  const changeTab = (value: string) => {
+    if (!isReportTab(value)) return;
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', value);
+    setSearchParams(next);
+  };
   const request = { ...period, ...scope, page, limit: 50 };
   const agreements = useReportQuery<ListReport<SerasaAgreement>>('serasa-agreements', request); const pix = useReportQuery<ListReport<PixPayment>>('pix-payments', request); const communications = useReportQuery<ListReport<Communication>>('communications', request);
   const formatDate = (value: string) => new Date(value).toLocaleString('pt-BR'); const changePeriod = (next: ReportPeriod) => { setPage(1); setPeriod(next); }; const changeScope = (next: Scope) => { setPage(1); setScope(next); };
-  return <VStack align="stretch" gap="6"><PageHeader title="Relatórios" /><Card.Root><Card.Body><ReportHeader period={period} scope={scope} onPeriodChange={changePeriod} onScopeChange={changeScope} /><Text mt="3" fontSize="sm" color="fg.muted">O período inicia, por padrão, nos últimos 30 dias.</Text></Card.Body></Card.Root><Tabs.Root defaultValue="agreements" lazyMount><Tabs.List overflowX="auto"><Tabs.Trigger value="agreements">Acordos pagos Serasa</Tabs.Trigger><Tabs.Trigger value="pix">Pix CobCom</Tabs.Trigger><Tabs.Trigger value="communications">Comunicações vistas</Tabs.Trigger><Tabs.Indicator /></Tabs.List>
+  return <VStack align="stretch" gap="6"><PageHeader title="Relatórios" /><Card.Root><Card.Body><ReportHeader period={period} scope={scope} onPeriodChange={changePeriod} onScopeChange={changeScope} /><Text mt="3" fontSize="sm" color="fg.muted">O período inicia, por padrão, nos últimos 30 dias.</Text></Card.Body></Card.Root><Tabs.Root value={activeTab} onValueChange={(details) => changeTab(details.value)} lazyMount><Tabs.List overflowX="auto"><Tabs.Trigger value="agreements">Acordos pagos Serasa</Tabs.Trigger><Tabs.Trigger value="pix">Pix CobCom</Tabs.Trigger><Tabs.Trigger value="communications">Comunicações vistas</Tabs.Trigger><Tabs.Indicator /></Tabs.List>
     <Tabs.Content value="agreements"><Card.Root><Card.Body>{agreements.isLoading ? <Spinner /> : <><HStack justify="space-between" align="start" mb="4" wrap="wrap"><Summary total={agreements.data?.total ?? 0} amount={agreements.data?.amount ?? 0} label="Acordos pagos" /><Button variant="outline" onClick={() => downloadSerasaAgreements(request)}>Exportar CSV</Button></HStack><Table.Root size="sm"><Table.Header><Table.Row><Table.ColumnHeader>Data do pagamento</Table.ColumnHeader><Table.ColumnHeader>Credor</Table.ColumnHeader><Table.ColumnHeader>Carteira</Table.ColumnHeader><Table.ColumnHeader>Contrato</Table.ColumnHeader><Table.ColumnHeader>Acordo</Table.ColumnHeader><Table.ColumnHeader textAlign="end">Valor</Table.ColumnHeader><Table.ColumnHeader>Parcelas</Table.ColumnHeader></Table.Row></Table.Header><Table.Body>{agreements.data?.data.map((row) => <Table.Row key={`${row.contractNumber}-${row.agreementReference}`}><Table.Cell>{formatDate(row.lastPaymentAt)}</Table.Cell><Table.Cell>{row.wallet.creditor.name}</Table.Cell><Table.Cell>{row.wallet.name}</Table.Cell><Table.Cell><ContractLink id={row.id} number={row.contractNumber} /></Table.Cell><Table.Cell>{row.agreementReference}</Table.Cell><Table.Cell textAlign="end">{formatCurrency(row.agreementTotalAmount)}</Table.Cell><Table.Cell>{row.paidInstallments}/{row.totalInstallments ?? 1}</Table.Cell></Table.Row>)}</Table.Body></Table.Root><Pagination report={agreements.data} onChange={setPage} /></>}</Card.Body></Card.Root></Tabs.Content>
     <Tabs.Content value="pix"><Card.Root><Card.Body>{pix.isLoading ? <Spinner /> : <><Summary total={pix.data?.total ?? 0} amount={pix.data?.amount ?? 0} label="Pagamentos Pix confirmados" /><Table.Root size="sm"><Table.Header><Table.Row><Table.ColumnHeader>Data</Table.ColumnHeader><Table.ColumnHeader>Credor</Table.ColumnHeader><Table.ColumnHeader>Carteira</Table.ColumnHeader><Table.ColumnHeader>Contrato</Table.ColumnHeader><Table.ColumnHeader>Canal</Table.ColumnHeader><Table.ColumnHeader textAlign="end">Valor pago</Table.ColumnHeader></Table.Row></Table.Header><Table.Body>{pix.data?.data.map((row) => <Table.Row key={row.externalPaymentId}><Table.Cell>{formatDate(row.paidAt)}</Table.Cell><Table.Cell>{row.contract.wallet.creditor.name}</Table.Cell><Table.Cell>{row.contract.wallet.name}</Table.Cell><Table.Cell><ContractLink id={row.contract.id} number={row.contract.contractNumber} /></Table.Cell><Table.Cell>{row.paymentCharge?.attributedChannel ?? 'CobCom'}</Table.Cell><Table.Cell textAlign="end">{formatCurrency(row.amount)}</Table.Cell></Table.Row>)}</Table.Body></Table.Root><Pagination report={pix.data} onChange={setPage} /></>}</Card.Body></Card.Root></Tabs.Content>
     <Tabs.Content value="communications"><Card.Root><Card.Body>{communications.isLoading ? <Spinner /> : <><Summary total={communications.data?.total ?? 0} label="Comunicações lidas ou atendidas" /><Table.Root size="sm"><Table.Header><Table.Row><Table.ColumnHeader>Data</Table.ColumnHeader><Table.ColumnHeader>Canal</Table.ColumnHeader><Table.ColumnHeader>Status</Table.ColumnHeader><Table.ColumnHeader>Credor</Table.ColumnHeader><Table.ColumnHeader>Contrato</Table.ColumnHeader><Table.ColumnHeader>Contato</Table.ColumnHeader><Table.ColumnHeader>Mensagem</Table.ColumnHeader></Table.Row></Table.Header><Table.Body>{communications.data?.data.map((row, index) => <Table.Row key={`${row.contract.contractNumber}-${row.occurredAt}-${index}`}><Table.Cell>{formatDate(row.occurredAt)}</Table.Cell><Table.Cell>{labelChannel[row.channel] ?? row.channel}</Table.Cell><Table.Cell>{labelStatus[row.status] ?? row.status}</Table.Cell><Table.Cell>{row.contract.wallet.creditor.name}</Table.Cell><Table.Cell><ContractLink id={row.contract.id} number={row.contract.contractNumber} /></Table.Cell><Table.Cell>{row.contact ?? '—'}</Table.Cell><Table.Cell>{row.summary ?? '—'}</Table.Cell></Table.Row>)}</Table.Body></Table.Root><Pagination report={communications.data} onChange={setPage} /></>}</Card.Body></Card.Root></Tabs.Content>
