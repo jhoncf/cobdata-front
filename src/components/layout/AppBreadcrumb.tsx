@@ -61,7 +61,7 @@ export function AppBreadcrumb() {
   // `/contracts/baixados` and `/contracts/acordos-pagos` are list routes in
   // the creditor portal, not contract IDs. Querying them caused a UUID
   // validation error (and consequently the global error toaster) on entry.
-  const detailContractId = section === 'contracts' && UUID_PATTERN.test(contractId ?? '') ? contractId : '';
+  const detailContractId = section === 'contracts' && UUID_PATTERN.test(contractId ?? '') ? (contractId ?? '') : '';
   const { data: contract } = useContractQuery(detailContractId);
   const crumbs = resolveCrumbs(pathname, contract?.wallet ? { id: contract.walletId, name: contract.wallet.name } : undefined);
 
