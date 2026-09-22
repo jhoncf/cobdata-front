@@ -69,6 +69,12 @@ export function generatePix(contractId: string): Promise<GeneratePixResponse> {
     .then((r: AxiosResponse<GeneratePixResponse>) => r.data);
 }
 
+export function generateAgreementPix(contractId: string): Promise<GeneratePixResponse> {
+  return api
+    .post<GeneratePixResponse>(`/contracts/${contractId}/payment-charges/agreement-pix`)
+    .then((r: AxiosResponse<GeneratePixResponse>) => r.data);
+}
+
 // ─── Charge Sync ─────────────────────────────────────────────────────────────
 
 export function syncCharge(chargeId: string): Promise<PaymentCharge> {

@@ -13,6 +13,7 @@ import {
   preflightCharge,
   createCharge,
   generatePix,
+  generateAgreementPix,
   syncCharge,
   resyncCharge,
 } from './api';
@@ -96,6 +97,14 @@ export function useGeneratePix(contractId: string) {
       queryClient.invalidateQueries({ queryKey: paymentKeys.charges(contractId) });
     },
     // Error is handled by the component via error-map for user-friendly messages
+  });
+}
+
+export function useGenerateAgreementPix(contractId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => generateAgreementPix(contractId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: paymentKeys.charges(contractId) }),
   });
 }
 

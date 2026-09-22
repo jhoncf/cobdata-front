@@ -13,7 +13,7 @@ import {
 } from '@chakra-ui/react';
 import { LuCopy, LuQrCode } from 'react-icons/lu';
 import { toaster } from '@/components/ui/toaster';
-import { useGeneratePix } from '../hooks';
+import { useGenerateAgreementPix, useGeneratePix } from '../hooks';
 import { mapChargeError } from '../error-map';
 import { ChargeErrorFeedback } from './ChargeErrorFeedback';
 import type { GeneratePixResponse, UserFriendlyError } from '../types';
@@ -24,6 +24,8 @@ import type { AxiosError } from 'axios';
 
 interface GeneratePixActionProps {
   contract: Contract;
+  agreementAmount?: boolean;
+  label?: string;
 }
 
 // ─── Copy Helper ─────────────────────────────────────────────────────────────
@@ -52,11 +54,13 @@ async function copyPixCode(text: string) {
  * Checks for existing valid Pix; if exists, shows it. Otherwise emits new one.
  * Visible only to ADMIN and OPERATIONAL roles (handled by parent via usePermission).
  */
-export function GeneratePixAction({ contract }: GeneratePixActionProps) {
+export function GeneratePixAction({ contract, agreementAmount = false, label }: GeneratePixActionProps) {
   const [open, setOpen] = useState(false);
   const [pixResult, setPixResult] = useState<GeneratePixResponse | null>(null);
   const [error, setError] = useState<UserFriendlyError | null>(null);
   const generatePix = useGeneratePix(contract.id);
+  const generateAgreementPix = useGenerateAgreementPix(contract.id);
+  const pixMutation = agreementAmount ? generateAgreementPix : generatePix;
 
   const handleOpen = () => {
     setOpen(true);
@@ -64,7 +68,7 @@ export function GeneratePixAction({ contract }: GeneratePixActionProps) {
     setError(null);
 
     // Call generate Pix API — backend handles reuse of existing Pix
-    generatePix.mutate(undefined, {
+    pixMutation.mutate(undefined, {
       onSuccess: (response) => {
         setPixResult(response);
       },
@@ -85,9 +89,9 @@ export function GeneratePixAction({ contract }: GeneratePixActionProps) {
           e.stopPropagation();
           handleOpen();
         }}
-        aria-label="Gerar Pix"
+        aria-label={label ?? 'Gerar Pix'}
       >
-        <LuQrCode />
+        <LuQrCode /> {label}
       </Button>
 
       <Dialog.Root
@@ -104,7 +108,7 @@ export function GeneratePixAction({ contract }: GeneratePixActionProps) {
               </Dialog.Header>
               <Dialog.Body>
                 {/* Loading state */}
-                {generatePix.isPending && (
+                {pixMutation.isPending && (
                   <HStack gap="3" justify="center" py="6">
                     <Spinner size="md" />
                     <Text>Gerando Pix...</Text>

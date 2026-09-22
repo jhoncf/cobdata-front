@@ -186,9 +186,14 @@ export default function ContractsListPage() {
 
   const paidAgreementColumns: DataTableColumn<Contract>[] = [
     { key: 'contractNumber', header: 'Nº Contrato', cell: (row) => row.contractNumber, minW: '130px' },
+    { key: 'debtorName', header: 'Nome do cliente', cell: (row) => row.debtorName || '—', minW: '180px' },
     { key: 'debtorDocument', header: 'CPF', cell: (row) => row.debtorDocument, minW: '150px' },
-    { key: 'dueDate', header: 'Vencimento', cell: (row) => row.dueDate ? formatDate(row.dueDate) : '—', minW: '130px' },
-    { key: 'updatedValue', header: 'Valor atualizado', cell: (row) => formatCurrency(row.updatedValue), textAlign: 'end', minW: '160px' },
+    { key: 'updatedValue', header: 'Valor em aberto', cell: (row) => formatCurrency(row.updatedValue), textAlign: 'end', minW: '150px' },
+    { key: 'offerDiscountPercent', header: 'Desconto aplicado', cell: (row) => `${Number(row.offerDiscountPercent ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`, textAlign: 'end', minW: '150px' },
+    { key: 'agreementTotalAmount', header: 'Valor acordo', cell: (row) => row.agreementTotalAmount != null ? formatCurrency(row.agreementTotalAmount) : '—', textAlign: 'end', minW: '140px' },
+    { key: 'agreementCreatedAt', header: 'Data do acordo', cell: (row) => row.agreementCreatedAt ? formatDate(row.agreementCreatedAt) : '—', minW: '145px' },
+    { key: 'agreementStatus', header: 'Status', cell: (row) => <StatusBadge status={row.paymentStatus === PaymentStatus.PAID ? 'PAID' : 'OPEN'} label={row.paymentStatus === PaymentStatus.PAID ? 'Pago' : 'Em aberto'} />, minW: '120px' },
+    { key: 'agreementPix', header: 'Ações', textAlign: 'end', minW: '130px', cell: (row) => row.paymentStatus === PaymentStatus.PAID || row.agreementTotalAmount == null ? '—' : <GeneratePixAction contract={row} agreementAmount label="Gerar Pix" /> },
   ];
 
   const columns: DataTableColumn<Contract>[] = showPaidAgreements ? paidAgreementColumns : [

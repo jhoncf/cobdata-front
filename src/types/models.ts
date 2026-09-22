@@ -219,6 +219,7 @@ export interface Contract {
   debtId: string | null;
   paymentStatus: PaymentStatus;
   agreementReference: string | null;
+  agreementCreatedAt: string | null;
   agreementTotalAmount: number | null;
   agreementDueAt: string | null;
   totalInstallments: number | null;

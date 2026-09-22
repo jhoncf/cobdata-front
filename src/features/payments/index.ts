@@ -20,6 +20,7 @@ export {
   preflightCharge,
   createCharge,
   generatePix,
+  generateAgreementPix,
   syncCharge,
   resyncCharge,
 } from './api';
@@ -33,6 +34,7 @@ export {
   usePreflightCharge,
   useCreateCharge,
   useGeneratePix,
+  useGenerateAgreementPix,
   useSyncCharge,
   useResyncCharge,
 } from './hooks';
