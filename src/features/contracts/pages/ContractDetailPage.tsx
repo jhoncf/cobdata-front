@@ -21,7 +21,7 @@ import {
 } from '@chakra-ui/react';
 import { LuBan, LuEllipsis, LuInfo, LuMessageSquare, LuPencil, LuRefreshCw, LuUnlink, LuVolume2 } from 'react-icons/lu';
 import { useContractInteractionsQuery, useContractQuery } from '../api/useContractsQuery';
-import { useCancelContractByCreditorMutation, useRemoveContractFromSerasaMutation, useSyncContractWithSerasaMutation, useUpdateContractMutation } from '../api/useContractMutations';
+import { useCancelContractByCreditorMutation, useRemoveContractFromSerasaMutation, useSyncContractWithSerasaMutation, useUpdateContractMutation, useUpdateContractWithSerasaMutation } from '../api/useContractMutations';
 import { ContractFormDialog } from '../components/ContractFormDialog';
 import { LigueLeadDialog } from '@/features/wallets/components/LigueLeadDialog';
 import { ConfirmDialog, DataTable, PageHeader, StatusBadge } from '@/components/common';
@@ -98,11 +98,12 @@ export default function ContractDetailPage() {
   const [selectedInteraction, setSelectedInteraction] = useState<ContractInteraction | null>(null);
   const [editingContract, setEditingContract] = useState(false);
   const [showCommunications, setShowCommunications] = useState(false);
-  const [serasaAction, setSerasaAction] = useState<'sync' | 'remove' | null>(null);
+  const [serasaAction, setSerasaAction] = useState<'sync' | 'update' | 'remove' | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancellationReason, setCancellationReason] = useState<'CREDITOR_REQUEST' | 'CONTESTATION' | 'PROCON' | 'RECLAME_AQUI' | 'EMAIL_REQUEST'>('CREDITOR_REQUEST');
   const updateContractMutation = useUpdateContractMutation();
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
+  const updateWithSerasaMutation = useUpdateContractWithSerasaMutation();
   const removeFromSerasaMutation = useRemoveContractFromSerasaMutation();
   const cancelContractMutation = useCancelContractByCreditorMutation();
 
@@ -130,14 +131,21 @@ export default function ContractDetailPage() {
     && contract.status === 'ACTIVE'
     && contract.paymentStatus !== 'PAID';
   const canRemoveFromSerasa = ['SENT', 'REGISTERED', 'UPDATED'].includes(contract.serasaStatus);
+  const canUpdateInSerasa = ['REGISTERED', 'UPDATED'].includes(contract.serasaStatus)
+    && contract.status === 'ACTIVE'
+    && contract.paymentStatus === 'OPEN';
 
-  const requestSerasaAction = (action: 'sync' | 'remove') => {
+  const requestSerasaAction = (action: 'sync' | 'update' | 'remove') => {
     setSerasaAction(action);
   };
 
   const confirmSerasaAction = () => {
     if (!serasaAction) return;
-    const mutation = serasaAction === 'sync' ? syncWithSerasaMutation : removeFromSerasaMutation;
+    const mutation = serasaAction === 'sync'
+      ? syncWithSerasaMutation
+      : serasaAction === 'update'
+        ? updateWithSerasaMutation
+        : removeFromSerasaMutation;
     mutation.mutate(contract.id, { onSuccess: () => setSerasaAction(null) });
   };
 
@@ -182,6 +190,13 @@ export default function ContractDetailPage() {
                   onClick={() => requestSerasaAction('sync')}
                 >
                   <LuRefreshCw /> Adicionar ao Serasa
+                </Menu.Item>
+                <Menu.Item
+                  value="update-serasa"
+                  disabled={!canUpdateInSerasa}
+                  onClick={() => requestSerasaAction('update')}
+                >
+                  <LuRefreshCw /> Atualizar no Serasa
                 </Menu.Item>
                 <Menu.Item
                   value="remove-serasa"
@@ -515,13 +530,15 @@ export default function ContractDetailPage() {
       <ConfirmDialog
         open={serasaAction !== null}
         onOpenChange={(open) => { if (!open) setSerasaAction(null); }}
-        title={serasaAction === 'sync' ? 'Adicionar contrato ao Serasa?' : 'Remover contrato do Serasa?'}
+        title={serasaAction === 'sync' ? 'Adicionar contrato ao Serasa?' : serasaAction === 'update' ? 'Atualizar contrato na Serasa?' : 'Remover contrato do Serasa?'}
         message={serasaAction === 'sync'
           ? 'Tem certeza que deseja sincronizar este contrato com a carteira Serasa vinculada a esta carteira?'
-          : 'Tem certeza que deseja solicitar a remoção deste contrato do Serasa?'}
-        confirmLabel={serasaAction === 'sync' ? 'Sincronizar' : 'Remover'}
-        colorPalette={serasaAction === 'sync' ? 'blue' : 'red'}
-        loading={syncWithSerasaMutation.isPending || removeFromSerasaMutation.isPending}
+          : serasaAction === 'update'
+            ? 'A Serasa receberá os dados atuais deste contrato, incluindo vencimento e valores. O Debt ID será preservado.'
+            : 'Tem certeza que deseja solicitar a remoção deste contrato do Serasa?'}
+        confirmLabel={serasaAction === 'sync' ? 'Sincronizar' : serasaAction === 'update' ? 'Atualizar' : 'Remover'}
+        colorPalette={serasaAction === 'remove' ? 'red' : 'blue'}
+        loading={syncWithSerasaMutation.isPending || updateWithSerasaMutation.isPending || removeFromSerasaMutation.isPending}
         onConfirm={confirmSerasaAction}
       />
       <Dialog.Root open={cancelOpen} onOpenChange={(details) => setCancelOpen(details.open)} size={{ mdDown: 'full', md: 'md' }}>

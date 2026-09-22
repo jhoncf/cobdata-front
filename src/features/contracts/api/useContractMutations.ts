@@ -73,6 +73,19 @@ export function useSyncContractWithSerasaMutation() {
   });
 }
 
+export function useUpdateContractWithSerasaMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/operations/contracts/${id}/update`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['operations'] });
+      toaster.create({ type: 'success', title: 'Atualização enviada para a Serasa' });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
 export function useRemoveContractFromSerasaMutation() {
   const queryClient = useQueryClient();
   return useMutation({
