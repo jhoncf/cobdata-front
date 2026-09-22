@@ -213,7 +213,7 @@ export interface Contract {
   debtorEmail: string | null;
   isNegativated: boolean;
   cancelledAt: string | null;
-  cancellationReason: 'CREDITOR_REQUEST' | 'CONTESTATION' | null;
+  cancellationReason: 'CREDITOR_REQUEST' | 'CONTESTATION' | 'PROCON' | 'RECLAME_AQUI' | 'EMAIL_REQUEST' | null;
   status: ContractStatus;
   serasaStatus: SerasaStatus;
   debtId: string | null;

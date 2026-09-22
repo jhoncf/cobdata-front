@@ -12,14 +12,16 @@ import {
   Box,
   CloseButton,
   Dialog,
+  Field,
   Menu,
+  NativeSelect,
   Portal,
   Accordion,
   Tooltip,
 } from '@chakra-ui/react';
-import { LuEllipsis, LuInfo, LuMessageSquare, LuPencil, LuRefreshCw, LuUnlink, LuVolume2 } from 'react-icons/lu';
+import { LuBan, LuEllipsis, LuInfo, LuMessageSquare, LuPencil, LuRefreshCw, LuUnlink, LuVolume2 } from 'react-icons/lu';
 import { useContractInteractionsQuery, useContractQuery } from '../api/useContractsQuery';
-import { useRemoveContractFromSerasaMutation, useSyncContractWithSerasaMutation, useUpdateContractMutation } from '../api/useContractMutations';
+import { useCancelContractByCreditorMutation, useRemoveContractFromSerasaMutation, useSyncContractWithSerasaMutation, useUpdateContractMutation } from '../api/useContractMutations';
 import { ContractFormDialog } from '../components/ContractFormDialog';
 import { LigueLeadDialog } from '@/features/wallets/components/LigueLeadDialog';
 import { ConfirmDialog, DataTable, PageHeader, StatusBadge } from '@/components/common';
@@ -97,9 +99,12 @@ export default function ContractDetailPage() {
   const [editingContract, setEditingContract] = useState(false);
   const [showCommunications, setShowCommunications] = useState(false);
   const [serasaAction, setSerasaAction] = useState<'sync' | 'remove' | null>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState<'CREDITOR_REQUEST' | 'CONTESTATION' | 'PROCON' | 'RECLAME_AQUI' | 'EMAIL_REQUEST'>('CREDITOR_REQUEST');
   const updateContractMutation = useUpdateContractMutation();
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
   const removeFromSerasaMutation = useRemoveContractFromSerasaMutation();
+  const cancelContractMutation = useCancelContractByCreditorMutation();
 
   const downloadRecording = async (interaction: ContractInteraction) => {
     const response = await api.get(`/contracts/${id}/interactions/${interaction.id}/recording`, { responseType: 'blob' });
@@ -161,6 +166,14 @@ export default function ContractDetailPage() {
                 </Menu.Item>
                 <Menu.Item value="communications" onClick={() => setShowCommunications(true)}>
                   <LuMessageSquare /> Comunicações
+                </Menu.Item>
+                <Menu.Item
+                  value="cancel"
+                  color="fg.error"
+                  disabled={contract.status === 'CANCELLED' || contract.paymentStatus === 'PAID'}
+                  onClick={() => setCancelOpen(true)}
+                >
+                  <LuBan /> Dar baixa
                 </Menu.Item>
                 <Menu.Separator />
                 <Menu.Item
@@ -344,7 +357,7 @@ export default function ContractDetailPage() {
             </Stack>
             <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Motivo do cancelamento</Text>
-              <Text>{contract.cancellationReason === 'CONTESTATION' ? 'Reclamação no chatbot' : contract.cancellationReason === 'CREDITOR_REQUEST' ? 'Solicitação do Credor' : '—'}</Text>
+              <Text>{contract.cancellationReason === 'CONTESTATION' ? 'Reclamação chat bot' : contract.cancellationReason === 'CREDITOR_REQUEST' ? 'Solicitação do Credor' : contract.cancellationReason === 'PROCON' ? 'Procon' : contract.cancellationReason === 'RECLAME_AQUI' ? 'Reclame Aqui' : contract.cancellationReason === 'EMAIL_REQUEST' ? 'Solicitação por e-mail' : '—'}</Text>
             </Stack>
           </HStack>
         </Card.Body>
@@ -522,6 +535,39 @@ export default function ContractDetailPage() {
         loading={syncWithSerasaMutation.isPending || removeFromSerasaMutation.isPending}
         onConfirm={confirmSerasaAction}
       />
+      <Dialog.Root open={cancelOpen} onOpenChange={(details) => setCancelOpen(details.open)} size={{ mdDown: 'full', md: 'md' }}>
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header><Dialog.Title>Dar baixa no contrato</Dialog.Title></Dialog.Header>
+              <Dialog.Body>
+                <Stack gap="4">
+                  <Text>O contrato {contract.contractNumber} será desativado na carteira e removido dos canais ativos, incluindo a Serasa quando estiver registrado.</Text>
+                  <Field.Root required>
+                    <Field.Label>Motivo da baixa</Field.Label>
+                    <NativeSelect.Root>
+                      <NativeSelect.Field value={cancellationReason} onChange={(event) => setCancellationReason(event.target.value as typeof cancellationReason)}>
+                        <option value="CREDITOR_REQUEST">Solicitação do credor</option>
+                        <option value="CONTESTATION">Reclamação chat bot</option>
+                        <option value="PROCON">Procon</option>
+                        <option value="RECLAME_AQUI">Reclame Aqui</option>
+                        <option value="EMAIL_REQUEST">Solicitação por e-mail</option>
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                  </Field.Root>
+                </Stack>
+              </Dialog.Body>
+              <Dialog.Footer>
+                <Dialog.ActionTrigger asChild><Button variant="outline">Cancelar</Button></Dialog.ActionTrigger>
+                <Button colorPalette="red" loading={cancelContractMutation.isPending} onClick={() => cancelContractMutation.mutate({ id: contract.id, reason: cancellationReason }, { onSuccess: () => setCancelOpen(false) })}>Confirmar baixa</Button>
+              </Dialog.Footer>
+              <Dialog.CloseTrigger asChild><CloseButton size="sm" /></Dialog.CloseTrigger>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
     </Stack>
   );
 }

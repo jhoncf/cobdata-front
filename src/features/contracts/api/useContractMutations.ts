@@ -90,7 +90,7 @@ export function useRemoveContractFromSerasaMutation() {
 export function useCancelContractByCreditorMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.post(`/operations/contracts/${id}/cancel`),
+    mutationFn: ({ id, reason }: { id: string; reason?: 'CREDITOR_REQUEST' | 'CONTESTATION' | 'PROCON' | 'RECLAME_AQUI' | 'EMAIL_REQUEST' }) => api.post(`/operations/contracts/${id}/cancel`, reason ? { reason } : undefined),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['operations'] });

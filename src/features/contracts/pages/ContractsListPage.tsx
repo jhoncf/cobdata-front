@@ -487,7 +487,7 @@ export default function ContractsListPage() {
         title="Dar baixa no contrato"
         message={`Deseja cancelar o contrato ${cancelTarget?.contractNumber}? Ele será desativado na carteira e removido dos canais de cobrança ativos.`}
         confirmLabel="Dar baixa"
-        onConfirm={() => cancelTarget && cancelByCreditorMutation.mutate(cancelTarget.id, { onSuccess: () => setCancelTarget(null) })}
+        onConfirm={() => cancelTarget && cancelByCreditorMutation.mutate({ id: cancelTarget.id }, { onSuccess: () => setCancelTarget(null) })}
         loading={cancelByCreditorMutation.isPending}
       />
 

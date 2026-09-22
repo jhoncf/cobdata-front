@@ -20,8 +20,11 @@ interface CancellationReceiptDialogProps {
 }
 
 function cancellationReasonLabel(reason: Contract['cancellationReason']) {
-  if (reason === 'CONTESTATION') return 'Reclamação no chatbot';
+  if (reason === 'CONTESTATION') return 'Reclamação chat bot';
   if (reason === 'CREDITOR_REQUEST') return 'Solicitação do Credor';
+  if (reason === 'PROCON') return 'Procon';
+  if (reason === 'RECLAME_AQUI') return 'Reclame Aqui';
+  if (reason === 'EMAIL_REQUEST') return 'Solicitação por e-mail';
   return 'Baixa administrativa';
 }
 
