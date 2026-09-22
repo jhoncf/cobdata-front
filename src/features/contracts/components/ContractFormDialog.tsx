@@ -27,7 +27,6 @@ const contractFormSchema = z.object({
   debtorBirthDate: z.string().optional(),
   contractNumber: z.string().min(1, 'Número do contrato é obrigatório'),
   debtType: z.nativeEnum(DebtType),
-  occurrenceDate: z.string().min(1, 'Data de contratação obrigatória'),
   dueDate: z.string().min(1, 'Data de vencimento obrigatória'),
   originalValue: z.coerce.number().positive('Valor deve ser positivo'),
   updatedValue: z.coerce.number().positive('Valor atualizado é obrigatório e deve ser positivo'),
@@ -89,7 +88,6 @@ export function ContractFormDialog({
       debtorBirthDate: '',
       contractNumber: '',
       debtType: DebtType.COMMERCIAL,
-      occurrenceDate: '',
       dueDate: '',
       originalValue: 0,
       updatedValue: 0,
@@ -126,8 +124,7 @@ export function ContractFormDialog({
           debtorBirthDate: contract.debtorBirthDate?.split('T')[0] ?? '',
           contractNumber: contract.contractNumber,
           debtType: contract.debtType,
-          occurrenceDate: contract.occurrenceDate.split('T')[0] ?? contract.occurrenceDate,
-          dueDate: contract.dueDate?.split('T')[0] ?? '',
+          dueDate: (contract.dueDate ?? contract.occurrenceDate).split('T')[0],
           originalValue: contract.originalValue,
           updatedValue: contract.updatedValue,
           contractDiscountPercent: contract.offerDiscountPercent ?? 0,
@@ -157,7 +154,6 @@ export function ContractFormDialog({
           debtorBirthDate: '',
           contractNumber: '',
           debtType: DebtType.COMMERCIAL,
-          occurrenceDate: '',
           dueDate: '',
           originalValue: 0,
           updatedValue: 0,
@@ -203,7 +199,6 @@ export function ContractFormDialog({
         debtorName: values.debtorName,
         debtorBirthDate: values.debtorBirthDate || undefined,
         debtType: values.debtType,
-        occurrenceDate: values.occurrenceDate,
         dueDate: values.dueDate,
         originalValue: values.originalValue,
         updatedValue: Number(values.updatedValue),
@@ -229,7 +224,6 @@ export function ContractFormDialog({
         debtorBirthDate: values.debtorBirthDate || undefined,
         contractNumber: values.contractNumber ?? '',
         debtType: values.debtType,
-        occurrenceDate: values.occurrenceDate,
         dueDate: values.dueDate,
         originalValue: values.originalValue,
         updatedValue: Number(values.updatedValue),
@@ -317,12 +311,6 @@ export function ContractFormDialog({
                         </NativeSelect.Field>
                       <NativeSelect.Indicator />
                       </NativeSelect.Root>
-                    </Field.Root>
-
-                    <Field.Root invalid={!!errors.occurrenceDate} required>
-                      <Field.Label>Data de Contratação</Field.Label>
-                      <Input type="date" {...register('occurrenceDate')} />
-                      <Field.ErrorText>{errors.occurrenceDate?.message}</Field.ErrorText>
                     </Field.Root>
 
                     <Field.Root invalid={!!errors.dueDate} required>

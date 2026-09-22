@@ -66,8 +66,8 @@ export default function ContractsListPage() {
   const [serasaStatusFilter, setSerasaStatusFilter] = useState<SerasaStatus | ''>('');
   const [installmentOnly, setInstallmentOnly] = useState('');
   const [cpfSearch, setCpfSearch] = useState('');
-  const [paymentDateFrom, setPaymentDateFrom] = useState('');
-  const [paymentDateTo, setPaymentDateTo] = useState('');
+  const [agreementDateFrom, setAgreementDateFrom] = useState('');
+  const [agreementDateTo, setAgreementDateTo] = useState('');
 
   // Contracts pagination
   const [page, setPage] = useState(1);
@@ -93,9 +93,9 @@ export default function ContractsListPage() {
     page,
     limit,
     walletId: selectedWalletId || undefined,
-    paymentStatus: showPaidAgreements ? PaymentStatus.PAID : paymentStatusFilter || undefined,
-    paymentDateFrom: showPaidAgreements ? paymentDateFrom || undefined : undefined,
-    paymentDateTo: showPaidAgreements ? paymentDateTo || undefined : undefined,
+    agreementOnly: showPaidAgreements || undefined,
+    agreementDateFrom: showPaidAgreements ? agreementDateFrom || undefined : undefined,
+    agreementDateTo: showPaidAgreements ? agreementDateTo || undefined : undefined,
     serasaStatus: serasaStatusFilter || undefined,
     installmentOnly: installmentOnly === 'yes' ? true : undefined,
     status: showCancelled ? ContractStatus.CANCELLED : undefined,
@@ -305,7 +305,7 @@ export default function ContractsListPage() {
 
   return (
     <>
-      <PageHeader title={showPaidAgreements ? 'Acordos pagos' : showCancelled ? 'Contratos baixados' : 'Contratos'}>
+      <PageHeader title={showPaidAgreements ? 'Acordos' : showCancelled ? 'Contratos baixados' : 'Contratos'}>
         {canCreate && selectedWalletId && (
           <Button colorPalette="blue" size="sm" onClick={handleCreate}>
             <LuPlus /> Novo Contrato
@@ -316,14 +316,14 @@ export default function ContractsListPage() {
       {isCreditorPortal && showPaidAgreements ? (
         <HStack mb="5" gap="3" flexWrap="wrap" align="end">
           <Box>
-            <Text fontSize="sm" mb="1">Pagamento de</Text>
-            <Input size="sm" type="date" value={paymentDateFrom} onChange={(event) => { setPaymentDateFrom(event.target.value); setPage(1); }} aria-label="Data inicial de pagamento" />
+            <Text fontSize="sm" mb="1">Acordo de</Text>
+            <Input size="sm" type="date" value={agreementDateFrom} onChange={(event) => { setAgreementDateFrom(event.target.value); setPage(1); }} aria-label="Data inicial do acordo" />
           </Box>
           <Box>
             <Text fontSize="sm" mb="1">até</Text>
-            <Input size="sm" type="date" value={paymentDateTo} onChange={(event) => { setPaymentDateTo(event.target.value); setPage(1); }} aria-label="Data final de pagamento" />
+            <Input size="sm" type="date" value={agreementDateTo} onChange={(event) => { setAgreementDateTo(event.target.value); setPage(1); }} aria-label="Data final do acordo" />
           </Box>
-          <Text fontSize="sm" color="fg.muted" pb="1">Exibe somente acordos totalmente pagos no período selecionado.</Text>
+          <Text fontSize="sm" color="fg.muted" pb="1">Exibe todos os acordos gerados no período, inclusive pagos, parcelados e quebrados.</Text>
         </HStack>
       ) : isCreditorPortal ? (
         <Box mb="5" maxW="lg">

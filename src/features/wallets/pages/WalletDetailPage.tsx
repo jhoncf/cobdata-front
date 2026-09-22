@@ -749,7 +749,7 @@ export default function WalletDetailPage() {
                         <SortableHeader field="status">Situação</SortableHeader>
                         <SortableHeader field="paymentStatus">Financeiro</SortableHeader>
                         <SortableHeader field="serasaStatus">Serasa</SortableHeader>
-                        <SortableHeader field="occurrenceDate">Data Ocorrência</SortableHeader>
+                        <SortableHeader field="occurrenceDate">Data vencimento</SortableHeader>
                         <SortableHeader field="agingDays">Aging</SortableHeader>
                         {canEdit && <Table.ColumnHeader width="190px">Ações</Table.ColumnHeader>}
                       </Table.Row>
@@ -798,7 +798,7 @@ export default function WalletDetailPage() {
                             />
                           </Table.Cell>
                           <Table.Cell>
-                            {formatDate(contract.occurrenceDate)}
+                            {formatDate(contract.dueDate ?? contract.occurrenceDate)}
                           </Table.Cell>
                           <Table.Cell whiteSpace="nowrap">{contract.agingDays} dias</Table.Cell>
                           {canEdit && (

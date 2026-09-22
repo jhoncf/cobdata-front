@@ -165,7 +165,7 @@ export interface CreateContractDto {
   debtorBirthDate?: string;
   contractNumber: string;
   debtType: DebtType;
-  occurrenceDate: string;
+  occurrenceDate?: string;
   dueDate: string;
   productAdhesionDate?: string;
   originalValue: number;
@@ -328,6 +328,9 @@ export interface ListContractsParams extends PaginationParams {
   dateTo?: string;
   paymentDateFrom?: string;
   paymentDateTo?: string;
+  agreementOnly?: boolean;
+  agreementDateFrom?: string;
+  agreementDateTo?: string;
   debtorDocument?: string;
   search?: string;
   tags?: string[];

@@ -32,7 +32,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LuLayoutDashboard, section: 'Principal' },
   { label: 'Contratos', path: '/contracts', icon: LuFileText, section: 'Principal', portalOnly: true },
-  { label: 'Acordos pagos', path: '/contracts/acordos-pagos', icon: LuCircleCheck, section: 'Principal', portalOnly: true },
+  { label: 'Acordos', path: '/contracts/acordos-pagos', icon: LuCircleCheck, section: 'Principal', portalOnly: true },
   { label: 'Contratos baixados', path: '/contracts/baixados', icon: LuFileCheck2, section: 'Principal', portalOnly: true },
   { label: 'Remover dívidas', path: '/remover-dividas', icon: LuTrash2, section: 'Principal', portalOnly: true },
   { label: 'Credores', path: '/creditors', icon: LuBuilding2, section: 'Gestão' },
