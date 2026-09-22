@@ -232,14 +232,25 @@ export default function ContractDetailPage() {
               <Text fontSize="xs" color="fg.muted">Tipo de Dívida</Text>
               <Text>{contract.debtType}</Text>
             </Stack>
-            <Stack gap="0">
-              <Text fontSize="xs" color="fg.muted">Data de Ocorrência</Text>
-              <Text>{formatDate(contract.occurrenceDate)}</Text>
-            </Stack>
-            <Stack gap="0">
-              <Text fontSize="xs" color="fg.muted">Data de Vencimento</Text>
-              <Text>{contract.dueDate ? formatDate(contract.dueDate) : '—'}</Text>
-            </Stack>
+            {contract.wallet?.name.toLowerCase().includes('way') ? (
+              <Stack gap="0">
+                <Text fontSize="xs" color="fg.muted">Data da dívida</Text>
+                <Text>{contract.dueDate ? formatDate(contract.dueDate) : formatDate(contract.occurrenceDate)}</Text>
+              </Stack>
+            ) : <>
+              <Stack gap="0">
+                <Text fontSize="xs" color="fg.muted">Data de Ocorrência</Text>
+                <Text>{formatDate(contract.occurrenceDate)}</Text>
+              </Stack>
+              <Stack gap="0">
+                <Text fontSize="xs" color="fg.muted">Data de Vencimento</Text>
+                <Text>{contract.dueDate ? formatDate(contract.dueDate) : '—'}</Text>
+              </Stack>
+            </>}
+            {contract.productAdhesionDate && <Stack gap="0">
+              <Text fontSize="xs" color="fg.muted">Data de adesão ao produto</Text>
+              <Text>{formatDate(contract.productAdhesionDate)}</Text>
+            </Stack>}
             <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Aging</Text>
               <Text>{contract.agingDays} dias</Text>

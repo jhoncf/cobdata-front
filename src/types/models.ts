@@ -202,6 +202,7 @@ export interface Contract {
   occurrenceDate: string;
   agingDays: number;
   dueDate: string | null;
+  productAdhesionDate: string | null;
   originalValue: number;
   updatedValue: number;
   debtOrigin: string | null;

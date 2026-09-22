@@ -167,6 +167,7 @@ export interface CreateContractDto {
   debtType: DebtType;
   occurrenceDate: string;
   dueDate: string;
+  productAdhesionDate?: string;
   originalValue: number;
   updatedValue: number;
   debtOrigin?: string;
@@ -189,6 +190,7 @@ export interface UpdateContractDto {
   offerDiscountPercent?: number;
   occurrenceDate?: string;
   dueDate?: string;
+  productAdhesionDate?: string;
   debtType?: DebtType;
   status?: ContractStatus;
   debtOrigin?: string;
