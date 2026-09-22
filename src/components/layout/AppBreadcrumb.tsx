@@ -7,6 +7,8 @@ interface Crumb {
   to?: string;
 }
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function resolveCrumbs(pathname: string, wallet?: { id: string; name: string }): Crumb[] {
   const segments = pathname.split('/').filter(Boolean);
   const [section, identifier] = segments;
@@ -56,7 +58,11 @@ function resolveCrumbs(pathname: string, wallet?: { id: string; name: string }):
 export function AppBreadcrumb() {
   const { pathname } = useLocation();
   const [section, contractId] = pathname.split('/').filter(Boolean);
-  const { data: contract } = useContractQuery(section === 'contracts' && contractId && contractId !== 'new' ? contractId : '');
+  // `/contracts/baixados` and `/contracts/acordos-pagos` are list routes in
+  // the creditor portal, not contract IDs. Querying them caused a UUID
+  // validation error (and consequently the global error toaster) on entry.
+  const detailContractId = section === 'contracts' && UUID_PATTERN.test(contractId ?? '') ? contractId : '';
+  const { data: contract } = useContractQuery(detailContractId);
   const crumbs = resolveCrumbs(pathname, contract?.wallet ? { id: contract.walletId, name: contract.wallet.name } : undefined);
 
   return (
