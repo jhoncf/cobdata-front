@@ -159,6 +159,7 @@ export default function WalletDetailPage() {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [bulkAction, setBulkAction] = useState<OperationAction | null>(null);
+  const [bulkResyncOnly, setBulkResyncOnly] = useState(false);
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | ''>('');
   const [contractStatusFilter, setContractStatusFilter] = useState<ContractStatus>(ContractStatus.ACTIVE);
   const [serasaStatusFilter, setSerasaStatusFilter] = useState<SerasaStatusFilter | ''>('');
@@ -295,7 +296,12 @@ export default function WalletDetailPage() {
   const canRemoveFromSerasa = (contract: Contract) => ['SENT', 'REGISTERED', 'UPDATED'].includes(contract.serasaStatus);
   const handleSyncWithSerasa = (contract: Contract) => syncWithSerasaMutation.mutate(contract.id);
   const handleBulkAction = (action: OperationAction) => {
+    setBulkResyncOnly(false);
     setBulkAction(action);
+  };
+  const handleBulkResync = () => {
+    setBulkResyncOnly(true);
+    setBulkAction(OperationAction.CREATE_OR_UPDATE);
   };
 
   const handleCreateContract = (data: CreateContractDto) => {
@@ -666,6 +672,12 @@ export default function WalletDetailPage() {
                             onClick={() => handleBulkAction(OperationAction.CREATE_OR_UPDATE)}
                           >
                             <LuRefreshCw /> Enviar contratos filtrados ao Serasa
+                          </Menu.Item>
+                          <Menu.Item
+                            value="resync-filtered-serasa"
+                            onClick={handleBulkResync}
+                          >
+                            <LuRefreshCw /> Ressincronizar contratos filtrados
                           </Menu.Item>
                           <Menu.Item
                             value="remove-filtered-serasa"
@@ -1060,16 +1072,27 @@ export default function WalletDetailPage() {
       />
       <ConfirmDialog
         open={!!bulkAction}
-        onOpenChange={(open) => !open && setBulkAction(null)}
-        title={bulkAction === OperationAction.REMOVE ? 'Remover contratos filtrados do Serasa' : 'Enviar contratos filtrados ao Serasa'}
+        onOpenChange={(open) => {
+          if (!open) {
+            setBulkAction(null);
+            setBulkResyncOnly(false);
+          }
+        }}
+        title={bulkAction === OperationAction.REMOVE
+          ? 'Remover contratos filtrados do Serasa'
+          : bulkResyncOnly
+            ? 'Ressincronizar contratos filtrados com a Serasa'
+            : 'Enviar contratos filtrados ao Serasa'}
         message={bulkPreviewLoading
           ? 'Calculando os contratos elegíveis...'
           : bulkPreviewError
             ? 'Não foi possível calcular os contratos elegíveis. Tente novamente; se o erro persistir, verifique a integração Serasa.'
           : bulkAction === OperationAction.REMOVE
             ? `Serão removidos ${bulkPreview?.eligibleCount ?? 0} contrato(s) elegível(is) da Serasa. Deseja continuar?`
-            : `Serão enviados ${bulkPreview?.eligibleCount ?? 0} contrato(s) elegível(is) para a carteira Serasa vinculada. Deseja continuar?`}
-        confirmLabel={bulkAction === OperationAction.REMOVE ? 'Remover' : 'Enviar'}
+            : bulkResyncOnly
+              ? `Serão ressincronizados ${bulkPreview?.eligibleCount ?? 0} contrato(s) já registrados na Serasa, respeitando todos os filtros atuais. A ação atualiza valor e data de vencimento, sem adicionar ou remover contratos. Deseja continuar?`
+              : `Serão enviados ${bulkPreview?.eligibleCount ?? 0} contrato(s) elegível(is) para a carteira Serasa vinculada. Deseja continuar?`}
+        confirmLabel={bulkAction === OperationAction.REMOVE ? 'Remover' : bulkResyncOnly ? 'Ressincronizar' : 'Enviar'}
         loading={createOperationMutation.isPending || bulkPreviewLoading}
         disabled={bulkPreviewLoading || bulkPreviewError || (bulkPreview?.eligibleCount ?? 0) === 0}
         onConfirm={() => {
@@ -1077,8 +1100,8 @@ export default function WalletDetailPage() {
           createOperationMutation.mutate(
             // The API receives operation filters at the top level. A nested
             // `filters` object is rejected by the backend DTO validation.
-            { walletId: id, action: bulkAction, ...filteredSerasaOperationFilters },
-            { onSuccess: () => setBulkAction(null) },
+            { walletId: id, action: bulkAction, ...filteredSerasaOperationFilters, ...(bulkResyncOnly ? { resyncOnly: true } : {}) },
+            { onSuccess: () => { setBulkAction(null); setBulkResyncOnly(false); } },
           );
         }}
       />

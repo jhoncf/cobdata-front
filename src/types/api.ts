@@ -238,6 +238,8 @@ export interface OperationContractFilters {
   search?: string;
   paymentStatus?: PaymentStatus;
   serasaStatus?: SerasaStatus;
+  /** Atualiza apenas contratos já registrados ou atualizados na Serasa. */
+  resyncOnly?: boolean;
   installmentOnly?: boolean;
   minOriginalValue?: number;
   maxOriginalValue?: number;
