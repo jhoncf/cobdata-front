@@ -73,6 +73,19 @@ export function useSyncContractWithSerasaMutation() {
   });
 }
 
+export function useRecalculateContractOfferMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/contracts/${id}/recalculate-offer`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['wallets'] });
+      toaster.create({ type: 'success', title: 'Oferta atualizada com as regras atuais da carteira' });
+    },
+    onError: (error) => handleApiError(error),
+  });
+}
+
 export function useUpdateContractWithSerasaMutation() {
   const queryClient = useQueryClient();
   return useMutation({

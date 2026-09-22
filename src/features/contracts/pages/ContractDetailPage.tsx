@@ -21,7 +21,7 @@ import {
 } from '@chakra-ui/react';
 import { LuBan, LuEllipsis, LuInfo, LuMessageSquare, LuPencil, LuRefreshCw, LuUnlink, LuVolume2 } from 'react-icons/lu';
 import { useContractInteractionsQuery, useContractQuery } from '../api/useContractsQuery';
-import { useCancelContractByCreditorMutation, useRemoveContractFromSerasaMutation, useSyncContractWithSerasaMutation, useUpdateContractMutation, useUpdateContractWithSerasaMutation } from '../api/useContractMutations';
+import { useCancelContractByCreditorMutation, useRecalculateContractOfferMutation, useRemoveContractFromSerasaMutation, useSyncContractWithSerasaMutation, useUpdateContractMutation, useUpdateContractWithSerasaMutation } from '../api/useContractMutations';
 import { ContractFormDialog } from '../components/ContractFormDialog';
 import { LigueLeadDialog } from '@/features/wallets/components/LigueLeadDialog';
 import { ConfirmDialog, DataTable, PageHeader, StatusBadge } from '@/components/common';
@@ -102,6 +102,7 @@ export default function ContractDetailPage() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancellationReason, setCancellationReason] = useState<'CREDITOR_REQUEST' | 'CONTESTATION' | 'PROCON' | 'RECLAME_AQUI' | 'EMAIL_REQUEST'>('CREDITOR_REQUEST');
   const updateContractMutation = useUpdateContractMutation();
+  const recalculateOfferMutation = useRecalculateContractOfferMutation();
   const syncWithSerasaMutation = useSyncContractWithSerasaMutation();
   const updateWithSerasaMutation = useUpdateContractWithSerasaMutation();
   const removeFromSerasaMutation = useRemoveContractFromSerasaMutation();
@@ -171,6 +172,13 @@ export default function ContractDetailPage() {
               <Menu.Content>
                 <Menu.Item value="edit" onClick={() => setEditingContract(true)}>
                   <LuPencil /> Editar contrato
+                </Menu.Item>
+                <Menu.Item
+                  value="recalculate-offer"
+                  disabled={contract.status !== 'ACTIVE' || contract.paymentStatus === 'PAID'}
+                  onClick={() => recalculateOfferMutation.mutate(contract.id)}
+                >
+                  <LuRefreshCw /> Atualizar oferta
                 </Menu.Item>
                 <Menu.Item value="communications" onClick={() => setShowCommunications(true)}>
                   <LuMessageSquare /> Comunicações
