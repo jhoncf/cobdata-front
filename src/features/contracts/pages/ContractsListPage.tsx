@@ -51,6 +51,20 @@ import type { Contract } from '@/types/models';
 import type { CreateContractDto, UpdateContractDto } from '@/types/api';
 import { ContractStatus, PaymentStatus, type SerasaStatus } from '@/types/enums';
 
+function toDateInputValue(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function defaultAgreementPeriod() {
+  const end = new Date();
+  const start = new Date(end);
+  start.setDate(start.getDate() - 29);
+  return { from: toDateInputValue(start), to: toDateInputValue(end) };
+}
+
 export default function ContractsListPage() {
   const { canCreate, canEdit, canDelete } = usePermission();
   const { creditorId } = useAuth();
@@ -66,8 +80,8 @@ export default function ContractsListPage() {
   const [serasaStatusFilter, setSerasaStatusFilter] = useState<SerasaStatus | ''>('');
   const [installmentOnly, setInstallmentOnly] = useState('');
   const [cpfSearch, setCpfSearch] = useState('');
-  const [agreementDateFrom, setAgreementDateFrom] = useState('');
-  const [agreementDateTo, setAgreementDateTo] = useState('');
+  const [agreementDateFrom, setAgreementDateFrom] = useState(() => defaultAgreementPeriod().from);
+  const [agreementDateTo, setAgreementDateTo] = useState(() => defaultAgreementPeriod().to);
 
   // Contracts pagination
   const [page, setPage] = useState(1);
