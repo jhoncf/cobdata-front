@@ -390,7 +390,6 @@ export default function ContractsListPage() {
             <option value="NOT_ENABLED">Não enviado</option>
             <option value="SENT">Enviado</option>
             <option value="REGISTERED">Registrado</option>
-            <option value="UPDATED">Atualizado</option>
             <option value="FAILED">Falhou</option>
             <option value="REMOVING">Removendo</option>
             <option value="REMOVED">Removido</option>
