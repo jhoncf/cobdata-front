@@ -1,13 +1,12 @@
-import { Box, Card, Heading, HStack, SimpleGrid, Text, VStack, Spinner } from '@chakra-ui/react';
-import { LuUpload, LuPlay, LuWallet, LuClock, LuHandshake } from 'react-icons/lu';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { usePermission } from '@/hooks/usePermission';
+import { Box, Card, HStack, NativeSelect, SimpleGrid, Text, VStack, Spinner } from '@chakra-ui/react';
+import { LuHandshake } from 'react-icons/lu';
+import { useState } from 'react';
 import { PageHeader } from '@/components/common';
-import { Button } from '@chakra-ui/react';
 import { CartesianGrid, LabelList, Legend, Line, LineChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 import { useDashboardAgreementHistoryQuery, useDashboardTodayQuery } from '../api/useDashboardTodayQuery';
 import { formatCurrency } from '@/lib/formatters';
+import { useCreditorsQuery } from '@/features/creditors/api/useCreditorsQuery';
+import { useWalletsQuery } from '@/features/wallets/api/useWalletsQuery';
 
 function AgreementDailyChart({ data }: { data: Array<{ date: string; count: number; amount: number; paidCount: number; breachCount: number }> }) {
   const chartData = data.map((item) => ({
@@ -42,15 +41,44 @@ function AgreementDailyChart({ data }: { data: Array<{ date: string; count: numb
 }
 
 export default function DashboardPage() {
-  const { userName, role } = useAuth();
-  const { canCreate } = usePermission();
-  const navigate = useNavigate();
-  const { data: today, isLoading: isLoadingToday } = useDashboardTodayQuery();
-  const { data: agreementHistory, isLoading: isLoadingAgreementHistory } = useDashboardAgreementHistoryQuery();
+  const [creditorId, setCreditorId] = useState('');
+  const [walletId, setWalletId] = useState('');
+  const filters = { ...(creditorId ? { creditorId } : {}), ...(walletId ? { walletId } : {}) };
+  const { data: creditors } = useCreditorsQuery({ page: 1, limit: 100 });
+  const { data: wallets } = useWalletsQuery({ page: 1, limit: 100, ...(creditorId ? { creditorId } : {}) });
+  const { data: today, isLoading: isLoadingToday } = useDashboardTodayQuery(filters);
+  const { data: agreementHistory, isLoading: isLoadingAgreementHistory } = useDashboardAgreementHistoryQuery(filters);
 
   return (
     <VStack align="stretch" gap="6">
       <PageHeader title="Dashboard" />
+
+      <Card.Root>
+        <Card.Body>
+          <SimpleGrid columns={{ base: 1, md: 2 }} gap="3">
+            <Box>
+              <Text fontSize="sm" mb="1">Credor</Text>
+              <NativeSelect.Root>
+                <NativeSelect.Field value={creditorId} onChange={(event) => { setCreditorId(event.target.value); setWalletId(''); }}>
+                  <option value="">Todos os credores</option>
+                  {creditors?.data.map((creditor) => <option key={creditor.id} value={creditor.id}>{creditor.name}</option>)}
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+            </Box>
+            <Box>
+              <Text fontSize="sm" mb="1">Carteira</Text>
+              <NativeSelect.Root>
+                <NativeSelect.Field value={walletId} onChange={(event) => setWalletId(event.target.value)}>
+                  <option value="">Todas as carteiras</option>
+                  {wallets?.data.map((wallet) => <option key={wallet.id} value={wallet.id}>{wallet.name}</option>)}
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+            </Box>
+          </SimpleGrid>
+        </Card.Body>
+      </Card.Root>
 
       <Card.Root>
         <Card.Header>
@@ -86,94 +114,12 @@ export default function DashboardPage() {
       <Card.Root>
         <Card.Header>
           <Card.Title>Acordos nos últimos 30 dias</Card.Title>
-          <Text fontSize="sm" color="fg.muted">Consolidado de todas as carteiras: acordos fechados, pagos e quebrados.</Text>
+          <Text fontSize="sm" color="fg.muted">Acordos fechados, pagos e quebrados dentro do filtro selecionado.</Text>
         </Card.Header>
         <Card.Body>
           {isLoadingAgreementHistory ? <Spinner size="sm" /> : <AgreementDailyChart data={agreementHistory?.data ?? []} />}
         </Card.Body>
       </Card.Root>
-
-      {/* Welcome Card */}
-      <Card.Root>
-        <Card.Body>
-          <Heading size="lg">
-            Bem-vindo{userName ? `, ${userName}` : ''}!
-          </Heading>
-          <Text color="fg.muted" mt="1">
-            Perfil: {role ?? 'Carregando...'}
-          </Text>
-        </Card.Body>
-      </Card.Root>
-
-      {/* Quick Actions */}
-      {canCreate && (
-        <Box>
-          <Heading size="sm" mb="3">Ações rápidas</Heading>
-          <HStack gap="3" flexWrap="wrap">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => navigate('/imports/new')}
-            >
-              <LuUpload />
-              Importar
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => navigate('/operations')}
-            >
-              <LuPlay />
-              Nova Operação
-            </Button>
-          </HStack>
-        </Box>
-      )}
-
-      {/* Summary Cards */}
-      <SimpleGrid columns={{ base: 1, md: 2 }} gap="4">
-        <Card.Root>
-          <Card.Body>
-            <HStack gap="3">
-              <Box color="blue.500">
-                <LuWallet size={24} />
-              </Box>
-              <Box>
-                <Text fontWeight="medium">Veja suas carteiras</Text>
-                <Text fontSize="sm" color="fg.muted">
-                  Acesse e gerencie suas carteiras de crédito
-                </Text>
-              </Box>
-            </HStack>
-          </Card.Body>
-          <Card.Footer>
-            <Button size="xs" variant="ghost" onClick={() => navigate('/wallets')}>
-              Ver carteiras
-            </Button>
-          </Card.Footer>
-        </Card.Root>
-
-        <Card.Root>
-          <Card.Body>
-            <HStack gap="3">
-              <Box color="green.500">
-                <LuClock size={24} />
-              </Box>
-              <Box>
-                <Text fontWeight="medium">Últimas importações</Text>
-                <Text fontSize="sm" color="fg.muted">
-                  Acompanhe o status das suas importações recentes
-                </Text>
-              </Box>
-            </HStack>
-          </Card.Body>
-          <Card.Footer>
-            <Button size="xs" variant="ghost" onClick={() => navigate('/imports')}>
-              Ver importações
-            </Button>
-          </Card.Footer>
-        </Card.Root>
-      </SimpleGrid>
     </VStack>
   );
 }
