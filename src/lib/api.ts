@@ -100,8 +100,13 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // For all other errors, delegate to the generic error handler
-    handleApiError(error);
+    // Background reads (React Query screen loading) must not show a global
+    // permission toaster. A denied GET is rendered by its owning screen; a
+    // global toast was making creditor portal navigation look like a failed
+    // user action. Mutations keep the explicit feedback expected by users.
+    if (originalRequest?.method?.toLowerCase() !== 'get') {
+      handleApiError(error);
+    }
 
     return Promise.reject(error);
   },
