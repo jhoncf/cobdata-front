@@ -27,3 +27,13 @@ export async function downloadSerasaAgreements(period: ReportPeriod) {
   link.click();
   URL.revokeObjectURL(url);
 }
+
+export async function downloadPixPayments(period: ReportPeriod) {
+  const response = await api.get('/reports/pix-payments/export', { params: period, responseType: 'blob' });
+  const url = URL.createObjectURL(response.data);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'pagamentos-pix-cobcom.csv';
+  link.click();
+  URL.revokeObjectURL(url);
+}
