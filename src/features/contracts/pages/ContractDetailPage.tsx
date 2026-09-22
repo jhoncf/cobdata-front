@@ -344,7 +344,7 @@ export default function ContractDetailPage() {
             </Stack>
             <Stack gap="0">
               <Text fontSize="xs" color="fg.muted">Motivo do cancelamento</Text>
-              <Text>{contract.cancellationReason === 'CONTESTATION' ? 'Contestação do titular' : contract.cancellationReason === 'CREDITOR_REQUEST' ? 'Solicitação do credor' : '—'}</Text>
+              <Text>{contract.cancellationReason === 'CONTESTATION' ? 'Reclamação no chatbot' : contract.cancellationReason === 'CREDITOR_REQUEST' ? 'Solicitação do Credor' : '—'}</Text>
             </Stack>
           </HStack>
         </Card.Body>
