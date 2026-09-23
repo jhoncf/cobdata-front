@@ -345,14 +345,20 @@ export interface ListContractsParams extends PaginationParams {
   tags?: string[];
   sortBy?:
     | 'contractNumber'
+    | 'debtorName'
     | 'debtorDocument'
+    | 'debtType'
     | 'originalValue'
     | 'updatedValue'
     | 'offerValue'
+    | 'offerDiscountPercent'
     | 'status'
     | 'paymentStatus'
     | 'serasaStatus'
     | 'occurrenceDate'
+    | 'agreementCreatedAt'
+    | 'agreementTotalAmount'
+    | 'cancelledAt'
     | 'agingDays';
   sortDirection?: 'asc' | 'desc';
 }

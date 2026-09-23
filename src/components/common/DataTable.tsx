@@ -1,5 +1,6 @@
-import { Table, Skeleton, Box } from '@chakra-ui/react';
+import { Table, Skeleton, Box, Button, HStack } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
+import { LuArrowDown, LuArrowUp } from 'react-icons/lu';
 
 export interface DataTableColumn<T> {
   key: string;
@@ -7,6 +8,8 @@ export interface DataTableColumn<T> {
   cell: (row: T) => ReactNode;
   textAlign?: 'start' | 'center' | 'end';
   minW?: string;
+  /** Field sent to the API when this column is selected for sorting. */
+  sortKey?: string;
 }
 
 interface DataTableProps<T> {
@@ -16,6 +19,9 @@ interface DataTableProps<T> {
   skeletonRows?: number;
   keyExtractor: (row: T) => string | number;
   onRowClick?: (row: T) => void;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+  onSort?: (sortKey: string) => void;
 }
 
 export function DataTable<T>({
@@ -25,6 +31,9 @@ export function DataTable<T>({
   skeletonRows = 5,
   keyExtractor,
   onRowClick,
+  sortBy,
+  sortDirection,
+  onSort,
 }: DataTableProps<T>) {
   return (
     <Box
@@ -51,7 +60,29 @@ export function DataTable<T>({
                   color="fg.muted"
                   py="3"
                 >
-                  {col.header}
+                  {col.sortKey && onSort ? (
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      px="0"
+                      minW="0"
+                      h="auto"
+                      fontSize="inherit"
+                      fontWeight="inherit"
+                      textTransform="inherit"
+                      letterSpacing="inherit"
+                      color="inherit"
+                      onClick={() => onSort(col.sortKey!)}
+                      aria-label={`Ordenar por ${col.header}`}
+                    >
+                      <HStack gap="1">
+                        <Box as="span">{col.header}</Box>
+                        {sortBy === col.sortKey && (
+                          sortDirection === 'asc' ? <LuArrowUp /> : <LuArrowDown />
+                        )}
+                      </HStack>
+                    </Button>
+                  ) : col.header}
                 </Table.ColumnHeader>
               ))}
             </Table.Row>

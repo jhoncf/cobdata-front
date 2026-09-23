@@ -48,7 +48,7 @@ import {
   PROVIDER_STATUS_LABELS,
 } from '@/lib/constants';
 import type { Contract } from '@/types/models';
-import type { CreateContractDto, UpdateContractDto } from '@/types/api';
+import type { CreateContractDto, UpdateContractDto, ListContractsParams } from '@/types/api';
 import { ContractStatus, PaymentStatus, type SerasaStatus } from '@/types/enums';
 
 function toDateInputValue(date: Date) {
@@ -82,6 +82,8 @@ export default function ContractsListPage() {
   const [cpfSearch, setCpfSearch] = useState('');
   const [agreementDateFrom, setAgreementDateFrom] = useState(() => defaultAgreementPeriod().from);
   const [agreementDateTo, setAgreementDateTo] = useState(() => defaultAgreementPeriod().to);
+  const [portalSortBy, setPortalSortBy] = useState<NonNullable<ListContractsParams['sortBy']>>('agreementCreatedAt');
+  const [portalSortDirection, setPortalSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Contracts pagination
   const [page, setPage] = useState(1);
@@ -110,6 +112,8 @@ export default function ContractsListPage() {
     agreementOnly: showPaidAgreements || undefined,
     agreementDateFrom: showPaidAgreements ? agreementDateFrom || undefined : undefined,
     agreementDateTo: showPaidAgreements ? agreementDateTo || undefined : undefined,
+    sortBy: isCreditorPortal ? portalSortBy : undefined,
+    sortDirection: isCreditorPortal ? portalSortDirection : undefined,
     serasaStatus: serasaStatusFilter || undefined,
     installmentOnly: installmentOnly === 'yes' ? true : undefined,
     status: showCancelled ? ContractStatus.CANCELLED : undefined,
@@ -140,6 +144,17 @@ export default function ContractsListPage() {
 
   const handleWalletChange = (walletId: string) => {
     setSelectedWalletId(walletId);
+    setPage(1);
+  };
+
+  const handlePortalSort = (field: string) => {
+    const nextField = field as NonNullable<ListContractsParams['sortBy']>;
+    if (portalSortBy === nextField) {
+      setPortalSortDirection((current) => current === 'asc' ? 'desc' : 'asc');
+    } else {
+      setPortalSortBy(nextField);
+      setPortalSortDirection('asc');
+    }
     setPage(1);
   };
 
@@ -199,33 +214,35 @@ export default function ContractsListPage() {
     : [];
 
   const paidAgreementColumns: DataTableColumn<Contract>[] = [
-    { key: 'contractNumber', header: 'Nº Contrato', cell: (row) => row.contractNumber, minW: '130px' },
-    { key: 'debtorName', header: 'Nome do cliente', cell: (row) => row.debtorName || '—', minW: '180px' },
-    { key: 'debtorDocument', header: 'CPF', cell: (row) => row.debtorDocument, minW: '150px' },
-    { key: 'updatedValue', header: 'Valor em aberto', cell: (row) => formatCurrency(row.updatedValue), textAlign: 'end', minW: '150px' },
-    { key: 'offerDiscountPercent', header: 'Desconto aplicado', cell: (row) => `${Number(row.offerDiscountPercent ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`, textAlign: 'end', minW: '150px' },
-    { key: 'agreementTotalAmount', header: 'Valor acordo', cell: (row) => row.agreementTotalAmount != null ? formatCurrency(row.agreementTotalAmount) : '—', textAlign: 'end', minW: '140px' },
-    { key: 'agreementCreatedAt', header: 'Data do acordo', cell: (row) => row.agreementCreatedAt ? formatDate(row.agreementCreatedAt) : '—', minW: '145px' },
-    { key: 'agreementStatus', header: 'Status', cell: (row) => <StatusBadge status={row.paymentStatus === PaymentStatus.PAID ? 'PAID' : 'OPEN'} label={row.paymentStatus === PaymentStatus.PAID ? 'Pago' : 'Em aberto'} />, minW: '120px' },
+    { key: 'contractNumber', header: 'Nº Contrato', cell: (row) => row.contractNumber, minW: '130px', sortKey: 'contractNumber' },
+    { key: 'debtorName', header: 'Nome do cliente', cell: (row) => row.debtorName || '—', minW: '180px', sortKey: 'debtorName' },
+    { key: 'debtorDocument', header: 'CPF', cell: (row) => row.debtorDocument, minW: '150px', sortKey: 'debtorDocument' },
+    { key: 'updatedValue', header: 'Valor em aberto', cell: (row) => formatCurrency(row.updatedValue), textAlign: 'end', minW: '150px', sortKey: 'updatedValue' },
+    { key: 'offerDiscountPercent', header: 'Desconto aplicado', cell: (row) => `${Number(row.offerDiscountPercent ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`, textAlign: 'end', minW: '150px', sortKey: 'offerDiscountPercent' },
+    { key: 'agreementTotalAmount', header: 'Valor acordo', cell: (row) => row.agreementTotalAmount != null ? formatCurrency(row.agreementTotalAmount) : '—', textAlign: 'end', minW: '140px', sortKey: 'agreementTotalAmount' },
+    { key: 'agreementCreatedAt', header: 'Data do acordo', cell: (row) => row.agreementCreatedAt ? formatDate(row.agreementCreatedAt) : '—', minW: '145px', sortKey: 'agreementCreatedAt' },
+    { key: 'agreementStatus', header: 'Status', cell: (row) => <StatusBadge status={row.paymentStatus === PaymentStatus.PAID ? 'PAID' : 'OPEN'} label={row.paymentStatus === PaymentStatus.PAID ? 'Pago' : 'Em aberto'} />, minW: '120px', sortKey: 'paymentStatus' },
     { key: 'agreementPix', header: 'Ações', textAlign: 'end', minW: '130px', cell: (row) => row.paymentStatus === PaymentStatus.PAID || row.agreementTotalAmount == null ? '—' : <GeneratePixAction contract={row} agreementAmount label="Gerar Pix" /> },
   ];
 
   const columns: DataTableColumn<Contract>[] = showPaidAgreements ? paidAgreementColumns : [
-    { key: 'contractNumber', header: 'Nº Contrato', cell: (row) => row.contractNumber, minW: '120px' },
-    { key: 'debtorDocument', header: 'Documento', cell: (row) => row.debtorDocument },
-    { key: 'debtType', header: 'Tipo', cell: (row) => DEBT_TYPE_LABELS[row.debtType] },
-    { key: 'originalValue', header: 'Valor', cell: (row) => formatCurrency(row.originalValue), textAlign: 'end' },
+    { key: 'contractNumber', header: 'Nº Contrato', cell: (row) => row.contractNumber, minW: '120px', sortKey: 'contractNumber' },
+    { key: 'debtorDocument', header: 'Documento', cell: (row) => row.debtorDocument, sortKey: 'debtorDocument' },
+    { key: 'debtType', header: 'Tipo', cell: (row) => DEBT_TYPE_LABELS[row.debtType], sortKey: 'debtType' },
+    { key: 'originalValue', header: 'Valor', cell: (row) => formatCurrency(row.originalValue), textAlign: 'end', sortKey: 'originalValue' },
     {
       key: 'status',
       header: 'Situação',
+      sortKey: 'status',
       cell: (row) => <StatusBadge status={row.status} label={CONTRACT_STATUS_LABELS[row.status]} />,
     },
     {
       key: 'paymentStatus',
       header: 'Financeiro',
+      sortKey: 'paymentStatus',
       cell: (row) => <StatusBadge status={row.paymentStatus} label={PAYMENT_STATUS_LABELS[row.paymentStatus]} />,
     },
-    { key: 'serasaStatus', header: 'Serasa', cell: (row) => <StatusBadge status={row.serasaStatus} label={PROVIDER_STATUS_LABELS[row.serasaStatus]} /> },
+    { key: 'serasaStatus', header: 'Serasa', cell: (row) => <StatusBadge status={row.serasaStatus} label={PROVIDER_STATUS_LABELS[row.serasaStatus]} />, sortKey: 'serasaStatus' },
     {
       key: 'agreement',
       header: 'Acordo',
@@ -236,6 +253,7 @@ export default function ContractsListPage() {
     {
       key: 'occurrenceDate',
       header: showCancelled ? 'Data da remoção' : 'Ocorrência',
+      sortKey: showCancelled ? 'cancelledAt' : 'occurrenceDate',
       cell: (row) => showCancelled
         ? (row.cancelledAt ? formatDate(row.cancelledAt) : '—')
         : formatDate(row.occurrenceDate),
@@ -480,6 +498,9 @@ export default function ContractsListPage() {
             loading={contractsLoading}
             keyExtractor={(row) => row.id}
             onRowClick={(row) => { if (canEdit) setTagsTarget(row); }}
+            sortBy={isCreditorPortal ? portalSortBy : undefined}
+            sortDirection={isCreditorPortal ? portalSortDirection : undefined}
+            onSort={isCreditorPortal ? handlePortalSort : undefined}
           />
 
           <Box mt="4">
