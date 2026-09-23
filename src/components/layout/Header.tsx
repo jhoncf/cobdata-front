@@ -15,9 +15,13 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick, sidebarCollapsed = false, onSidebarToggle }: HeaderProps) {
-  const { userName, role, creditorId } = useAuth();
+  const { userName, role, creditorId, user } = useAuth();
   const { data: creditor } = useCreditorQuery(creditorId ?? '');
-  const creditorName = creditor?.tradeName?.trim() || creditor?.name?.trim();
+  // The portal identity comes with /auth/me. The creditor lookup remains a
+  // fallback only, so a transient detail-query failure never hides the name.
+  const creditorName = user?.creditorName?.trim()
+    || creditor?.tradeName?.trim()
+    || creditor?.name?.trim();
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const [colorMode, setColorMode] = useState<'light' | 'dark'>(() => {

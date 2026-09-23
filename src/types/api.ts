@@ -50,6 +50,7 @@ export interface MeResponse {
   role: Role;
   scopes: string[];
   creditorId?: string | null;
+  creditorName?: string | null;
 }
 
 // ─── Auth Request DTOs ───────────────────────────────────────────────────────
