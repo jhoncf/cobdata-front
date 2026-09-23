@@ -24,6 +24,10 @@ export interface PaginationMeta {
 export interface PaginatedResponse<T> {
   data: T[];
   meta: PaginationMeta;
+  /** Optional aggregate returned by endpoints that expose a filtered financial total. */
+  summary?: {
+    agreementTotalAmount?: number;
+  };
 }
 
 export interface ApiError {

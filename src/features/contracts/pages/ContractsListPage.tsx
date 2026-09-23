@@ -333,17 +333,29 @@ export default function ContractsListPage() {
       </PageHeader>
 
       {isCreditorPortal && showPaidAgreements ? (
-        <HStack mb="5" gap="3" flexWrap="wrap" align="end">
-          <Box>
-            <Text fontSize="sm" mb="1">Acordo de</Text>
-            <Input size="sm" type="date" value={agreementDateFrom} onChange={(event) => { setAgreementDateFrom(event.target.value); setPage(1); }} aria-label="Data inicial do acordo" />
-          </Box>
-          <Box>
-            <Text fontSize="sm" mb="1">até</Text>
-            <Input size="sm" type="date" value={agreementDateTo} onChange={(event) => { setAgreementDateTo(event.target.value); setPage(1); }} aria-label="Data final do acordo" />
-          </Box>
-          <Text fontSize="sm" color="fg.muted" pb="1">Exibe todos os acordos gerados no período, inclusive pagos, parcelados e quebrados.</Text>
-        </HStack>
+        <Box mb="5">
+          <HStack gap="3" flexWrap="wrap" align="end">
+            <Box>
+              <Text fontSize="sm" mb="1">Acordo de</Text>
+              <Input size="sm" type="date" value={agreementDateFrom} onChange={(event) => { setAgreementDateFrom(event.target.value); setPage(1); }} aria-label="Data inicial do acordo" />
+            </Box>
+            <Box>
+              <Text fontSize="sm" mb="1">até</Text>
+              <Input size="sm" type="date" value={agreementDateTo} onChange={(event) => { setAgreementDateTo(event.target.value); setPage(1); }} aria-label="Data final do acordo" />
+            </Box>
+            <Box minW={{ base: 'full', sm: '280px' }}>
+              <Text fontSize="sm" mb="1">CPF ou contrato</Text>
+              <Input
+                size="sm"
+                value={cpfSearch}
+                onChange={(event) => { setCpfSearch(event.target.value); setPage(1); }}
+                placeholder="Digite o CPF ou número do contrato"
+                aria-label="Filtrar acordos por CPF ou número do contrato"
+              />
+            </Box>
+          </HStack>
+          <Text mt="2" fontSize="sm" color="fg.muted">Exibe todos os acordos gerados no período, inclusive pagos, parcelados e quebrados.</Text>
+        </Box>
       ) : isCreditorPortal ? (
         <Box mb="5" maxW="lg">
           <Input
@@ -523,6 +535,23 @@ export default function ContractsListPage() {
           onOpenChange={(open) => { if (!open) setChargeTarget(null); }}
           contract={chargeTarget}
         />
+      )}
+
+      {isCreditorPortal && showPaidAgreements && (
+        <SimpleGrid columns={{ base: 1, sm: 2 }} gap="3" mb="5" maxW="xl">
+          <Card.Root size="sm">
+            <Card.Body py="3" px="4">
+              <Text fontSize="xs" color="fg.muted" fontWeight="medium" textTransform="uppercase">Acordos filtrados</Text>
+              <Text fontSize="2xl" fontWeight="bold" color="brand.fg" mt="1">{contractsData?.meta.total ?? 0}</Text>
+            </Card.Body>
+          </Card.Root>
+          <Card.Root size="sm">
+            <Card.Body py="3" px="4">
+              <Text fontSize="xs" color="fg.muted" fontWeight="medium" textTransform="uppercase">Valor total dos acordos</Text>
+              <Text fontSize="2xl" fontWeight="bold" color="brand.fg" mt="1">{formatCurrency(contractsData?.summary?.agreementTotalAmount ?? 0)}</Text>
+            </Card.Body>
+          </Card.Root>
+        </SimpleGrid>
       )}
 
       <CancellationReceiptDialog
