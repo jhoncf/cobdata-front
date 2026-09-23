@@ -10,7 +10,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { NativeSelect } from '@chakra-ui/react';
-import { LuPlus, LuPencil, LuTrash2, LuBanknote, LuRefreshCw, LuUnlink, LuBan, LuReceiptText } from 'react-icons/lu';
+import { LuPlus, LuPencil, LuTrash2, LuBanknote, LuRefreshCw, LuUnlink, LuBan, LuReceiptText, LuDownload } from 'react-icons/lu';
 import {
   PageHeader,
   DataTable,
@@ -41,6 +41,7 @@ import { usePermission } from '@/hooks/usePermission';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { toaster } from '@/components/ui/toaster';
+import api from '@/lib/api';
 import {
   DEBT_TYPE_LABELS,
   CONTRACT_STATUS_LABELS,
@@ -84,6 +85,7 @@ export default function ContractsListPage() {
   const [agreementDateTo, setAgreementDateTo] = useState(() => defaultAgreementPeriod().to);
   const [portalSortBy, setPortalSortBy] = useState<NonNullable<ListContractsParams['sortBy']>>('agreementCreatedAt');
   const [portalSortDirection, setPortalSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [isExporting, setIsExporting] = useState(false);
 
   // Contracts pagination
   const [page, setPage] = useState(1);
@@ -156,6 +158,40 @@ export default function ContractsListPage() {
       setPortalSortDirection('asc');
     }
     setPage(1);
+  };
+
+  const canExportPortal = showCancelled || showPaidAgreements || cpfSearch.trim().length >= 3;
+  const handlePortalExport = async () => {
+    if (!canExportPortal) return;
+    setIsExporting(true);
+    try {
+      const response = await api.get('/contracts/export', {
+        params: {
+          format: 'xlsx',
+          agreementOnly: showPaidAgreements || undefined,
+          agreementDateFrom: showPaidAgreements ? agreementDateFrom || undefined : undefined,
+          agreementDateTo: showPaidAgreements ? agreementDateTo || undefined : undefined,
+          status: showCancelled ? ContractStatus.CANCELLED : undefined,
+          search: cpfSearch.trim().length >= 3 ? cpfSearch.trim() : undefined,
+          sortBy: portalSortBy,
+          sortDirection: portalSortDirection,
+        },
+        responseType: 'blob',
+        timeout: 120_000,
+      });
+      const href = window.URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = showPaidAgreements ? 'acordos.xlsx' : showCancelled ? 'contratos-baixados.xlsx' : 'contratos.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(href);
+    } catch {
+      toaster.create({ title: 'Não foi possível exportar os contratos', type: 'error' });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleCreate = () => {
@@ -343,6 +379,18 @@ export default function ContractsListPage() {
   return (
     <>
       <PageHeader title={showPaidAgreements ? 'Acordos' : showCancelled ? 'Contratos baixados' : 'Contratos'}>
+        {isCreditorPortal && (
+          <Button
+            size="sm"
+            variant="outline"
+            loading={isExporting}
+            disabled={!canExportPortal || isExporting}
+            title={canExportPortal ? 'Exportar todos os registros do filtro atual em XLSX' : 'Informe CPF ou número do contrato antes de exportar'}
+            onClick={() => void handlePortalExport()}
+          >
+            <LuDownload /> Exportar XLS
+          </Button>
+        )}
         {canCreate && selectedWalletId && (
           <Button colorPalette="blue" size="sm" onClick={handleCreate}>
             <LuPlus /> Novo Contrato
