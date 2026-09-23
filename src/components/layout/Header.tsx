@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import api from '@/lib/api';
 import { GlobalSearchBar } from '@/features/search/components';
+import { useCreditorQuery } from '@/features/creditors/api/useCreditorsQuery';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -15,6 +16,8 @@ interface HeaderProps {
 
 export function Header({ onMenuClick, sidebarCollapsed = false, onSidebarToggle }: HeaderProps) {
   const { userName, role, creditorId } = useAuth();
+  const { data: creditor } = useCreditorQuery(creditorId ?? '');
+  const creditorName = creditor?.tradeName?.trim() || creditor?.name?.trim();
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
   const [colorMode, setColorMode] = useState<'light' | 'dark'>(() => {
@@ -93,9 +96,14 @@ export function Header({ onMenuClick, sidebarCollapsed = false, onSidebarToggle 
           <Box w="7" h="7" rounded="lg" bg="white" overflow="hidden" flexShrink="0">
             <Image src="/cobcom-logo.png" alt="CobCom" w="full" h="full" objectFit="contain" />
           </Box>
-          <Text fontWeight="bold" fontSize="md" color="fg" display={{ base: 'none', sm: 'block' }} whiteSpace="nowrap">
-            CobCom - CRM
-          </Text>
+          <HStack gap="2" minW="0" display={{ base: 'none', sm: 'flex' }}>
+            <Text fontWeight="bold" fontSize="md" color="fg" whiteSpace="nowrap">CobCom - CRM</Text>
+            {creditorName && (
+              <Text fontSize="sm" color="fg.muted" fontWeight="medium" truncate maxW={{ sm: '150px', lg: '260px' }} title={creditorName}>
+                · {creditorName}
+              </Text>
+            )}
+          </HStack>
         </Flex>
       </HStack>
 
