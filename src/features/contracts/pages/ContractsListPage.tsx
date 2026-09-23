@@ -479,6 +479,23 @@ export default function ContractsListPage() {
         </SimpleGrid>
       )}
 
+      {isCreditorPortal && showPaidAgreements && (
+        <SimpleGrid columns={{ base: 1, sm: 2 }} gap="3" mb="5" maxW="xl">
+          <Card.Root size="sm">
+            <Card.Body py="3" px="4">
+              <Text fontSize="xs" color="fg.muted" fontWeight="medium" textTransform="uppercase">Acordos filtrados</Text>
+              <Text fontSize="2xl" fontWeight="bold" color="brand.fg" mt="1">{contractsData?.meta.total ?? 0}</Text>
+            </Card.Body>
+          </Card.Root>
+          <Card.Root size="sm">
+            <Card.Body py="3" px="4">
+              <Text fontSize="xs" color="fg.muted" fontWeight="medium" textTransform="uppercase">Valor total dos acordos</Text>
+              <Text fontSize="2xl" fontWeight="bold" color="brand.fg" mt="1">{formatCurrency(contractsData?.summary?.agreementTotalAmount ?? 0)}</Text>
+            </Card.Body>
+          </Card.Root>
+        </SimpleGrid>
+      )}
+
       {/* Content */}
       {!isCreditorPortal && !selectedWalletId ? (
         <EmptyState
@@ -556,23 +573,6 @@ export default function ContractsListPage() {
           onOpenChange={(open) => { if (!open) setChargeTarget(null); }}
           contract={chargeTarget}
         />
-      )}
-
-      {isCreditorPortal && showPaidAgreements && (
-        <SimpleGrid columns={{ base: 1, sm: 2 }} gap="3" mb="5" maxW="xl">
-          <Card.Root size="sm">
-            <Card.Body py="3" px="4">
-              <Text fontSize="xs" color="fg.muted" fontWeight="medium" textTransform="uppercase">Acordos filtrados</Text>
-              <Text fontSize="2xl" fontWeight="bold" color="brand.fg" mt="1">{contractsData?.meta.total ?? 0}</Text>
-            </Card.Body>
-          </Card.Root>
-          <Card.Root size="sm">
-            <Card.Body py="3" px="4">
-              <Text fontSize="xs" color="fg.muted" fontWeight="medium" textTransform="uppercase">Valor total dos acordos</Text>
-              <Text fontSize="2xl" fontWeight="bold" color="brand.fg" mt="1">{formatCurrency(contractsData?.summary?.agreementTotalAmount ?? 0)}</Text>
-            </Card.Body>
-          </Card.Root>
-        </SimpleGrid>
       )}
 
       <CancellationReceiptDialog
