@@ -57,7 +57,14 @@ export default function CreditorRemovalPage() {
     setLoading(true);
     try {
       const form = new FormData(); form.append('file', file); form.append('columnMapping', JSON.stringify(mapping));
-      const { data } = await api.post(endpoint === 'preview' ? '/creditor-removals/preview' : '/creditor-removals/confirm', form);
+      // A large file may legitimately take longer than the global 30-second
+      // API timeout while the server validates every record. Keep this action
+      // alive and show the button loading state instead of aborting it.
+      const { data } = await api.post(
+        endpoint === 'preview' ? '/creditor-removals/preview' : '/creditor-removals/confirm',
+        form,
+        { timeout: 10 * 60 * 1000 },
+      );
       if (endpoint === 'preview') setPreview(data);
       else { setConfirmOpen(false); setPreview(null); setFile(null); setHeaders([]); toaster.create({ type: 'success', title: `${data.cancelledCount} cadastro(s) removido(s)`, description: data.queuedForSerasaRemoval ? `${data.queuedForSerasaRemoval} remoção(ões) foram enviadas aos canais ativos.` : undefined }); }
     } catch (error) { handleApiError(error); }
