@@ -32,6 +32,7 @@ import { ContractFormDialog } from '@/features/contracts/components/ContractForm
 import { GeneratePixAction } from '@/features/payments/components/GeneratePixAction';
 import { WalletFormDialog } from '../components/WalletFormDialog';
 import { LigueLeadDialog } from '../components/LigueLeadDialog';
+import { CommunicationRulesPanel } from '../components/CommunicationRulesPanel';
 import { formatDate, formatCurrency } from '@/lib/formatters';
 import { toaster } from '@/components/ui/toaster';
 import api from '@/lib/api';
@@ -422,6 +423,8 @@ export default function WalletDetailPage() {
         <Tabs.List mb="4" maxW="full" overflowX="auto" overflowY="hidden" whiteSpace="nowrap">
           <Tabs.Trigger value="contracts">Visão geral e contratos</Tabs.Trigger>
           <Tabs.Trigger value="offers">Configurações de ofertas</Tabs.Trigger>
+          <Tabs.Trigger value="communication-rules">Regras de comunicação</Tabs.Trigger>
+          <Tabs.Trigger value="channels">Canais</Tabs.Trigger>
           <Tabs.Indicator />
         </Tabs.List>
 
@@ -982,6 +985,14 @@ export default function WalletDetailPage() {
               </Card.Body>
             </Card.Root>
           </Stack>
+        </Tabs.Content>
+
+        <Tabs.Content value="communication-rules">
+          <CommunicationRulesPanel walletId={id!} canEdit={canEdit} initialSection="rules" />
+        </Tabs.Content>
+
+        <Tabs.Content value="channels">
+          <CommunicationRulesPanel walletId={id!} canEdit={canEdit} initialSection="channels" />
         </Tabs.Content>
       </Tabs.Root>
 
