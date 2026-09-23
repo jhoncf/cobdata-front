@@ -75,7 +75,7 @@ export function AppShell() {
           bg="content.bg"
           p={{ base: '3', sm: '4', md: '6' }}
         >
-          <Box maxW="7xl" w="full" minW="0" mx="auto">
+          <Box w="full" minW="0">
             <AppBreadcrumb />
             <Outlet />
           </Box>
