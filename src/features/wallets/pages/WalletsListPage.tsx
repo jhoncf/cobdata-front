@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, HStack, Input } from '@chakra-ui/react';
 import { NativeSelect } from '@chakra-ui/react';
-import { LuPlus, LuSearch, LuPencil, LuTrash2 } from 'react-icons/lu';
+import { LuArchive, LuPlus, LuSearch, LuPencil } from 'react-icons/lu';
 import {
   PageHeader,
   DataTable,
   PaginationBar,
   StatusBadge,
-  ConfirmDialog,
 } from '@/components/common';
 import type { DataTableColumn } from '@/components/common';
 import { useCreditorsQuery } from '@/features/creditors/api/useCreditorsQuery';
@@ -16,18 +15,18 @@ import { useWalletsQuery } from '../api/useWalletsQuery';
 import {
   useCreateWalletMutation,
   useUpdateWalletMutation,
-  useDeleteWalletMutation,
 } from '../api/useWalletMutations';
 import { WalletFormDialog } from '../components/WalletFormDialog';
 import { usePermission } from '@/hooks/usePermission';
 import { formatDate } from '@/lib/formatters';
 import type { Wallet } from '@/types/models';
+import { WalletStatus } from '@/types/enums';
 
 const LAST_CREDITOR_SESSION_KEY = 'cobdata.wallets.lastCreditorId';
 
 export default function WalletsListPage() {
   const navigate = useNavigate();
-  const { canCreate, canEdit, canDelete } = usePermission();
+  const { canCreate, canEdit } = usePermission();
 
   // URL state management
   const [searchParams, setSearchParams] = useSearchParams();
@@ -39,6 +38,9 @@ export default function WalletsListPage() {
     searchParams.get('creditorId') ??
     sessionStorage.getItem(LAST_CREDITOR_SESSION_KEY) ??
     '';
+  const status = searchParams.get('status') as WalletStatus | null;
+  const sortBy = (searchParams.get('sortBy') as 'name' | 'createdAt' | 'status' | null) ?? 'createdAt';
+  const sortDirection = (searchParams.get('sortDirection') as 'asc' | 'desc' | null) ?? 'desc';
 
   const [searchInput, setSearchInput] = useState(search);
   const limit = 20;
@@ -60,19 +62,18 @@ export default function WalletsListPage() {
     limit,
     search,
     creditorId: selectedCreditorId || undefined,
+    status: status ?? undefined,
+    sortBy,
+    sortDirection,
   });
   const createMutation = useCreateWalletMutation();
   const updateMutation = useUpdateWalletMutation();
-  const deleteMutation = useDeleteWalletMutation();
 
   // Dialog state derived from URL
   const formOpen = action === 'new' || action === 'edit';
   const editingWallet = action === 'edit' && editId
     ? data?.data.find((w) => w.id === editId) ?? null
     : null;
-
-  // Delete stays in local state
-  const [deleteTarget, setDeleteTarget] = useState<Wallet | null>(null);
 
   const handleSearch = () => {
     updateParams({ search: searchInput || undefined, page: undefined });
@@ -119,16 +120,12 @@ export default function WalletsListPage() {
     }
   };
 
-  const handleDelete = () => {
-    if (deleteTarget) {
-      deleteMutation.mutate(deleteTarget.id, {
-        onSuccess: () => setDeleteTarget(null),
-      });
-    }
+  const archiveWallet = (wallet: Wallet) => {
+    updateMutation.mutate({ id: wallet.id, data: { status: WalletStatus.INACTIVE } });
   };
 
   const columns: DataTableColumn<Wallet>[] = [
-    { key: 'name', header: 'Nome', cell: (row) => row.name },
+    { key: 'name', header: 'Nome', cell: (row) => <RouterLink to={`/wallets/${row.id}`} onClick={(event) => event.stopPropagation()} style={{ color: 'var(--chakra-colors-blue-fg)', fontWeight: 600, textDecoration: 'underline' }}>{row.name}</RouterLink> },
     {
       key: 'creditor',
       header: 'Credor',
@@ -143,14 +140,14 @@ export default function WalletsListPage() {
     {
       key: 'status',
       header: 'Status',
-      cell: (row) => <StatusBadge status={row.status} />,
+      cell: (row) => <StatusBadge status={row.status} label={row.status === WalletStatus.INACTIVE ? 'Arquivada' : 'Ativa'} />,
     },
     {
       key: 'createdAt',
       header: 'Criado em',
       cell: (row) => formatDate(row.createdAt),
     },
-    ...(canEdit || canDelete
+    ...(canEdit
       ? [
           {
             key: 'actions',
@@ -171,18 +168,19 @@ export default function WalletsListPage() {
                     <LuPencil />
                   </Button>
                 )}
-                {canDelete && (
+                {canEdit && row.status === WalletStatus.ACTIVE && (
                   <Button
                     size="xs"
                     variant="ghost"
-                    colorPalette="red"
+                    colorPalette="orange"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setDeleteTarget(row);
+                      archiveWallet(row);
                     }}
-                    aria-label="Excluir"
+                    aria-label="Arquivar"
+                    title="Arquivar carteira"
                   >
-                    <LuTrash2 />
+                    <LuArchive />
                   </Button>
                 )}
               </HStack>
@@ -213,6 +211,26 @@ export default function WalletsListPage() {
             {creditorsData?.data.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
+
+        <NativeSelect.Root size="sm" width={{ base: 'full', sm: '170px' }}>
+          <NativeSelect.Field value={status ?? ''} onChange={(e) => updateParams({ status: e.target.value || undefined, page: undefined })}>
+            <option value="">Ativas e arquivadas</option>
+            <option value="ACTIVE">Ativas</option>
+            <option value="INACTIVE">Arquivadas</option>
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
+
+        <NativeSelect.Root size="sm" width={{ base: 'full', sm: '210px' }}>
+          <NativeSelect.Field value={`${sortBy}:${sortDirection}`} onChange={(e) => { const [nextSortBy, nextDirection] = e.target.value.split(':'); updateParams({ sortBy: nextSortBy, sortDirection: nextDirection, page: undefined }); }}>
+            <option value="createdAt:desc">Mais recentes primeiro</option>
+            <option value="createdAt:asc">Mais antigas primeiro</option>
+            <option value="name:asc">Nome: A–Z</option>
+            <option value="name:desc">Nome: Z–A</option>
+            <option value="status:asc">Status</option>
           </NativeSelect.Field>
           <NativeSelect.Indicator />
         </NativeSelect.Root>
@@ -255,15 +273,6 @@ export default function WalletsListPage() {
         loading={createMutation.isPending || updateMutation.isPending}
       />
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-        title="Excluir Carteira"
-        message={`Tem certeza que deseja excluir "${deleteTarget?.name}"?`}
-        confirmLabel="Excluir"
-        onConfirm={handleDelete}
-        loading={deleteMutation.isPending}
-      />
     </>
   );
 }

@@ -307,6 +307,9 @@ export interface ListCreditorsParams extends PaginationParams {
 export interface ListWalletsParams extends PaginationParams {
   search?: string;
   creditorId?: string;
+  status?: 'ACTIVE' | 'INACTIVE';
+  sortBy?: 'name' | 'createdAt' | 'status';
+  sortDirection?: 'asc' | 'desc';
 }
 
 export interface ListContractsParams extends PaginationParams {
