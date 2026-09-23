@@ -423,8 +423,7 @@ export default function WalletDetailPage() {
         <Tabs.List mb="4" maxW="full" overflowX="auto" overflowY="hidden" whiteSpace="nowrap">
           <Tabs.Trigger value="contracts">Visão geral e contratos</Tabs.Trigger>
           <Tabs.Trigger value="offers">Configurações de ofertas</Tabs.Trigger>
-          <Tabs.Trigger value="communication-rules">Regras de comunicação</Tabs.Trigger>
-          <Tabs.Trigger value="channels">Canais</Tabs.Trigger>
+          <Tabs.Trigger value="communication-rules">Régua de comunicação</Tabs.Trigger>
           <Tabs.Indicator />
         </Tabs.List>
 
@@ -988,11 +987,7 @@ export default function WalletDetailPage() {
         </Tabs.Content>
 
         <Tabs.Content value="communication-rules">
-          <CommunicationRulesPanel walletId={id!} canEdit={canEdit} initialSection="rules" />
-        </Tabs.Content>
-
-        <Tabs.Content value="channels">
-          <CommunicationRulesPanel walletId={id!} canEdit={canEdit} initialSection="channels" />
+          <CommunicationRulesPanel walletId={id!} canEdit={canEdit} />
         </Tabs.Content>
       </Tabs.Root>
 
