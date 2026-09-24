@@ -125,6 +125,7 @@ export interface UpsertIxcIntegrationDto {
   syncEveryDays?: number;
   syncAtHour?: number;
   syncAtMinute?: number;
+  ixcReceivingAccountId?: string;
 }
 
 export interface TestIxcIntegrationDto {

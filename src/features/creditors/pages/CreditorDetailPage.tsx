@@ -69,6 +69,7 @@ export default function CreditorDetailPage() {
   const [ixcMinDebtValue, setIxcMinDebtValue] = useState(0);
   const [ixcEveryDays, setIxcEveryDays] = useState(1);
   const [ixcSyncTime, setIxcSyncTime] = useState('07:00');
+  const [ixcReceivingAccountId, setIxcReceivingAccountId] = useState('');
   const { data: portalUsers = [] } = useQuery({
     queryKey: ['creditors', id, 'portal-users'],
     queryFn: async () =>
@@ -100,6 +101,7 @@ export default function CreditorDetailPage() {
     setIxcMinDebtValue(ixcIntegration.syncMinDebtValue ?? 0);
     setIxcEveryDays(ixcIntegration.syncEveryDays ?? 1);
     setIxcSyncTime(`${String(ixcIntegration.syncAtHour ?? 7).padStart(2, '0')}:${String(ixcIntegration.syncAtMinute ?? 0).padStart(2, '0')}`);
+    setIxcReceivingAccountId(ixcIntegration.ixcReceivingAccountId ?? '');
   }, [ixcIntegration]);
 
   if (isLoading) {
@@ -419,10 +421,11 @@ export default function CreditorDetailPage() {
                           <Field.Root><Field.Label>Valor mínimo (R$)</Field.Label><Input type="number" min="0" step="0.01" value={ixcMinDebtValue} onChange={(event) => setIxcMinDebtValue(Number(event.target.value))} /></Field.Root>
                           <Field.Root><Field.Label>Atualizar a cada (dias)</Field.Label><Input type="number" min="1" max="365" value={ixcEveryDays} onChange={(event) => setIxcEveryDays(Number(event.target.value))} /></Field.Root>
                           <Field.Root><Field.Label>Horário da atualização</Field.Label><Input type="time" value={ixcSyncTime} onChange={(event) => setIxcSyncTime(event.target.value)} /></Field.Root>
+                          <Field.Root><Field.Label>ID da conta de recebimento</Field.Label><Input value={ixcReceivingAccountId} onChange={(event) => setIxcReceivingAccountId(event.target.value)} placeholder="Ex.: 27" /><Field.HelperText>Identificador <code>id_conta</code> usado pelo IXC ao registrar uma baixa.</Field.HelperText></Field.Root>
                         </SimpleGrid>
                       </Stack>
                     </Dialog.Body>
-                    <Dialog.Footer><HStack><Button variant="outline" onClick={() => setIxcDialogOpen(false)}>Cancelar</Button><Button variant="outline" loading={testIxcIntegrationMutation.isPending} disabled={!ixcBaseUrl || (!ixcAccessToken && !ixcIntegration?.hasAccessToken)} onClick={() => testIxcIntegrationMutation.mutate({ creditorId: id!, data: { baseUrl: ixcBaseUrl, ...(ixcAccessToken ? { accessToken: ixcAccessToken } : {}) } })}><LuTestTube /> Testar conexão</Button><Button colorPalette="blue" loading={saveIxcIntegrationMutation.isPending} disabled={!ixcBaseUrl || (!ixcAccessToken && !ixcIntegration?.hasAccessToken)} onClick={() => { const [hours, minutes] = ixcSyncTime.split(':').map(Number); saveIxcIntegrationMutation.mutate({ creditorId: id!, data: { baseUrl: ixcBaseUrl, ...(ixcAccessToken ? { accessToken: ixcAccessToken } : {}), syncMinOverdueDays: ixcMinOverdueDays, syncMinDebtValue: ixcMinDebtValue, syncEveryDays: ixcEveryDays, syncAtHour: hours, syncAtMinute: minutes } }, { onSuccess: () => { setIxcAccessToken(''); setIxcDialogOpen(false); } }); }}><LuSave /> Salvar</Button></HStack></Dialog.Footer>
+                    <Dialog.Footer><HStack><Button variant="outline" onClick={() => setIxcDialogOpen(false)}>Cancelar</Button><Button variant="outline" loading={testIxcIntegrationMutation.isPending} disabled={!ixcBaseUrl || (!ixcAccessToken && !ixcIntegration?.hasAccessToken)} onClick={() => testIxcIntegrationMutation.mutate({ creditorId: id!, data: { baseUrl: ixcBaseUrl, ...(ixcAccessToken ? { accessToken: ixcAccessToken } : {}) } })}><LuTestTube /> Testar conexão</Button><Button colorPalette="blue" loading={saveIxcIntegrationMutation.isPending} disabled={!ixcBaseUrl || (!ixcAccessToken && !ixcIntegration?.hasAccessToken)} onClick={() => { const [hours, minutes] = ixcSyncTime.split(':').map(Number); saveIxcIntegrationMutation.mutate({ creditorId: id!, data: { baseUrl: ixcBaseUrl, ...(ixcAccessToken ? { accessToken: ixcAccessToken } : {}), syncMinOverdueDays: ixcMinOverdueDays, syncMinDebtValue: ixcMinDebtValue, syncEveryDays: ixcEveryDays, syncAtHour: hours, syncAtMinute: minutes, ixcReceivingAccountId: ixcReceivingAccountId.trim() || undefined } }, { onSuccess: () => { setIxcAccessToken(''); setIxcDialogOpen(false); } }); }}><LuSave /> Salvar</Button></HStack></Dialog.Footer>
                   </Dialog.Content>
                 </Dialog.Positioner>
               </Portal>
