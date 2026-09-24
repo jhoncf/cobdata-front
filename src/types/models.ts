@@ -68,7 +68,6 @@ export interface CreditorIxcIntegration {
   syncEveryDays: number;
   syncAtHour: number;
   syncAtMinute: number;
-  ixcReceivingAccountId: string | null;
   lastTestedAt: string | null;
   lastTestSucceeded: boolean | null;
   lastTestMessage: string | null;
