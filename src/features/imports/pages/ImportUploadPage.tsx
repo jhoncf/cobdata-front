@@ -84,9 +84,10 @@ function suggestedFieldMapping(headers: string[]): Record<string, string> {
 function anonymizedFormat(value: string): string {
   const normalized = value.trim();
   const digits = normalized.replace(/\D/g, '');
+  const document = normalized.toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalized)) return '[e-mail]';
   if (digits.length === 11 && /[.\-\s]/.test(normalized)) return '[CPF com 11 dígitos]';
-  if (digits.length === 14 && /[.\-\/\s]/.test(normalized)) return '[CNPJ com 14 dígitos]';
+  if (/^[A-Z0-9]{12}\d{2}$/.test(document) && /[.\-\/\s]/.test(normalized)) return '[CNPJ com 14 caracteres]';
   if (digits.length >= 10 && digits.length <= 13 && /[()\-\s]/.test(normalized)) return '[telefone]';
   if (/^\d{2}[\/-]\d{2}[\/-]\d{4}$/.test(normalized)) return '[data DD/MM/AAAA]';
   if (/^\d{4}[\/-]\d{2}[\/-]\d{2}$/.test(normalized)) return '[data AAAA-MM-DD]';

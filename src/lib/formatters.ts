@@ -18,11 +18,13 @@ export function formatCPF(cpf: string): string {
 }
 
 /**
- * Formats a CNPJ string (14 digits) into "11.222.333/0001-81".
+ * Formats a CNPJ string (14 numeric or alphanumeric positions) into its
+ * official printed mask, e.g. "11.222.333/0001-81" or "12.ABC.345/01DE-35".
  */
 export function formatCNPJ(cnpj: string): string {
-  const digits = cnpj.replace(/\D/g, '').padStart(14, '0');
-  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12, 14)}`;
+  const document = cnpj.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (document.length !== 14) return cnpj;
+  return `${document.slice(0, 2)}.${document.slice(2, 5)}.${document.slice(5, 8)}/${document.slice(8, 12)}-${document.slice(12, 14)}`;
 }
 
 /**

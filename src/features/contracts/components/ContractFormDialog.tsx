@@ -216,7 +216,7 @@ export function ContractFormDialog({
       };
       onSubmit(dto);
     } else {
-      const doc = (values.debtorDocument ?? '').replace(/\D/g, '');
+      const doc = (values.debtorDocument ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
       const dto: CreateContractDto = {
         walletId: values.walletId,
         debtorDocument: doc,
@@ -280,7 +280,7 @@ export function ContractFormDialog({
                       <>
                         <Field.Root invalid={!!errors.debtorDocument} required>
                           <Field.Label>CPF/CNPJ do Devedor</Field.Label>
-                          <Input {...register('debtorDocument')} placeholder="Somente números" />
+                          <Input {...register('debtorDocument')} placeholder="CPF ou CNPJ" />
                           <Field.ErrorText>{errors.debtorDocument?.message}</Field.ErrorText>
                         </Field.Root>
                         <Field.Root invalid={!!errors.contractNumber} required>
